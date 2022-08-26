@@ -1,0 +1,17 @@
+[engine]
+description = "The kodanuki game engine."
+path        = "engine/"
+depends     = []
+library     = true
+
+[kodanuki]
+description = "The upcoming kodanuki game."
+path        = "kodanuki/"
+depends     = ["kodanuki.engine"]
+library     = false
+
+[unittest]
+description = "Unittests for the kodanuki engine."
+path        = "unittest/"
+depends     = ["kodanuki.engine"]
+library     = false
