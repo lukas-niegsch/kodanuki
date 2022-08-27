@@ -14,10 +14,12 @@ void RenderModule::onAttach()
 	createInstance();
 	createSurface();
 	pickPhysicalDevice();
+	createLogicalDevice();
 }
 
 void RenderModule::onDetach()
 {
+	vkDestroyDevice(device, nullptr);
 	vkDestroySurfaceKHR(instance, surface, nullptr);
 	vkDestroyInstance(instance, nullptr);
 }
@@ -73,6 +75,53 @@ void RenderModule::pickPhysicalDevice()
 	physicalDevice = *it;
 	// printPhysicalDeviceProperties(devices);
 	// printPhysicalDeviceProperties(physicalDevice);
+}
+
+bool RenderModule::isQueueFamilySuitable(VkQueueFamilyProperties family)
+{
+	return family.queueFlags & VK_QUEUE_GRAPHICS_BIT;
+}
+
+void RenderModule::createLogicalDevice()
+{
+	auto queueFamilies = getQueueFamilyProperties(physicalDevice);
+	// printQueueFamilyProperties(queueFamilies);
+
+	auto it = std::find_if(queueFamilies.begin(), queueFamilies.end(), [&](auto family) {
+		return isQueueFamilySuitable(family);
+	});
+	queueCount = it->queueCount;
+	queueFamilyIndex = std::distance(queueFamilies.begin(), it);
+	std::vector<float> priorities(queueCount, 0.8);
+
+	VkDeviceQueueCreateInfo queueCreateInfo;
+	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queueCreateInfo.pNext = nullptr;
+	queueCreateInfo.flags = 0;
+	queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
+	queueCreateInfo.queueCount = queueCount;
+	queueCreateInfo.pQueuePriorities = priorities.data();
+
+	// VkPhysicalDeviceFeatures contains lots of bools, set them to 0 for now
+	VkPhysicalDeviceFeatures deviceFeatures = {};
+
+	// printExtensionProperties(getDeviceExtensionProperties(physicalDevice, nullptr));
+	std::vector<const char *> deviceExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
+	VkDeviceCreateInfo deviceCreateInfo;
+	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	deviceCreateInfo.pNext = nullptr;
+	deviceCreateInfo.flags = 0;
+	deviceCreateInfo.queueCreateInfoCount = 1;
+	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+	deviceCreateInfo.enabledLayerCount = 0;
+	deviceCreateInfo.ppEnabledLayerNames = nullptr;
+	deviceCreateInfo.enabledExtensionCount = deviceExtensions.size();
+	deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+	deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+
+	auto result = vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device);
+	VERIFY_VULKAN_RESULT(result);
 }
 
 }

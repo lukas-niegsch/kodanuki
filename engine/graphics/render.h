@@ -31,13 +31,20 @@ private:
 	void createSurface();
 	bool isDeviceSuitable(VkPhysicalDevice device);
 	void pickPhysicalDevice();
+	bool isQueueFamilySuitable(VkQueueFamilyProperties family);
+	void createLogicalDevice();
 
 private:
 	GameInfo& info;
 	std::shared_ptr<WindowModule> window;
+
 	VkInstance instance;
 	VkSurfaceKHR surface;
 	VkPhysicalDevice physicalDevice;
+	VkDevice device;
+
+	uint32_t queueCount;
+	uint32_t queueFamilyIndex;
 };
 
 }
