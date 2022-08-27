@@ -39,6 +39,7 @@ private:
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 	void createGraphicsPipeline();
 	void createFramebuffers();
+	void createCommandPool();
 
 private:
 	GameInfo& info;
@@ -52,6 +53,7 @@ private:
 	VkRenderPass renderPass;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
+	VkCommandPool commandPool;
 
 	uint32_t queueCount;
 	uint32_t queueFamilyIndex;

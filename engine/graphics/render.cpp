@@ -21,11 +21,13 @@ void RenderModule::onAttach()
 	createRenderPass();
 	createGraphicsPipeline();
 	createFramebuffers();
+	createCommandPool();
 }
 
 void RenderModule::onDetach()
 {
 	vkDeviceWaitIdle(device);
+	vkDestroyCommandPool(device, commandPool, nullptr);
 	for (auto framebuffer : framebuffers) {
 		vkDestroyFramebuffer(device, framebuffer, nullptr);
 	}
@@ -423,6 +425,17 @@ void RenderModule::createFramebuffers()
 		auto result = vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebuffers[i]);
 		VERIFY_VULKAN_RESULT(result);
 	}
+}
+
+void RenderModule::createCommandPool()
+{
+	VkCommandPoolCreateInfo poolInfo = {};
+	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	poolInfo.queueFamilyIndex = queueFamilyIndex;
+
+	auto result = vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool);
+	VERIFY_VULKAN_RESULT(result);
 }
 
 }
