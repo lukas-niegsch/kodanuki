@@ -29,12 +29,15 @@ public:
 private:
 	void createInstance();
 	void createSurface();
+	bool isDeviceSuitable(VkPhysicalDevice device);
+	void pickPhysicalDevice();
 
 private:
 	GameInfo& info;
 	std::shared_ptr<WindowModule> window;
 	VkInstance instance;
 	VkSurfaceKHR surface;
+	VkPhysicalDevice physicalDevice;
 };
 
 }

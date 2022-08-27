@@ -1,5 +1,7 @@
 #include "engine/graphics/render.h"
 #include "engine/graphics/vulkan/debug.h"
+#include "engine/graphics/vulkan/enumerate.h"
+#include <algorithm>
 
 namespace Kodanuki
 {
@@ -11,6 +13,7 @@ void RenderModule::onAttach()
 {
 	createInstance();
 	createSurface();
+	pickPhysicalDevice();
 }
 
 void RenderModule::onDetach()
@@ -52,6 +55,24 @@ void RenderModule::createInstance()
 void RenderModule::createSurface()
 {
 	surface = window->createSurface(instance);
+}
+
+bool RenderModule::isDeviceSuitable(VkPhysicalDevice device)
+{
+	VkPhysicalDeviceProperties deviceProperties;
+	vkGetPhysicalDeviceProperties(device, &deviceProperties);
+	return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+}
+
+void RenderModule::pickPhysicalDevice()
+{
+	auto devices = getPhysicalDevices(instance);
+	auto it = std::find_if(devices.begin(), devices.end(), [&](auto device) {
+		return isDeviceSuitable(device);
+	});
+	physicalDevice = *it;
+	// printPhysicalDeviceProperties(devices);
+	// printPhysicalDeviceProperties(physicalDevice);
 }
 
 }
