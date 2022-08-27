@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/graphics/window.h"
+#include "engine/framework/game.h"
 #include "engine/framework/module.h"
 #include <vulkan/vulkan.h>
 #include <memory>
@@ -17,7 +18,7 @@ class RenderModule : public Module
 {
 public:
 	// Constructs the new render module.
-	RenderModule(std::shared_ptr<WindowModule> window);
+	RenderModule(GameInfo& info, std::shared_ptr<WindowModule> window);
 
 	// Called once when the module is attached.
 	virtual void onAttach() override;
@@ -26,7 +27,12 @@ public:
 	virtual void onDetach() override;
 
 private:
+	void createInstance();
+
+private:
+	GameInfo& info;
 	std::shared_ptr<WindowModule> window;
+	VkInstance instance;
 };
 
 }
