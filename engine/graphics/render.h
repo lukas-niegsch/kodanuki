@@ -40,6 +40,7 @@ private:
 	void createGraphicsPipeline();
 	void createFramebuffers();
 	void createCommandPool();
+	void createCommandBuffer();
 
 private:
 	GameInfo& info;
@@ -54,6 +55,7 @@ private:
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
 	VkCommandPool commandPool;
+	VkCommandBuffer commandBuffer;
 
 	uint32_t queueCount;
 	uint32_t queueFamilyIndex;

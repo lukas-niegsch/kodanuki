@@ -22,6 +22,7 @@ void RenderModule::onAttach()
 	createGraphicsPipeline();
 	createFramebuffers();
 	createCommandPool();
+	createCommandBuffer();
 }
 
 void RenderModule::onDetach()
@@ -435,6 +436,18 @@ void RenderModule::createCommandPool()
 	poolInfo.queueFamilyIndex = queueFamilyIndex;
 
 	auto result = vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool);
+	VERIFY_VULKAN_RESULT(result);
+}
+
+void RenderModule::createCommandBuffer()
+{
+	VkCommandBufferAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = commandPool;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandBufferCount = 1;
+
+	auto result = vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
 	VERIFY_VULKAN_RESULT(result);
 }
 
