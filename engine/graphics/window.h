@@ -17,7 +17,7 @@ class WindowModule : public Module
 {
 public:
 	// Creates a new window with the given size.
-	WindowModule(GameInfo& info, VkExtent2D extend);
+	WindowModule(GameInfo& info, VkExtent2D extent);
 
 	// Called once when the module is attached.
 	virtual void onAttach() override;
@@ -31,19 +31,19 @@ public:
 	// Creates an surface for the renderer to use.
 	VkSurfaceKHR createSurface(VkInstance instance);
 
-	// Resets the current extend of the window.
-	void resetExtend();
+	// Resets the current extent of the window.
+	void resetExtent();
 
-	// Changes the current extend of the window.
-	void setExtend(VkExtent2D extend);
+	// Changes the current extent of the window.
+	void setExtent(VkExtent2D extent);
 
-	// Returns the current extend of the window.
-	VkExtent2D getExtend();
+	// Returns the current extent of the window.
+	VkExtent2D getExtent();
 
 private:
 	GameInfo& info;
 	GLFWwindow* window;
-	VkExtent2D defaultExtend;
+	VkExtent2D defaultExtent;
 };
 
 }

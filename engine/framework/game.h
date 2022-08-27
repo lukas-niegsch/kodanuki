@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/framework/module.h"
 #include "engine/central/entity.h"
+#include <memory>
 #include <vector>
 
 namespace Kodanuki
@@ -25,8 +26,8 @@ struct GameInfo
 	// Is the game currently running?
 	bool running;
 
-	// The main module that the game should run.
-	Module* modules;
+	// The modules that the game should run.
+	std::vector<std::shared_ptr<Module>> modules;
 };
 
 /**

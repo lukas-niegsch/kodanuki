@@ -3,15 +3,15 @@
 namespace Kodanuki
 {
 
-WindowModule::WindowModule(GameInfo& info, VkExtent2D extend)
-	: info(info), defaultExtend(extend) {}
+WindowModule::WindowModule(GameInfo& info, VkExtent2D extent)
+	: info(info), defaultExtent(extent) {}
 
 void WindowModule::onAttach()
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	int width = defaultExtend.width;
-	int height = defaultExtend.height;
+	int width = defaultExtent.width;
+	int height = defaultExtent.height;
 	window = glfwCreateWindow(width, height, info.title, nullptr, nullptr);
 }
 
@@ -37,17 +37,17 @@ VkSurfaceKHR WindowModule::createSurface(VkInstance instance)
 	return surface;
 }
 
-void WindowModule::resetExtend()
+void WindowModule::resetExtent()
 {
-	setExtend(defaultExtend);
+	setExtent(defaultExtent);
 }
 
-void WindowModule::setExtend(VkExtent2D extend)
+void WindowModule::setExtent(VkExtent2D extent)
 {
-	glfwSetWindowSize(window, extend.width, extend.height);
+	glfwSetWindowSize(window, extent.width, extent.height);
 }
 
-VkExtent2D WindowModule::getExtend()
+VkExtent2D WindowModule::getExtent()
 {
 	int width, height;
 	glfwGetWindowSize(window, &width, &height);
