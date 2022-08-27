@@ -6,7 +6,7 @@ FLAGS := -O2 -std=c++20 -pipe -Wall -Wextra -Werror -g
 SRC_DIR := $(CURDIR)
 OUT_DIR := /var/tmp/kodanuki
 BIN_DIR := $(OUT_DIR)/build
-RUNNABLE := unittest
+RUNNABLE := kodanuki
 PROJECTS := unittest kodanuki
 .EXPORT_ALL_VARIABLES:
 LIBRARY_PATH := $(OUT_DIR)
@@ -35,6 +35,9 @@ stats:
 
 valgrind: compile
 	valgrind --leak-check=full $(OUT_DIR)/$(RUNNABLE)
+
+gdb:
+	gdb $(OUT_DIR)/$(RUNNABLE)
 
 run:
 	$(OUT_DIR)/$(RUNNABLE)

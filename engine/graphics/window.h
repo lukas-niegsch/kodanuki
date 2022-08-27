@@ -17,7 +17,7 @@ class WindowModule : public Module
 {
 public:
 	// Creates a new window with the given size.
-	WindowModule(GameInfo& game, VkExtent2D extend);
+	WindowModule(GameInfo& info, VkExtent2D extend);
 
 	// Called once when the module is attached.
 	virtual void onAttach() override;
