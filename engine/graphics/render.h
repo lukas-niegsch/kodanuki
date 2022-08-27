@@ -38,6 +38,7 @@ private:
 	void createRenderPass();
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 	void createGraphicsPipeline();
+	void createFramebuffers();
 
 private:
 	GameInfo& info;
@@ -58,6 +59,7 @@ private:
 	VkExtent2D imageExtend;
 	std::vector<VkImage> images;
 	std::vector<VkImageView> imageViews;
+	std::vector<VkFramebuffer> framebuffers;
 };
 
 }

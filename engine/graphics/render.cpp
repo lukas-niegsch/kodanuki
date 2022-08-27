@@ -20,10 +20,15 @@ void RenderModule::onAttach()
 	createImageViews();
 	createRenderPass();
 	createGraphicsPipeline();
+	createFramebuffers();
 }
 
 void RenderModule::onDetach()
 {
+	vkDeviceWaitIdle(device);
+	for (auto framebuffer : framebuffers) {
+		vkDestroyFramebuffer(device, framebuffer, nullptr);
+	}
 	vkDestroyPipeline(device, graphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 	vkDestroyRenderPass(device, renderPass, nullptr);
@@ -395,6 +400,29 @@ void RenderModule::createGraphicsPipeline()
 
 	vkDestroyShaderModule(device, fragShaderModule, nullptr);
 	vkDestroyShaderModule(device, vertShaderModule, nullptr);
+}
+
+void RenderModule::createFramebuffers()
+{
+	framebuffers.resize(imageViews.size());
+
+	for (size_t i = 0; i < imageViews.size(); i++) {
+		VkImageView attachments[] = {
+			imageViews[i]
+		};
+
+		VkFramebufferCreateInfo framebufferInfo = {};
+		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		framebufferInfo.renderPass = renderPass;
+		framebufferInfo.attachmentCount = 1;
+		framebufferInfo.pAttachments = attachments;
+		framebufferInfo.width = imageExtend.width;
+		framebufferInfo.height = imageExtend.height;
+		framebufferInfo.layers = 1;
+
+		auto result = vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebuffers[i]);
+		VERIFY_VULKAN_RESULT(result);
+	}
 }
 
 }
