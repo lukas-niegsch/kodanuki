@@ -16,10 +16,14 @@ void RenderModule::onAttach()
 	pickPhysicalDevice();
 	createLogicalDevice();
 	createSwapChain();
+	createImageViews();
 }
 
 void RenderModule::onDetach()
 {
+	for (auto imageView : imageViews) {
+		vkDestroyImageView(device, imageView, nullptr);
+	}
 	vkDestroySwapchainKHR(device, swapchain, nullptr);
 	vkDestroyDevice(device, nullptr);
 	vkDestroySurfaceKHR(instance, surface, nullptr);
@@ -160,6 +164,32 @@ void RenderModule::createSwapChain()
 	VERIFY_VULKAN_RESULT(result);
 
 	images = getSwapchainImagesKHR(device, swapchain);
+}
+
+void RenderModule::createImageViews()
+{
+	imageViews.resize(images.size());
+
+	VkImageViewCreateInfo viewCreateInfo = {};
+	viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	viewCreateInfo.format = imageFormat;
+	viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+	viewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+	viewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+	viewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+	viewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	viewCreateInfo.subresourceRange.baseMipLevel = 0;
+	viewCreateInfo.subresourceRange.levelCount = 1;
+	viewCreateInfo.subresourceRange.baseArrayLayer = 0;
+	viewCreateInfo.subresourceRange.layerCount = 1;
+
+	for (uint32_t i = 0; i < imageViews.size(); i++)
+	{
+		viewCreateInfo.image = images[i];
+		auto result = vkCreateImageView(device, &viewCreateInfo, nullptr, &imageViews[i]);
+		VERIFY_VULKAN_RESULT(result);
+	}
 }
 
 }

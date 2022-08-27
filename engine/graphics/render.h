@@ -34,6 +34,7 @@ private:
 	bool isQueueFamilySuitable(VkQueueFamilyProperties family);
 	void createLogicalDevice();
 	void createSwapChain();
+	void createImageViews();
 
 private:
 	GameInfo& info;
@@ -50,6 +51,7 @@ private:
 	VkFormat imageFormat;
 	VkExtent2D imageExtend;
 	std::vector<VkImage> images;
+	std::vector<VkImageView> imageViews;
 };
 
 }
