@@ -33,6 +33,7 @@ private:
 	void pickPhysicalDevice();
 	bool isQueueFamilySuitable(VkQueueFamilyProperties family);
 	void createLogicalDevice();
+	void createSwapChain();
 
 private:
 	GameInfo& info;
@@ -42,9 +43,13 @@ private:
 	VkSurfaceKHR surface;
 	VkPhysicalDevice physicalDevice;
 	VkDevice device;
+	VkSwapchainKHR swapchain;
 
 	uint32_t queueCount;
 	uint32_t queueFamilyIndex;
+	VkFormat imageFormat;
+	VkExtent2D imageExtend;
+	std::vector<VkImage> images;
 };
 
 }

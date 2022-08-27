@@ -15,10 +15,12 @@ void RenderModule::onAttach()
 	createSurface();
 	pickPhysicalDevice();
 	createLogicalDevice();
+	createSwapChain();
 }
 
 void RenderModule::onDetach()
 {
+	vkDestroySwapchainKHR(device, swapchain, nullptr);
 	vkDestroyDevice(device, nullptr);
 	vkDestroySurfaceKHR(instance, surface, nullptr);
 	vkDestroyInstance(instance, nullptr);
@@ -122,6 +124,42 @@ void RenderModule::createLogicalDevice()
 
 	auto result = vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device);
 	VERIFY_VULKAN_RESULT(result);
+}
+
+void RenderModule::createSwapChain()
+{
+	VkSurfaceCapabilitiesKHR surfaceCapabilities;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities);
+	// printSurfaceCapabilitiesKHR(surfaceCapabilities);
+
+	// printSurfaceFormatKHR(getPhysicalDeviceSurfaceFormats(physicalDevice, surface));
+	// printPresentModeKHR(getPhysicalDeviceSurfacePresentModes(physicalDevice, surface));
+
+	imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
+	imageExtend = surfaceCapabilities.currentExtent;
+
+	VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
+	swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	swapchainCreateInfo.surface = surface;
+	swapchainCreateInfo.minImageCount = 3;
+	swapchainCreateInfo.imageFormat = imageFormat;
+	swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+	swapchainCreateInfo.imageExtent = imageExtend;
+	swapchainCreateInfo.imageArrayLayers = 1;
+	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	swapchainCreateInfo.queueFamilyIndexCount = 1;
+	swapchainCreateInfo.pQueueFamilyIndices = &queueFamilyIndex;
+	swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+	swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	swapchainCreateInfo.clipped = true;
+	swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
+
+	auto result = vkCreateSwapchainKHR(device, &swapchainCreateInfo, nullptr, &swapchain);
+	VERIFY_VULKAN_RESULT(result);
+
+	images = getSwapchainImagesKHR(device, swapchain);
 }
 
 }
