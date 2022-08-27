@@ -36,6 +36,8 @@ private:
 	void createSwapChain();
 	void createImageViews();
 	void createRenderPass();
+	VkShaderModule createShaderModule(const std::vector<char>& code);
+	void createGraphicsPipeline();
 
 private:
 	GameInfo& info;
@@ -47,6 +49,8 @@ private:
 	VkDevice device;
 	VkSwapchainKHR swapchain;
 	VkRenderPass renderPass;
+	VkPipelineLayout pipelineLayout;
+	VkPipeline graphicsPipeline;
 
 	uint32_t queueCount;
 	uint32_t queueFamilyIndex;
