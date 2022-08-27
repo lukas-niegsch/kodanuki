@@ -35,6 +35,7 @@ private:
 	void createLogicalDevice();
 	void createSwapChain();
 	void createImageViews();
+	void createRenderPass();
 
 private:
 	GameInfo& info;
@@ -45,6 +46,7 @@ private:
 	VkPhysicalDevice physicalDevice;
 	VkDevice device;
 	VkSwapchainKHR swapchain;
+	VkRenderPass renderPass;
 
 	uint32_t queueCount;
 	uint32_t queueFamilyIndex;
