@@ -41,6 +41,7 @@ private:
 	void createFramebuffers();
 	void createCommandPool();
 	void createCommandBuffer();
+	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 private:
 	GameInfo& info;
