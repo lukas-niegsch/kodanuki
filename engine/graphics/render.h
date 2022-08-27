@@ -28,11 +28,13 @@ public:
 
 private:
 	void createInstance();
+	void createSurface();
 
 private:
 	GameInfo& info;
 	std::shared_ptr<WindowModule> window;
 	VkInstance instance;
+	VkSurfaceKHR surface;
 };
 
 }

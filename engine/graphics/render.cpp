@@ -10,10 +10,12 @@ RenderModule::RenderModule(GameInfo& info, std::shared_ptr<WindowModule> window)
 void RenderModule::onAttach()
 {
 	createInstance();
+	createSurface();
 }
 
 void RenderModule::onDetach()
 {
+	vkDestroySurfaceKHR(instance, surface, nullptr);
 	vkDestroyInstance(instance, nullptr);
 }
 
@@ -45,6 +47,11 @@ void RenderModule::createInstance()
 
 	auto result = vkCreateInstance(&instanceInfo, nullptr, &instance);
 	VERIFY_VULKAN_RESULT(result);
+}
+
+void RenderModule::createSurface()
+{
+	surface = window->createSurface(instance);
 }
 
 }
