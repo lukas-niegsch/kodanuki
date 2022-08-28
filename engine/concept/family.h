@@ -1,7 +1,8 @@
 #pragma once
 #include "engine/central/entity.h"
 
-namespace Kodanuki {
+namespace Kodanuki
+{
 
 /**
  * The family stores the calculated family tree.
