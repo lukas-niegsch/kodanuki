@@ -7,7 +7,9 @@ namespace Kodanuki
 Entity ECS::create()
 {
 	uint64_t id = count();
-	return std::make_optional<uint64_t>(id);
+	Entity entity = std::make_optional<uint64_t>(id);
+	ECS::update<Entity>(entity, entity);
+	return entity;
 }
 
 Mapping ECS::mapping;
