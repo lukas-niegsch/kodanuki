@@ -23,11 +23,15 @@ void RenderModule::onAttach()
 	createFramebuffers();
 	createCommandPool();
 	createCommandBuffer();
+	createSyncObjects();
 }
 
 void RenderModule::onDetach()
 {
 	vkDeviceWaitIdle(device);
+    vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
+    vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
+    vkDestroyFence(device, inFlightFence, nullptr);
 	vkDestroyCommandPool(device, commandPool, nullptr);
 	for (auto framebuffer : framebuffers) {
 		vkDestroyFramebuffer(device, framebuffer, nullptr);
@@ -42,6 +46,20 @@ void RenderModule::onDetach()
 	vkDestroyDevice(device, nullptr);
 	vkDestroySurfaceKHR(instance, surface, nullptr);
 	vkDestroyInstance(instance, nullptr);
+}
+
+void RenderModule::onRender(float)
+{
+	auto result = vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
+	VERIFY_VULKAN_RESULT(result);
+	result = vkResetFences(device, 1, &inFlightFence);
+	VERIFY_VULKAN_RESULT(result);
+	uint32_t imageIndex;
+    vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+	vkResetCommandBuffer(commandBuffer, 0);
+	recordCommandBuffer(commandBuffer, imageIndex);
+	submitCommandBuffer(commandBuffer);
+	presentImage(imageIndex);
 }
 
 void RenderModule::createInstance()
@@ -142,6 +160,9 @@ void RenderModule::createLogicalDevice()
 
 	auto result = vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device);
 	VERIFY_VULKAN_RESULT(result);
+
+	vkGetDeviceQueue(device, queueFamilyIndex, 0, &presentQueue);
+	vkGetDeviceQueue(device, queueFamilyIndex, 1, &graphicsQueue);
 }
 
 void RenderModule::createSwapChain()
@@ -154,7 +175,7 @@ void RenderModule::createSwapChain()
 	// printPresentModeKHR(getPhysicalDeviceSurfacePresentModes(physicalDevice, surface));
 
 	imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
-	imageExtend = surfaceCapabilities.currentExtent;
+	imageExtent = surfaceCapabilities.currentExtent;
 
 	VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
 	swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -162,7 +183,7 @@ void RenderModule::createSwapChain()
 	swapchainCreateInfo.minImageCount = 3;
 	swapchainCreateInfo.imageFormat = imageFormat;
 	swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-	swapchainCreateInfo.imageExtent = imageExtend;
+	swapchainCreateInfo.imageExtent = imageExtent;
 	swapchainCreateInfo.imageArrayLayers = 1;
 	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -208,6 +229,14 @@ void RenderModule::createImageViews()
 
 void RenderModule::createRenderPass()
 {
+	VkSubpassDependency dependency{};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
 	VkAttachmentDescription colorAttachment = {};
 	colorAttachment.format = imageFormat;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -233,6 +262,8 @@ void RenderModule::createRenderPass()
 	renderPassInfo.pAttachments = &colorAttachment;
 	renderPassInfo.subpassCount = 1;
 	renderPassInfo.pSubpasses = &subpass;
+	renderPassInfo.dependencyCount = 1;
+	renderPassInfo.pDependencies = &dependency;
 
 	auto result = vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass);
 	VERIFY_VULKAN_RESULT(result);
@@ -311,14 +342,14 @@ void RenderModule::createGraphicsPipeline()
 	VkViewport viewport = {};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = imageExtend.width;
-	viewport.height = imageExtend.height;
+	viewport.width = imageExtent.width;
+	viewport.height = imageExtent.height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
 	VkRect2D scissor{};
 	scissor.offset = {0, 0};
-	scissor.extent = imageExtend;
+	scissor.extent = imageExtent;
 
 	VkPipelineViewportStateCreateInfo viewportInfo = {};
 	viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -419,8 +450,8 @@ void RenderModule::createFramebuffers()
 		framebufferInfo.renderPass = renderPass;
 		framebufferInfo.attachmentCount = 1;
 		framebufferInfo.pAttachments = attachments;
-		framebufferInfo.width = imageExtend.width;
-		framebufferInfo.height = imageExtend.height;
+		framebufferInfo.width = imageExtent.width;
+		framebufferInfo.height = imageExtent.height;
 		framebufferInfo.layers = 1;
 
 		auto result = vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebuffers[i]);
@@ -466,7 +497,7 @@ void RenderModule::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t i
 	renderPassInfo.renderPass = renderPass;
 	renderPassInfo.framebuffer = framebuffers[imageIndex];
 	renderPassInfo.renderArea.offset = {0, 0};
-	renderPassInfo.renderArea.extent = imageExtend;
+	renderPassInfo.renderArea.extent = imageExtent;
 
 	VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
 	renderPassInfo.clearValueCount = 1;
@@ -478,19 +509,77 @@ void RenderModule::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t i
 	VkViewport viewport{};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = static_cast<float>(imageExtend.width);
-	viewport.height = static_cast<float>(imageExtend.height);
+	viewport.width = static_cast<float>(imageExtent.width);
+	viewport.height = static_cast<float>(imageExtent.height);
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
 	VkRect2D scissor{};
 	scissor.offset = {0, 0};
-	scissor.extent = imageExtend;
+	scissor.extent = imageExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
 	vkCmdEndRenderPass(commandBuffer);
 	result = vkEndCommandBuffer(commandBuffer);
+	VERIFY_VULKAN_RESULT(result);
+}
+
+void RenderModule::createSyncObjects()
+{
+    VkSemaphoreCreateInfo semaphoreInfo = {};
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkFenceCreateInfo fenceInfo = {};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	auto result = vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphore);
+	VERIFY_VULKAN_RESULT(result);
+
+	result = vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphore);
+	VERIFY_VULKAN_RESULT(result);
+
+	result = vkCreateFence(device, &fenceInfo, nullptr, &inFlightFence);
+	VERIFY_VULKAN_RESULT(result);
+}
+
+void RenderModule::presentImage(uint32_t imageIndex)
+{
+	VkPresentInfoKHR presentInfo = {};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = &renderFinishedSemaphore;
+
+	VkSwapchainKHR swapchains[] = {swapchain};
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = swapchains;
+	presentInfo.pImageIndices = &imageIndex;
+	presentInfo.pResults = nullptr;
+
+	vkQueuePresentKHR(presentQueue, &presentInfo);
+}
+
+void RenderModule::submitCommandBuffer(VkCommandBuffer commandBuffer)
+{
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+	VkSemaphore waitSemaphores[] = {imageAvailableSemaphore};
+	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = waitSemaphores;
+	submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = signalSemaphores;
+
+	auto result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFence);
 	VERIFY_VULKAN_RESULT(result);
 }
 

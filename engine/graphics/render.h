@@ -26,6 +26,9 @@ public:
 	// Called once when the module is detached.
 	virtual void onDetach() override;
 
+	// Called repeatedly to render the module.
+	virtual void onRender(float deltaTime) override;
+
 private:
 	void createInstance();
 	void createSurface();
@@ -42,6 +45,9 @@ private:
 	void createCommandPool();
 	void createCommandBuffer();
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	void createSyncObjects();
+	void submitCommandBuffer(VkCommandBuffer commandBuffer);
+	void presentImage(uint32_t imageIndex);
 
 private:
 	GameInfo& info;
@@ -51,17 +57,22 @@ private:
 	VkSurfaceKHR surface;
 	VkPhysicalDevice physicalDevice;
 	VkDevice device;
+	VkQueue presentQueue;
+	VkQueue graphicsQueue;
 	VkSwapchainKHR swapchain;
 	VkRenderPass renderPass;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
 	VkCommandPool commandPool;
 	VkCommandBuffer commandBuffer;
+	VkSemaphore imageAvailableSemaphore;
+	VkSemaphore renderFinishedSemaphore;
+	VkFence inFlightFence;
 
 	uint32_t queueCount;
 	uint32_t queueFamilyIndex;
 	VkFormat imageFormat;
-	VkExtent2D imageExtend;
+	VkExtent2D imageExtent;
 	std::vector<VkImage> images;
 	std::vector<VkImageView> imageViews;
 	std::vector<VkFramebuffer> framebuffers;
