@@ -41,11 +41,13 @@ TEST_CASE("basic entity tests")
 		CHECK(another == invalid);
 	}
 
-	SUBCASE("new entity has no components")
+	SUBCASE("new entity has only Entity component")
 	{
 		Entity entity = ECS::create();
 		CHECK(ECS::has<Position>(entity) == false);
 		CHECK(ECS::has<Quaternion>(entity) == false);
+		CHECK(ECS::has<Entity>(entity) == true);
+		CHECK(ECS::get<Entity>(entity) == entity);
 	}
 
 	SUBCASE("can check if any entity has component")
