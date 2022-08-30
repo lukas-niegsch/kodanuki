@@ -61,7 +61,6 @@ private:
 	VkQueue graphicsQueue;
 	VkSwapchainKHR swapchain;
 	VkRenderPass renderPass;
-	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
 	VkCommandPool commandPool;
 	VkCommandBuffer commandBuffer;
