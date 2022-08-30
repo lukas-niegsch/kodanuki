@@ -12,6 +12,4 @@ Entity ECS::create()
 	return entity;
 }
 
-Mapping ECS::mapping;
-
 }

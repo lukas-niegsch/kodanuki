@@ -56,16 +56,32 @@ public:
 	template <typename T>
 	static void copy(Entity source, Entity target);
 
+	// Copies all components from the source entity to the target entity.
+	template <typename A, typename B, typename ... T>
+	static void copy(Entity source, Entity target);
+
 	// Moves the component from the source entity to the target entity.
 	template <typename T>
+	static void move(Entity source, Entity target);
+
+	// Moves all components from the source entity to the target entity.
+	template <typename A, typename B, typename ... T>
 	static void move(Entity source, Entity target);
 
 	// Swaps the component from the source entity with the target entity.
 	template <typename T>
 	static void swap(Entity source, Entity target);
 
+	// Swaps all components from the source entity with the target entity.
+	template <typename A, typename B, typename ... T>
+	static void swap(Entity source, Entity target);
+
 	// Binds the component from the source entity to the target entity.
 	template <typename T>
+	static void bind(Entity source, Entity target, bool weak = false);
+
+	// Binds all components from the source entity to the target entity.
+	template <typename A, typename B, typename ... T>
 	static void bind(Entity source, Entity target, bool weak = false);
 
 	// Iterates over entities with the given archetype.
@@ -75,7 +91,7 @@ public:
 private:
 	using Storage = std::unique_ptr<EntityStorage>;
 	using Mapping = std::unordered_map<std::type_index, Storage>;
-	static Mapping mapping;
+	static inline Mapping mapping;
 };
 
 }
