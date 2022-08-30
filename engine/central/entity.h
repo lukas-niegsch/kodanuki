@@ -36,6 +36,10 @@ public:
 	template <typename T>
 	static void remove(Entity entity);
 
+	// Removes all given components from the entity.
+	template <typename A, typename B, typename ... T>
+	static void remove(Entity entity);
+
 	// Removes the given component from each entity.
 	template <typename T>
 	static void remove();

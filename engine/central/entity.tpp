@@ -18,6 +18,13 @@ void ECS::remove(Entity entity)
 	storage->remove(entity.value());	
 }
 
+template <typename A, typename B, typename ... T>
+void ECS::remove(Entity entity)
+{
+	ECS::remove<A>(entity);
+	ECS::remove<B, T...>(entity);
+}
+
 template <typename T>
 void ECS::remove()
 {
