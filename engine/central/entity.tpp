@@ -18,6 +18,13 @@ void ECS::remove(Entity entity)
 	storage->remove(entity.value());	
 }
 
+template <typename A, typename B, typename ... T>
+void ECS::remove(Entity entity)
+{
+	ECS::remove<A>(entity);
+	ECS::remove<B, T...>(entity);
+}
+
 template <typename T>
 void ECS::remove()
 {
@@ -53,11 +60,25 @@ void ECS::copy(Entity source, Entity target)
 	storage->copy(source.value(), target.value());
 }
 
+template <typename A, typename B, typename ... T>
+void ECS::copy(Entity source, Entity target)
+{
+	ECS::copy<A>(source, target);
+	ECS::copy<B, T...>(source, target);
+}
+
 template <typename T>
 void ECS::move(Entity source, Entity target)
 {
 	EntityStorage* storage = getStorage<T>(mapping);
 	storage->move(source.value(), target.value());
+}
+
+template <typename A, typename B, typename ... T>
+void ECS::move(Entity source, Entity target)
+{
+	ECS::move<A>(source, target);
+	ECS::move<B, T...>(source, target);
 }
 
 template <typename T>
@@ -67,11 +88,25 @@ void ECS::swap(Entity source, Entity target)
 	storage->swap(source.value(), target.value());
 }
 
+template <typename A, typename B, typename ... T>
+void ECS::swap(Entity source, Entity target)
+{
+	ECS::swap<A>(source, target);
+	ECS::swap<B, T...>(source, target);
+}
+
 template <typename T>
 void ECS::bind(Entity source, Entity target, bool weak)
 {
 	EntityStorage* storage = getStorage<T>(mapping);
 	storage->bind(source.value(), target.value(), weak);
+}
+
+template <typename A, typename B, typename ... T>
+void ECS::bind(Entity source, Entity target, bool weak)
+{
+	ECS::bind<A>(source, target, weak);
+	ECS::bind<B, T...>(source, target, weak);
 }
 
 template <typename Archetype>
