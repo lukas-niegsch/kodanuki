@@ -2,6 +2,7 @@
 #include "engine/graphics/pipeline.h"
 #include "engine/graphics/vulkan/debug.h"
 #include "engine/graphics/vulkan/enumerate.h"
+#include "engine/concept/polygon.h"
 #include <algorithm>
 
 namespace Kodanuki
@@ -24,11 +25,17 @@ void RenderModule::onAttach()
 	createCommandPool();
 	createCommandBuffer();
 	createSyncObjects();
+	example = GetUnitCube();
+	uint64_t size = sizeof(example.vertices[0]) * example.vertices.size();
+	createVertexBuffer(&vertexBuffer, size);
+	createVertexBuffer(&colorBuffer, size);
 }
 
 void RenderModule::onDetach()
 {
 	vkDeviceWaitIdle(device);
+	vkDestroyBuffer(device, vertexBuffer, nullptr);
+	vkDestroyBuffer(device, colorBuffer, nullptr);
     vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
     vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
     vkDestroyFence(device, inFlightFence, nullptr);
@@ -49,6 +56,7 @@ void RenderModule::onDetach()
 
 void RenderModule::onRender(float)
 {
+	return;
 	auto result = vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
 	VERIFY_VULKAN_RESULT(result);
 	result = vkResetFences(device, 1, &inFlightFence);
@@ -418,6 +426,21 @@ void RenderModule::submitCommandBuffer(VkCommandBuffer commandBuffer)
 
 	auto result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFence);
 	VERIFY_VULKAN_RESULT(result);
+}
+
+void RenderModule::createVertexBuffer(VkBuffer* result, uint64_t size)
+{
+	VkBufferCreateInfo createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	createInfo.size = size;
+	createInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	auto success = vkCreateBuffer(device, &createInfo, nullptr, result);
+	VERIFY_VULKAN_RESULT(success);
+
+	VkMemoryRequirements memRequirements;
+	vkGetBufferMemoryRequirements(device, *result, &memRequirements);
 }
 
 }

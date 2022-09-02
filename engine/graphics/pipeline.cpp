@@ -1,7 +1,12 @@
 #include "engine/graphics/pipeline.h"
 #include "engine/graphics/vulkan/debug.h"
+#include "engine/concept/polygon.h"
 #include <vector>
 #include <fstream>
+#include <array>
+#define SHADER_PATH std::string("engine/graphics/shader/")
+#define POSITION_BUFFER_BIND_ID 0
+#define COLOR_BUFFER_BIND_ID 1
 
 namespace Kodanuki
 {
@@ -32,14 +37,39 @@ VkShaderModule createShaderModule(VkDevice device, const std::vector<char>& code
 	return shaderModule;
 }
 
+struct PolygonInputDescription
+{
+	std::array<VkVertexInputBindingDescription, 2> bindingDescription;
+	std::array<VkVertexInputAttributeDescription, 2> attributeDescription;
+};
+
+PolygonInputDescription getPolygonInputDescription()
+{
+	PolygonInputDescription result;
+	result.bindingDescription[0].binding = POSITION_BUFFER_BIND_ID;
+	result.bindingDescription[0].stride = sizeof(glm::vec3);
+	result.bindingDescription[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	result.bindingDescription[1].binding = COLOR_BUFFER_BIND_ID;
+	result.bindingDescription[1].stride = sizeof(glm::vec3);
+	result.bindingDescription[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	result.attributeDescription[0].location = 0;
+	result.attributeDescription[0].binding = POSITION_BUFFER_BIND_ID;
+	result.attributeDescription[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+	result.attributeDescription[0].offset = 0;
+	result.attributeDescription[1].location = 1;
+	result.attributeDescription[1].binding = COLOR_BUFFER_BIND_ID;
+	result.attributeDescription[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+	result.attributeDescription[1].offset = 0;
+	return result;
+}
+
 VkPipeline CreatePipelineForPolygon(VkDevice device, VkRenderPass renderPass)
 {
-	std::string path = "engine/graphics/shader/";
-	auto exampleVertShaderCode = readFile(path + "example.vert.spv");
-	auto exampleFragShaderCode = readFile(path + "example.frag.spv");
-
-	VkShaderModule vertShaderModule = createShaderModule(device, exampleVertShaderCode);
-	VkShaderModule fragShaderModule = createShaderModule(device, exampleFragShaderCode);
+	// Polygon Shader Modules
+	auto vertShaderCode = readFile(SHADER_PATH + "polygon.vert.spv");
+	auto fragShaderCode = readFile(SHADER_PATH + "polygon.frag.spv");
+	auto vertShaderModule = createShaderModule(device, vertShaderCode);
+	auto fragShaderModule = createShaderModule(device, fragShaderCode);
 
 	std::vector<VkDynamicState> dynamicStates = {
 		VK_DYNAMIC_STATE_VIEWPORT,
@@ -68,8 +98,15 @@ VkPipeline CreatePipelineForPolygon(VkDevice device, VkRenderPass renderPass)
 
 	VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
+	auto inputDescription = getPolygonInputDescription();
 	VkPipelineVertexInputStateCreateInfo vertexInput = {};
 	vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	vertexInput.pNext = nullptr;
+	vertexInput.flags = 0;
+	vertexInput.vertexBindingDescriptionCount = inputDescription.bindingDescription.size();
+	vertexInput.pVertexBindingDescriptions = inputDescription.bindingDescription.data();
+	vertexInput.vertexAttributeDescriptionCount = inputDescription.attributeDescription.size();
+	vertexInput.pVertexAttributeDescriptions = inputDescription.attributeDescription.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

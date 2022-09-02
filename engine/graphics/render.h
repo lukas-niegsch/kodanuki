@@ -2,6 +2,7 @@
 #include "engine/graphics/window.h"
 #include "engine/framework/game.h"
 #include "engine/framework/module.h"
+#include "engine/concept/polygon.h"
 #include <vulkan/vulkan.h>
 #include <memory>
 
@@ -48,10 +49,14 @@ private:
 	void createSyncObjects();
 	void submitCommandBuffer(VkCommandBuffer commandBuffer);
 	void presentImage(uint32_t imageIndex);
+	void createVertexBuffer(VkBuffer* result, uint64_t size);
 
 private:
 	GameInfo& info;
 	std::shared_ptr<WindowModule> window;
+	Polygon example;
+	VkBuffer vertexBuffer;
+	VkBuffer colorBuffer;
 
 	VkInstance instance;
 	VkSurfaceKHR surface;
