@@ -15,3 +15,10 @@ description = "Unittests for the kodanuki engine."
 path        = "unittest/"
 depends     = ["kodanuki.engine"]
 library     = false
+
+# Side projects that are just for fun!
+[tetris]
+description = "The game tetris with multiple boards simultaneously."
+path        = "projects/tetris/"
+depends     = ["kodanuki.engine", "ncurses", "ao", "sndfile"]
+library     = false

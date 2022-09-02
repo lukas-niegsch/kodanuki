@@ -6,8 +6,8 @@ FLAGS := -O2 -std=c++20 -pipe -Wall -Wextra -Werror -g
 SRC_DIR := $(CURDIR)
 OUT_DIR := /var/tmp/kodanuki
 BIN_DIR := $(OUT_DIR)/build
-RUNNABLE := kodanuki
-PROJECTS := unittest kodanuki
+RUNNABLE := tetris
+PROJECTS := unittest kodanuki tetris
 .EXPORT_ALL_VARIABLES:
 LIBRARY_PATH := $(OUT_DIR)
 LD_LIBRARY_PATH := $(OUT_DIR)
@@ -29,6 +29,10 @@ ninja: build
 
 compile: ninja
 	ninja -C $(BIN_DIR) $(OUT_DIR)/$(RUNNABLE)
+
+shader:
+	glslc engine/graphics/shader/polygon.frag -o engine/graphics/shader/polygon.frag.spv
+	glslc engine/graphics/shader/polygon.vert -o engine/graphics/shader/polygon.vert.spv
 
 stats:
 	pygount --format=summary
