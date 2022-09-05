@@ -38,6 +38,9 @@ stats:
 	pygount --format=summary
 
 valgrind: compile
+# valgrind --tool=callgrind $(OUT_DIR)/$(RUNNABLE)
+# valgrind --tool=cachegrind $(OUT_DIR)/$(RUNNABLE)
+# valgrind --tool=massif $(OUT_DIR)/$(RUNNABLE)
 	valgrind --leak-check=full $(OUT_DIR)/$(RUNNABLE)
 
 gdb:
