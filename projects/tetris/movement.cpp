@@ -27,7 +27,7 @@ void move_vertical_system()
 			position.y += count;
 		} else {
 			fixate_tetromino(board, tetromino, color.ncurses_mod8, position.x, position.y);
-			ECS::remove<Falling>(entity);
+			ECS::remove<Entity>(entity);
 		}
 		ECS::remove<Flag>(entity);
 	}

@@ -20,5 +20,5 @@ library     = false
 [tetris]
 description = "The game tetris with multiple boards simultaneously."
 path        = "projects/tetris/"
-depends     = ["kodanuki.engine", "ncurses", "ao", "sndfile"]
+depends     = ["kodanuki.engine", "ncurses"]
 library     = false
