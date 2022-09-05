@@ -76,6 +76,16 @@ TEST_CASE("basic entity tests")
 		CHECK(ECS::has<Position>(entity) == false);
 	}
 
+	SUBCASE("entities can be removed and all its components")
+	{
+		Entity entity = ECS::create();
+		ECS::update<Position>(entity, {10, 10, 10});
+		ECS::update<Quaternion>(entity, {1, 1, 1, 1});
+		ECS::remove<Entity>(entity);
+		CHECK(ECS::has<Position>(entity) == false);
+		CHECK(ECS::has<Quaternion>(entity) == false);
+	}
+
 	SUBCASE("multiple removal is possible")
 	{
 		Entity entity = ECS::create();

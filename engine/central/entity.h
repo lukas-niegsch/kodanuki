@@ -92,7 +92,7 @@ public:
 	template <typename Archetype>
 	static auto iterate(bool weak = false);
 
-private:
+public:
 	using Storage = std::unique_ptr<EntityStorage>;
 	using Mapping = std::unordered_map<std::type_index, Storage>;
 	static inline Mapping mapping;

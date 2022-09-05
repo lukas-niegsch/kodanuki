@@ -14,6 +14,12 @@ void ECS::update(Entity entity, T component)
 template <typename T>
 void ECS::remove(Entity entity)
 {
+	if constexpr (std::is_same<T, Entity>()) {
+		for (auto& pair : mapping) {
+			pair.second->remove(entity.value());
+		}
+		return;
+	}
 	EntityStorage* storage = getStorage<T>(mapping);
 	storage->remove(entity.value());	
 }
