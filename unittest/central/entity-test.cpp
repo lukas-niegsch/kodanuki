@@ -1,25 +1,32 @@
 #include "engine/central/entity.h"
+#include "engine/central/family.h"
 #include "engine/central/archetype.h"
 #include <doctest/doctest.h>
 #include <cmath>
 using namespace Kodanuki;
 
+struct Position
+{
+	int x;
+	int y;
+	int z;
+};
+
+struct Quaternion
+{
+	float w;
+	float x;
+	float y;
+	float z;
+};
+
 TEST_CASE("basic entity tests")
 {
-	struct Position
-	{
-		int x;
-		int y;
-		int z;
-	};
-
-	struct Quaternion
-	{
-		float w;
-		float x;
-		float y;
-		float z;
-	};
+	// setup
+	Entity entity = ECS::create();
+	Entity entityA = ECS::create();
+	Entity entityB = ECS::create();
+	Entity entityC = ECS::create();
 
 	SUBCASE("each entity is small")
 	{
@@ -28,48 +35,41 @@ TEST_CASE("basic entity tests")
 
 	SUBCASE("compare entities")
 	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
-		Entity entityC = entityA;
+		Entity copied = entityA;
 		Entity invalid;
 		Entity another;
 
 		CHECK(entityA != invalid);
 		CHECK(entityB != invalid);
-		CHECK(entityA == entityC);
+		CHECK(entityC != invalid);
+
+		CHECK(entityA != entityB);
+		CHECK(entityA != entityC);
 		CHECK(entityB != entityC);
+
+		CHECK(entityA == copied);
 		CHECK(another == invalid);
 	}
 
-	SUBCASE("new entity has only Entity component")
+	SUBCASE("new entities only have entity and family components")
 	{
-		Entity entity = ECS::create();
 		CHECK(ECS::has<Position>(entity) == false);
 		CHECK(ECS::has<Quaternion>(entity) == false);
 		CHECK(ECS::has<Entity>(entity) == true);
 		CHECK(ECS::get<Entity>(entity) == entity);
-	}
-
-	SUBCASE("can check if any entity has component")
-	{
-		CHECK(ECS::has<Position>() == false);
-		Entity entity = ECS::create();
-		ECS::update<Position>(entity, {10, 10, 10});
-		CHECK(ECS::has<Position>() == true);
+		CHECK(ECS::has<Family>(entity) == true);
 	}
 
 	SUBCASE("entity can update components")
 	{
-		Entity entity = ECS::create();
 		ECS::update<Position>(entity, {10, 10, 10});
 		ECS::update<Quaternion>(entity, {0.0f, 1.0f, 2.0f, 3.0f});
 		CHECK(ECS::has<Position>(entity) == true);
 		CHECK(ECS::has<Quaternion>(entity) == true);
 	}
 
-	SUBCASE("entities must manually remove components")
+	SUBCASE("entities can remove components")
 	{
-		Entity entity = ECS::create();
 		ECS::update<Position>(entity, {10, 10, 10});
 		// do something
 		ECS::remove<Position>(entity);
@@ -78,7 +78,6 @@ TEST_CASE("basic entity tests")
 
 	SUBCASE("entities can be removed and all its components")
 	{
-		Entity entity = ECS::create();
 		ECS::update<Position>(entity, {10, 10, 10});
 		ECS::update<Quaternion>(entity, {1, 1, 1, 1});
 		ECS::remove<Entity>(entity);
@@ -86,30 +85,8 @@ TEST_CASE("basic entity tests")
 		CHECK(ECS::has<Quaternion>(entity) == false);
 	}
 
-	SUBCASE("multiple removal is possible")
-	{
-		Entity entity = ECS::create();
-		ECS::update<Position>(entity, {10, 10, 10});
-		ECS::update<Quaternion>(entity, {1, 1, 1, 1});
-		ECS::remove<Position, Quaternion>(entity);
-		CHECK(ECS::has<Position>(entity) == false);
-		CHECK(ECS::has<Quaternion>(entity) == false);
-	}
-
-	SUBCASE("component wide removal is possible")
-	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
-		ECS::update<Position>(entityA, {10, 10, 10});
-		ECS::update<Position>(entityB, {10, 10, 10});
-		ECS::remove<Position>();
-		CHECK(ECS::has<Position>(entityA) == false);
-		CHECK(ECS::has<Position>(entityB) == false);
-	}
-
 	SUBCASE("values are saved correctly")
 	{
-		Entity entity = ECS::create();
 		ECS::update<Position>(entity, {10, 11, 12});
 		Position& position = ECS::get<Position>(entity);
 		CHECK(position.x == 10);
@@ -119,8 +96,6 @@ TEST_CASE("basic entity tests")
 
 	SUBCASE("components can be copied")
 	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
 		ECS::update<Position>(entityA, {10, 10, 10});
 		ECS::copy<Position>(entityA, entityB);
 		CHECK(ECS::has<Position>(entityA) == true);
@@ -128,25 +103,8 @@ TEST_CASE("basic entity tests")
 		CHECK(ECS::get<Position>(entityB).x == 10);
 	}
 
-	SUBCASE("multiple components can be copied at once")
-	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
-		ECS::update<Position>(entityA, {10, 10, 10});
-		ECS::update<Quaternion>(entityA, {1, 1, 1, 1});
-		ECS::copy<Position, Quaternion>(entityA, entityB);
-		CHECK(ECS::has<Position>(entityA) == true);
-		CHECK(ECS::has<Position>(entityB) == true);
-		CHECK(ECS::get<Position>(entityB).x == 10);
-		CHECK(ECS::has<Quaternion>(entityA) == true);
-		CHECK(ECS::has<Quaternion>(entityB) == true);
-		CHECK(ECS::get<Quaternion>(entityB).x == 1);
-	}
-
 	SUBCASE("components can be moved")
 	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
 		ECS::update<Position>(entityA, {10, 10, 10});
 		ECS::move<Position>(entityA, entityB);
 		CHECK(ECS::has<Position>(entityA) == false);
@@ -154,26 +112,8 @@ TEST_CASE("basic entity tests")
 		CHECK(ECS::get<Position>(entityB).x == 10);
 	}
 
-	SUBCASE("multiple components can be moved at once")
-	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
-		ECS::update<Position>(entityA, {10, 10, 10});
-		ECS::update<Quaternion>(entityA, {1, 1, 1, 1});
-		ECS::move<Position, Quaternion>(entityA, entityB);
-		CHECK(ECS::has<Position>(entityA) == false);
-		CHECK(ECS::has<Position>(entityB) == true);
-		CHECK(ECS::get<Position>(entityB).x == 10);
-		CHECK(ECS::has<Quaternion>(entityA) == false);
-		CHECK(ECS::has<Quaternion>(entityB) == true);
-		CHECK(ECS::get<Quaternion>(entityB).x == 1);
-	}
-
 	SUBCASE("components can be swapped")
 	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
-		Entity entityC = ECS::create();
 		ECS::update<Position>(entityA, {10, 10, 10});
 		ECS::update<Position>(entityB, {20, 20, 20});
 		ECS::swap<Position>(entityA, entityB);
@@ -187,25 +127,8 @@ TEST_CASE("basic entity tests")
 		CHECK(ECS::get<Position>(entityC).x == 10);
 	}
 
-	SUBCASE("multiple components can be swappped at once")
-	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
-		ECS::update<Position>(entityA, {10, 10, 10});
-		ECS::update<Quaternion>(entityA, {1, 1, 1, 1});
-		ECS::swap<Position, Quaternion>(entityA, entityB);
-		CHECK(ECS::has<Position>(entityA) == false);
-		CHECK(ECS::has<Position>(entityB) == true);
-		CHECK(ECS::get<Position>(entityB).x == 10);
-		CHECK(ECS::has<Quaternion>(entityA) == false);
-		CHECK(ECS::has<Quaternion>(entityB) == true);
-		CHECK(ECS::get<Quaternion>(entityB).x == 1);
-	}
-
 	SUBCASE("components can be bound")
 	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
 		ECS::update<Position>(entityB, {10, 10, 10});
 		ECS::bind<Position>(entityA, entityB);
 		CHECK(ECS::has<Position>(entityA) == true);
@@ -223,50 +146,26 @@ TEST_CASE("basic entity tests")
 		CHECK(ECS::has<Position>(entityB) == false);
 	}
 
-	SUBCASE("multiple components can be bound at once")
-	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
-		ECS::update<Position>(entityB, {10, 10, 10});
-		ECS::update<Quaternion>(entityB, {1, 1, 1, 1});
-		ECS::bind<Position, Quaternion>(entityA, entityB);
-		CHECK(ECS::has<Position>(entityA) == true);
-		CHECK(ECS::has<Position>(entityB) == true);
-		CHECK(ECS::get<Position>(entityB).x == 10);
-		CHECK(ECS::has<Quaternion>(entityA) == true);
-		CHECK(ECS::has<Quaternion>(entityB) == true);
-		CHECK(ECS::get<Quaternion>(entityB).x == 1);
-	}
-
 	// cleanup
-	ECS::remove<Position>();
-	ECS::remove<Quaternion>();
+	ECS::remove<Entity>(entity);
+	ECS::remove<Entity>(entityA);
+	ECS::remove<Entity>(entityB);
+	ECS::remove<Entity>(entityC);
 };
 
 TEST_CASE("entity component iteration tests")
 {
-	struct Position
-	{
-		int x;
-		int y;
-		int z;
-	};
-
-	struct Quaternion
-	{
-		float w;
-		float x;
-		float y;
-		float z;
-	};
+	Entity entity = ECS::create();
+	Entity entityA = ECS::create();
+	Entity entityB = ECS::create();
+	Entity entityC = ECS::create();
+	Entity entityD = ECS::create();
 
 	using Positions = Archetype<Iterator<Position>, Predicate<>>;
 	using Rotations = Archetype<Iterator<Position, Quaternion>, Predicate<>>;
 
 	SUBCASE("iteration with one parameter")
 	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
 		ECS::update<Position>(entityA, {10, 10, 10});
 		ECS::update<Position>(entityB, {10, 10, 10});
 
@@ -281,10 +180,6 @@ TEST_CASE("entity component iteration tests")
 
 	SUBCASE("iteration with multiple parameters")
 	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
-		Entity entityC = ECS::create();
-		Entity entityD = ECS::create();
 		ECS::update<Position>(entityA, {10, 10, 10});
 		ECS::update<Position>(entityB, {10, 10, 10});
 		ECS::bind<Position>(entityC, entityB);
@@ -304,9 +199,6 @@ TEST_CASE("entity component iteration tests")
 
 	SUBCASE("iteration can ignore weak bindings")
 	{
-		Entity entityA = ECS::create();
-		Entity entityB = ECS::create();
-		Entity entityC = ECS::create();
 		ECS::update<Position>(entityA, {10, 10, 10});
 		ECS::bind<Position>(entityB, entityA);
 		ECS::bind<Position>(entityC, entityA);
@@ -338,7 +230,6 @@ TEST_CASE("entity component iteration tests")
 
 	SUBCASE("iteration can modify elements")
 	{
-		Entity entity = ECS::create();
 		ECS::update<Position>(entity, {10, 10, 10});
 		ECS::update<Quaternion>(entity, {1.0, 1.0, 1.0, 1.0});
 
@@ -391,8 +282,12 @@ TEST_CASE("entity component iteration tests")
 			counter++;
 		}
 		CHECK(counter == 2);
+		ECS::remove<Entity>(main);
 	}
 
-	ECS::remove<Position>();
-	ECS::remove<Quaternion>();
+	ECS::remove<Entity>(entity);
+	ECS::remove<Entity>(entityA);
+	ECS::remove<Entity>(entityB);
+	ECS::remove<Entity>(entityC);
+	ECS::remove<Entity>(entityD);
 }

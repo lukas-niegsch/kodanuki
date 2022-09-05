@@ -36,21 +36,9 @@ public:
 	template <typename T>
 	static void remove(Entity entity);
 
-	// Removes all given components from the entity.
-	template <typename A, typename B, typename ... T>
-	static void remove(Entity entity);
-
-	// Removes the given component from each entity.
-	template <typename T>
-	static void remove();
-
 	// Returns true iff the entity has the given component.
 	template <typename T>
 	static bool has(Entity entity);
-
-	// Returns true iff any entity has the given component.
-	template <typename T>
-	static bool has();
 
 	// Returns the reference to the component.
 	template <typename T>
@@ -60,32 +48,16 @@ public:
 	template <typename T>
 	static void copy(Entity source, Entity target);
 
-	// Copies all components from the source entity to the target entity.
-	template <typename A, typename B, typename ... T>
-	static void copy(Entity source, Entity target);
-
 	// Moves the component from the source entity to the target entity.
 	template <typename T>
-	static void move(Entity source, Entity target);
-
-	// Moves all components from the source entity to the target entity.
-	template <typename A, typename B, typename ... T>
 	static void move(Entity source, Entity target);
 
 	// Swaps the component from the source entity with the target entity.
 	template <typename T>
 	static void swap(Entity source, Entity target);
 
-	// Swaps all components from the source entity with the target entity.
-	template <typename A, typename B, typename ... T>
-	static void swap(Entity source, Entity target);
-
 	// Binds the component from the source entity to the target entity.
 	template <typename T>
-	static void bind(Entity source, Entity target, bool weak = false);
-
-	// Binds all components from the source entity to the target entity.
-	template <typename A, typename B, typename ... T>
 	static void bind(Entity source, Entity target, bool weak = false);
 
 	// Iterates over entities with the given archetype.
