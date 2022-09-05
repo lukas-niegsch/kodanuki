@@ -35,6 +35,6 @@ struct Family
  * @param entity The entity for which the family should change.
  * @param parent The new parent for the given entity.
  */
-void UpdateFamily(Entity entity, Entity parent = std::nullopt);
+void update_family(Entity entity, Entity parent = std::nullopt);
 
 } // namespace Kodanuki

@@ -33,24 +33,28 @@ void RunGameLoop(GameInfo& game)
 		while (now - lastUpdateTime > updateDuration && updateCounter < maxUpdates)
 		{
 			// todo: calculate updateDeltaTime
-			const float updateDeltaTime = 0.0;
+			// const float updateDeltaTime = 0.0;
 
+			/*
 			for (auto module : game.modules)
 			{
 				module->onUpdate(updateDeltaTime);
 			}
+			*/
 
 			updateCounter++;
 			lastUpdateTime += updateDuration;
 		}
 
-		const duration<float> framesDeltaDuration = now - lastRenderTime;
-		float framesDeltaTime = 1000 * framesDeltaDuration.count();
+		//const duration<float> framesDeltaDuration = now - lastRenderTime;
+		//float framesDeltaTime = 1000 * framesDeltaDuration.count();
 
+		/*
 		for (auto module : game.modules)
 		{
 			module->onRender(framesDeltaTime);
 		}
+		*/
 
 		lastRenderTime = now;
 		sleepDuration = std::max(framesDuration, framesDuration + lastUpdateTime - lastRenderTime);
@@ -64,17 +68,21 @@ int RunGame(Entity game)
 	GameInfo& info = ECS::get<GameInfo>(game);
 	info.running = true;
 
+	/*
 	for (auto module : info.modules)
 	{
 		module->onAttach();
 	}
+	*/
 
 	RunGameLoop(info);
 
+	/*
 	for (auto module : info.modules)
 	{
 		module->onDetach();
 	}
+	*/
 
 	return 0;
 }

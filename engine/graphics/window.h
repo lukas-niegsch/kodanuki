@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/framework/game.h"
-#include "engine/framework/module.h"
+#include "engine/central/module.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -20,13 +20,13 @@ public:
 	WindowModule(GameInfo& info, VkExtent2D extent);
 
 	// Called once when the module is attached.
-	virtual void onAttach() override;
+	virtual void attach(Family context) override;
 
 	// Called once when the module is detached.
-	virtual void onDetach() override;
+	virtual void detach(Family context) override;
 
 	// Called repeatedly to update the module.
-	virtual void onUpdate(float deltaTime) override;
+	virtual void update(Family context) override;
 
 	// Creates an surface for the renderer to use.
 	VkSurfaceKHR createSurface(VkInstance instance);

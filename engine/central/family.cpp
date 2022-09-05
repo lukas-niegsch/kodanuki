@@ -1,4 +1,4 @@
-#include "engine/concept/family.h"
+#include "engine/central/family.h"
 #include <cassert>
 
 namespace Kodanuki {
@@ -87,7 +87,7 @@ void UpdateDefaultFamily(Entity entity)
 	ECS::get<Family>(entity).root = entity;
 }
 
-void UpdateFamily(Entity entity, Entity newParent)
+void update_family(Entity entity, Entity newParent)
 {
 	assert(entity);
 	assert(!newParent || ECS::has<Family>(newParent));

@@ -6,7 +6,7 @@ namespace Kodanuki
 WindowModule::WindowModule(GameInfo& info, VkExtent2D extent)
 	: info(info), defaultExtent(extent) {}
 
-void WindowModule::onAttach()
+void WindowModule::attach(Family)
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -15,13 +15,13 @@ void WindowModule::onAttach()
 	window = glfwCreateWindow(width, height, info.title, nullptr, nullptr);
 }
 
-void WindowModule::onDetach()
+void WindowModule::detach(Family)
 {
 	glfwDestroyWindow(window);
 	glfwTerminate();
 }
 
-void WindowModule::onUpdate(float)
+void WindowModule::update(Family)
 {
 	if (glfwWindowShouldClose(window))
 	{

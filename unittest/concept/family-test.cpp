@@ -1,4 +1,4 @@
-#include "engine/concept/family.h"
+#include "engine/central/family.h"
 #include <doctest/doctest.h>
 using namespace Kodanuki;
 
@@ -9,7 +9,7 @@ TEST_CASE("family tests")
 	SUBCASE("isolation")
 	{
 		Entity entity = ECS::create();
-		UpdateFamily(entity);
+		update_family(entity);
 
 		Family& family = ECS::get<Family>(entity);
 		CHECK(family.root == entity);
@@ -25,10 +25,10 @@ TEST_CASE("family tests")
 		Entity entity = ECS::create();
 		Entity childA = ECS::create();
 		Entity childB = ECS::create();
-		UpdateFamily(parent);
-		UpdateFamily(entity, parent);
-		UpdateFamily(childA, entity);
-		UpdateFamily(childB, entity);
+		update_family(parent);
+		update_family(entity, parent);
+		update_family(childA, entity);
+		update_family(childB, entity);
 
 		Family& parentFamily = ECS::get<Family>(parent);
 		CHECK(parentFamily.root == parent);
