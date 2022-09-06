@@ -14,37 +14,18 @@
 #include <iomanip>
 using namespace Kodanuki;
 
-#define ON_EXIT 27
-#define ON_ROTATE_LEFT 'q'
-#define ON_ROTATE_RIGHT 'e'
-#define ON_MOVE_DOWN 's'
-#define ON_MOVE_LEFT 'a'
-#define ON_MOVE_RIGHT 'd'
-#define NUMBER_OF_BOARDS 3
+#define KEY_ESCAPE 27
+#define KEY_ROTATE_LEFT 'q'
+#define KEY_ROTATE_RIGHT 'e'
+#define KEY_MOVE_LEFT 'a'
+#define KEY_MOVE_DOWN 's'
+#define KEY_MOVE_RIGHT 'd'
+#define BOARD_COUNT 3
 #define BOARD_WIDTH 10
 #define BOARD_HEIGHT 20
 #define BOARD_SPACING 4
+#define INITIAL_SPEED 200
 
-void print_score_line(int lines)
-{
-	std::stringstream output;
-	output << "moving = [" << ON_MOVE_LEFT << " " << ON_MOVE_DOWN << " " << ON_MOVE_RIGHT << "]";
-	output << "   ";
-	output << "rotating = [" << ON_ROTATE_LEFT << " " << ON_ROTATE_RIGHT << "]";
-	output << "   ";
-	output << "exiting = [" << "Esc" << "]";
-	output << "   ";
-	output << "score = " << std::setw(6) << std::setfill('0') << lines;
-	mvaddstr(1, 5, output.str().c_str());
-}
-
-/**
- * Creates a new falling tetromino.
- * 
- * @param world The entity containing the board and rotations.
- * @param speed The initial speed of the tetromino.
- * @return Entity The entity containing all relevant components.
- */
 Entity create_falling_tetromino(Entity world, float speed)
 {
 	Entity tetromino = ECS::create();
@@ -58,21 +39,6 @@ Entity create_falling_tetromino(Entity world, float speed)
 	int size = ECS::get<Tetromino>(tetromino).size;
 	ECS::update<Position>(tetromino, {std::rand() % (BOARD_WIDTH - size), -2});
 	return tetromino;
-}
-
-/**
- * Updates the given flag for all tetrominos.
- * 
- * @param tetrominos The given tetrominos.
- */
-template <typename Flag>
-void update_flag_globally(std::vector<std::vector<Entity>> tetrominos)
-{
-	for (auto subset : tetrominos) {
-		for (Entity tetromino : subset) {
-			ECS::update<Flag>(tetromino);
-		}
-	}
 }
 
 std::vector<Entity> create_boards()
@@ -90,7 +56,7 @@ std::vector<Entity> create_boards()
 	std::vector<Entity> boards;
 	boards.push_back(mainBoard);
 
-	for (int i = 1; i < NUMBER_OF_BOARDS; i++) {
+	for (int i = 1; i < BOARD_COUNT; i++) {
 		Entity board = ECS::create();
 		ECS::update<Board>(board, {3 + (width + spacing / 2) * i, 4, width, height, emptyBoard, true});
 		ECS::bind<TetrominoRotations>(board, mainBoard);
@@ -100,68 +66,68 @@ std::vector<Entity> create_boards()
 	return boards;
 }
 
-void clean_boards(std::vector<Entity> boards)
+void print_score_line(int score)
 {
-	TetrominoRotations tetrominos = ECS::get<TetrominoRotations>(boards[0]);
-	for (Entity entity : tetrominos.rotations) {
-		ECS::remove<Entity>(entity);
-	}
-	for (Entity entity : boards) {
+	std::stringstream output;
+	output << "moving = [" << KEY_MOVE_LEFT << " " << KEY_MOVE_DOWN << " " << KEY_MOVE_RIGHT << "]";
+	output << "   ";
+	output << "rotating = [" << KEY_ROTATE_LEFT << " " << KEY_ROTATE_RIGHT << "]";
+	output << "   ";
+	output << "exiting = [" << "Esc" << "]";
+	output << "   ";
+	output << "score = " << std::setw(6) << std::setfill('0') << score;
+	mvaddstr(1, 5, output.str().c_str());
+}
+
+void remove_entities(std::vector<Entity> entities)
+{
+	for (Entity entity : entities) {
 		ECS::remove<Entity>(entity);
 	}
 }
 
-void clean_tetrominos(std::vector<std::vector<Entity>> tetrominos)
+template <typename Flag>
+void update_entities(std::vector<Entity> entities)
 {
-	for (auto entities : tetrominos) {
-		for (Entity entity : entities) {
-			ECS::remove<Entity>(entity);
-		}
+	for (Entity entity : entities) {
+		ECS::update<Flag>(entity);
 	}
 }
 
 int main()
 {
 	std::srand(std::time(0));
-	NcursesRenderer::attach();
+	initialize_ncurses();
 	std::vector<Entity> boards = create_boards();
-	std::vector<std::vector<Entity>> tetrominos(boards.size());
+	std::vector<Entity> tetrominos(boards.size());
 
-	bool running = true;
+	float speed = INITIAL_SPEED;
 	int lines = 0;
-	float speed = 200;
+	bool running = true;
 
 	while (running)
 	{
-		speed += 0.01;
-
-		for (int i = 0; i < (int) tetrominos.size(); i++) {
-			tetrominos[i].erase(std::remove_if(tetrominos[i].begin(), tetrominos[i].end(),
-				[](Entity entity){ return !ECS::has<Entity>(entity); }
-			), tetrominos[i].end());
-			if (tetrominos[i].empty()) {
-				tetrominos[i].push_back(create_falling_tetromino(boards[i], speed));
-			}
-		}
-
-		int input = getch();
-		if (input == ON_EXIT) {
+		switch (getch())
+		{
+		case KEY_ESCAPE:
 			running = false;
-		} else if (input == ON_MOVE_LEFT) {
-			update_flag_globally<MoveLeftFlag>(tetrominos);
-		} else if (input == ON_MOVE_RIGHT) {
-			update_flag_globally<MoveRightFlag>(tetrominos);
-		} else if (input == ON_MOVE_DOWN) {
-			update_flag_globally<MoveDownFlag>(tetrominos);
-		} else if (input == ON_ROTATE_LEFT) {
-			update_flag_globally<RotateLeftFlag>(tetrominos);
-		} else if (input == ON_ROTATE_RIGHT) {
-			update_flag_globally<RotateRightFlag>(tetrominos);
+			break;
+		case KEY_MOVE_LEFT:
+			update_entities<MoveLeftFlag>(tetrominos);
+			break;
+		case KEY_MOVE_RIGHT:
+			update_entities<MoveRightFlag>(tetrominos);
+			break;
+		case KEY_MOVE_DOWN:
+			update_entities<MoveDownFlag>(tetrominos);
+			break;
+		case KEY_ROTATE_LEFT:
+			update_entities<RotateLeftFlag>(tetrominos);
+			break;
+		case KEY_ROTATE_RIGHT:
+			update_entities<RotateRightFlag>(tetrominos);
+			break;
 		}
-
-		move_tetromino_system();
-		rotate_tetromino_system();
-		NcursesRenderer::render();
 
 		for (Entity entity : boards) {
 			Board& board = ECS::get<Board>(entity);
@@ -169,12 +135,26 @@ int main()
 			running &= board.playable;
 		}
 
+		for (int i = 0; i < (int) boards.size(); i++) {
+			if (tetrominos[i] && ECS::has<Entity>(tetrominos[i])) {
+				continue;
+			}
+			tetrominos[i] = create_falling_tetromino(boards[i], speed);
+		}
+
+		speed += 0.01;
+		move_tetromino_system();
+		rotate_tetromino_system();
+		draw_board_system();
+		draw_tetromino_system();
 		print_score_line(lines);
 	}
 
-	NcursesRenderer::detach();
-	clean_boards(boards);
-	clean_tetrominos(tetrominos);
+	auto rotations = ECS::get<TetrominoRotations>(boards[0]).rotations;
+	remove_entities(std::vector<Entity>(rotations.begin(), rotations.end()));
+	remove_entities(boards);
+	remove_entities(tetrominos);
+	terminate_ncurses();
 	std::cout << "You lost! Score: " << lines << '\n';
 	return 0;
 }

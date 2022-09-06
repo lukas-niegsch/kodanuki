@@ -7,7 +7,7 @@
 #include <ncurses.h>
 using namespace Kodanuki;
 
-void NcursesRenderer::attach()
+void initialize_ncurses()
 {
 	initscr();
 	curs_set(0);
@@ -20,7 +20,7 @@ void NcursesRenderer::attach()
 	}
 }
 
-void NcursesRenderer::detach()
+void terminate_ncurses()
 {
 	endwin();
 }
@@ -69,20 +69,11 @@ void draw_tetromino_system()
 	for (auto[tetromino, color, position, board] : ECS::iterate<System>()) {
 		attron(COLOR_PAIR(color.ncurses_mod8));
 		execute_blockwise(tetromino, [&](int x, int y) {
-			int blockX = position.x + x;
-			int blockY = position.y + y;
-			if (!is_block_inside_board(board, blockX, blockY)) return;
-			int globalX = 2 * (board.offsetX + blockX);
-			int globalY = board.offsetY + blockY;
+			int globalX = 2 * (board.offsetX + position.x + x);
+			int globalY = board.offsetY + position.y + y;
 			mvaddch(globalY, globalX, ' ');
 			mvaddch(globalY, globalX + 1, ' ');
 		});
 		attroff(COLOR_PAIR(color.ncurses_mod8));
 	}
-}
-
-void NcursesRenderer::render()
-{
-	draw_board_system();
-	draw_tetromino_system();
 }

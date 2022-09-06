@@ -10,19 +10,21 @@ struct Color
 };
 
 /**
- * The renderer for the tetris game that uses the ncurses library.
- * 
- * The renderer uses the ECS to iterate over all the entities that
- * should be rendered: Tetromino, Color, Position, Board.
+ * Initializes the ncurses library for the application.
  */
-namespace NcursesRenderer
-{
-	// Attach this renderer and initialize it.
-	void attach();
+void initialize_ncurses();
 
-	// Detach this renderer and terminate it.
-	void detach();
+/**
+ * Terminates the ncurses library for the application.
+ */
+void terminate_ncurses();
 
-	// Render all tetrominos and all boards.
-	void render();
-};
+/**
+ * Renders each board using ncurses.
+ */
+void draw_board_system();
+
+/**
+ * Renders each tetromino using ncurses.
+ */
+void draw_tetromino_system();
