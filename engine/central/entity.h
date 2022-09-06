@@ -26,7 +26,7 @@ class ECS
 {
 public:
 	// Creates a new entity with a unique identifier.
-	static Entity create(Entity parent = std::nullopt);
+	static Entity create();
 
 	// Updates the given component inside the entity.
 	template <typename T>
