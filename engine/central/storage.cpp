@@ -32,6 +32,7 @@ void EntityStorage::remove(int identifier)
 	sparse[sparseInverse[position]] = position;
 	sparse.erase(sparseInverse[lastPosition]);
 	sparseInverse.erase(lastPosition);
+	sparseCount.erase(storageIdentifier);
 }
 
 bool EntityStorage::contains(int identifier) const
