@@ -47,13 +47,12 @@ void draw_board_system()
 			for (int y = 0; y < board.sizeY; y++) {
 				int globalX = 2 * (board.offsetX + x);
 				int globalY = board.offsetY + y;
-				int index = y * board.sizeX + x;
 
-				if (board.isblock[index]) {
-					attron(COLOR_PAIR(board.isblock[index]));
+				if (board(x, y)) {
+					attron(COLOR_PAIR(board(x, y)));
 					mvaddch(globalY, globalX, ' ');
 					mvaddch(globalY, globalX + 1, ' ');
-					attroff(COLOR_PAIR(board.isblock[index]));
+					attroff(COLOR_PAIR(board(x, y)));
 				} else {
 					mvaddch(globalY, globalX, ':');
 					mvaddch(globalY, globalX + 1, ':');

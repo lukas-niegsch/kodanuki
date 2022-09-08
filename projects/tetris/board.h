@@ -28,6 +28,9 @@ struct Board
 
 	// Is the board already lost?
 	bool playable;
+
+	// The element at position y * sizeX + x.
+	int& operator() (int x, int y);
 };
 
 /**

@@ -41,7 +41,7 @@ valgrind: compile
 # valgrind --tool=callgrind $(OUT_DIR)/$(RUNNABLE)
 # valgrind --tool=cachegrind $(OUT_DIR)/$(RUNNABLE)
 # valgrind --tool=massif $(OUT_DIR)/$(RUNNABLE)
-	valgrind --leak-check=full $(OUT_DIR)/$(RUNNABLE)
+	valgrind --leak-check=full --show-leak-kinds=all --log-file="valgrind.out" $(OUT_DIR)/$(RUNNABLE)
 
 gdb:
 	gdb $(OUT_DIR)/$(RUNNABLE)

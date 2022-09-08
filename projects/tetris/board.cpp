@@ -1,6 +1,11 @@
 #include "board.h"
 #include <algorithm>
 
+int& Board::operator() (int x, int y)
+{
+	return *(isblock.begin() + y * sizeX + x); 
+}
+
 bool is_block_inside_board(Board board, int x, int y)
 {
 	return x >= 0 && y < board.sizeY && x < board.sizeX;
@@ -35,26 +40,14 @@ void fixate_tetromino(Board& board, Tetromino tetromino, int color, int x, int y
 
 int clear_lines(Board& board)
 {
-	int count = 0;
-	for (int y = 0; y < board.sizeY; y++) {
-		bool isFilled = true;
+	int k = board.sizeY - 1;
+	for (int y = k; y > 0; y--) {
+		int count = 0;
 		for (int x = 0; x < board.sizeX; x++) {
-			if (!board.isblock[y * board.sizeX + x]) {
-				isFilled = false;
-				break;
-			}
+			count += board(x, y) > 0;
+			board(x, k) = board(x, y);
 		}
-		if (isFilled) {
-			count++;
-			for (int y1 = y; y1 > 0; y1--) {
-				std::swap_ranges(board.isblock.begin() + board.sizeX * y1,
-					board.isblock.begin() + board.sizeX * y1 + board.sizeX,
-					board.isblock.begin() + board.sizeX * (y1 - 1));
-			}
-			for (int x = 0; x < board.sizeX; x++) {
-				board.isblock[x] = 0;
-			}
-		}
+		k -= count < board.sizeX;
 	}
-	return count;
+	return k;
 }
