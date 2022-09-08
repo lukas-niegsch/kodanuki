@@ -37,3 +37,5 @@ constexpr Polygon GetUnitCube();
 constexpr Polygon GetUnitGeodesicPolyhedron(int q, int b, int c);
 
 }
+
+#include "engine/concept/polygon.tpp"
