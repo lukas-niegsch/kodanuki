@@ -11,7 +11,7 @@ namespace Kodanuki
 RenderModule::RenderModule(GameInfo& info, std::shared_ptr<WindowModule> window)
 	: info(info), window(window) {}
 
-void RenderModule::onAttach()
+void RenderModule::attach(Family)
 {
 	createInstance();
 	createSurface();
@@ -31,7 +31,7 @@ void RenderModule::onAttach()
 	createVertexBuffer(&colorBuffer, size);
 }
 
-void RenderModule::onDetach()
+void RenderModule::detach(Family)
 {
 	vkDeviceWaitIdle(device);
 	vkDestroyBuffer(device, vertexBuffer, nullptr);
@@ -54,7 +54,7 @@ void RenderModule::onDetach()
 	vkDestroyInstance(instance, nullptr);
 }
 
-void RenderModule::onRender(float)
+void RenderModule::update(Family)
 {
 	return;
 	auto result = vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);

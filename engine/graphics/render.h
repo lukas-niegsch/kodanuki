@@ -22,13 +22,13 @@ public:
 	RenderModule(GameInfo& info, std::shared_ptr<WindowModule> window);
 
 	// Called once when the module is attached.
-	virtual void onAttach() override;
+	virtual void attach(Family context) override;
 
 	// Called once when the module is detached.
-	virtual void onDetach() override;
+	virtual void detach(Family context) override;
 
 	// Called repeatedly to render the module.
-	virtual void onRender(float deltaTime) override;
+	virtual void update(Family context) override;
 
 private:
 	void createInstance();
