@@ -2,12 +2,12 @@
 # Configuration                                                                #
 ################################################################################
 SHELL := /bin/bash
-FLAGS := -O2 -std=c++20 -pipe -Wall -Wextra -Werror -g
+FLAGS := -O2 -std=c++2b -pipe -Wall -Wextra -Werror -g
 SRC_DIR := $(CURDIR)
 OUT_DIR := /var/tmp/kodanuki
 BIN_DIR := $(OUT_DIR)/build
-RUNNABLE := tetris
-PROJECTS := unittest kodanuki tetris
+RUNNABLE := chess
+PROJECTS := unittest kodanuki chess tetris
 .EXPORT_ALL_VARIABLES:
 LIBRARY_PATH := $(OUT_DIR)
 LD_LIBRARY_PATH := $(OUT_DIR)

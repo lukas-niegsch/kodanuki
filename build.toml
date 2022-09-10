@@ -22,3 +22,9 @@ description = "The game tetris with multiple boards simultaneously."
 path        = "projects/tetris/"
 depends     = ["kodanuki.engine", "ncurses"]
 library     = false
+
+[chess]
+description = "The game chess against an artificial intelligence."
+path        = "projects/chess/"
+depends     = ["kodanuki.engine", "vulkan", "glfw"]
+library     = false
