@@ -63,6 +63,7 @@ void sorted_intersection(Iterator output, Iterable ... inputs)
 		return value >= *firsts[canditate_index];
 	};
 
+	advance:
 	while (!is_any_match(length, firsts, lasts)) {
 		for (uint32_t n = 0; n < length; n++) {
 			if (n == canditate_index) {
@@ -75,7 +76,6 @@ void sorted_intersection(Iterator output, Iterable ... inputs)
 			}
 		}
 		*output++ = *firsts[canditate_index]++;
-		advance:;
 	}
 }
 
