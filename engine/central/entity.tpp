@@ -60,16 +60,16 @@ void ECS::swap(Entity source, Entity target)
 }
 
 template <typename T>
-void ECS::bind(Entity source, Entity target, bool weak)
+void ECS::bind(Entity source, Entity target)
 {
 	EntityStorage* storage = getStorage<T>(mapping);
-	storage->bind(source.value(), target.value(), weak);
+	storage->bind(source.value(), target.value());
 }
 
 template <typename Archetype>
-auto ECS::iterate(bool weak)
+auto ECS::iterate()
 {
-	return Archetype::iterate(mapping, weak);
+	return Archetype::iterate(mapping);
 }
 
 }

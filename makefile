@@ -6,7 +6,7 @@ FLAGS := -O2 -std=c++2b -pipe -Wall -Wextra -Werror -g
 SRC_DIR := $(CURDIR)
 OUT_DIR := /var/tmp/kodanuki
 BIN_DIR := $(OUT_DIR)/build
-RUNNABLE := chess
+RUNNABLE := unittest
 PROJECTS := unittest kodanuki chess tetris
 .EXPORT_ALL_VARIABLES:
 LIBRARY_PATH := $(OUT_DIR)

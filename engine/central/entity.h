@@ -58,11 +58,11 @@ public:
 
 	// Binds the component from the source entity to the target entity.
 	template <typename T>
-	static void bind(Entity source, Entity target, bool weak = false);
+	static void bind(Entity source, Entity target);
 
 	// Iterates over entities with the given archetype.
 	template <typename Archetype>
-	static auto iterate(bool weak = false);
+	static auto iterate();
 
 public:
 	using Storage = std::unique_ptr<EntityStorage>;

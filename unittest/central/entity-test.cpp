@@ -197,37 +197,6 @@ TEST_CASE("entity component iteration tests")
 		CHECK(counter == 2); // elements that have all queried components: A, C	
 	}
 
-	SUBCASE("iteration can ignore weak bindings")
-	{
-		ECS::update<Position>(entityA, {10, 10, 10});
-		ECS::bind<Position>(entityB, entityA);
-		ECS::bind<Position>(entityC, entityA);
-		ECS::update<Quaternion>(entityA, {1.0, 1.0, 1.0, 1.0});
-		ECS::bind<Quaternion>(entityB, entityA, false);
-		ECS::bind<Quaternion>(entityC, entityA, true);
-
-		// now all entities have both Position and Quaternion
-		// but the component Quaternion is bound weak to entityC
-
-		int counter = 0; 
-		for (auto[position, rotation] : ECS::iterate<Rotations>(false))
-		{
-			CHECK(position.x == 10);
-			CHECK(std::abs(rotation.w - 1.0) <= 0.001);
-			counter++;
-		}
-		CHECK(counter == 2); // only not weak bindings are considered
-
-		counter = 0; 
-		for (auto[position, rotation] : ECS::iterate<Rotations>(true))
-		{
-			CHECK(position.x == 10);
-			CHECK(std::abs(rotation.w - 1.0) <= 0.001);
-			counter++;
-		}
-		CHECK(counter == 3); // weak bindings are considered too
-	}
-
 	SUBCASE("iteration can modify elements")
 	{
 		ECS::update<Position>(entity, {10, 10, 10});
@@ -250,39 +219,6 @@ TEST_CASE("entity component iteration tests")
 
 		CHECK(ECS::get<Position>(entity).y == 11);
 		CHECK(std::abs(ECS::get<Quaternion>(entity).w - 2.0) <= 0.001);
-	}
-
-	SUBCASE("rebinding can remove weakness")
-	{
-		Entity main = ECS::create();
-		ECS::update<Position>(main, {10, 10, 10});
-		ECS::update<Quaternion>(main, {1.0, 1.0, 1.0, 1.0});
-
-		Entity entity = ECS::create();
-		ECS::bind<Position>(entity, main, true);
-		ECS::bind<Quaternion>(entity, main, true);
-
-		int counter = 0;
-		for (auto[position, rotation] : ECS::iterate<Rotations>())
-		{
-			(void) position;
-			(void) rotation;
-			counter++;
-		}
-		CHECK(counter == 1);
-
-		ECS::bind<Position>(entity, main);
-		ECS::bind<Quaternion>(entity, main);
-
-		counter = 0;
-		for (auto[position, rotation] : ECS::iterate<Rotations>())
-		{
-			(void) position;
-			(void) rotation;
-			counter++;
-		}
-		CHECK(counter == 2);
-		ECS::remove<Entity>(main);
 	}
 
 	ECS::remove<Entity>(entity);
