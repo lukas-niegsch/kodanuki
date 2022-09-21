@@ -161,8 +161,8 @@ TEST_CASE("entity component iteration tests")
 	Entity entityC = ECS::create();
 	Entity entityD = ECS::create();
 
-	using Positions = Archetype<Iterator<Position>, Predicate<>>;
-	using Rotations = Archetype<Iterator<Position, Quaternion>, Predicate<>>;
+	using Positions = Archetype<Iterate<Position>>;
+	using Rotations = Archetype<Iterate<Position, Quaternion>>;
 
 	SUBCASE("iteration with one parameter")
 	{
@@ -170,7 +170,7 @@ TEST_CASE("entity component iteration tests")
 		ECS::update<Position>(entityB, {10, 10, 10});
 
 		int counter = 0;
-		for (auto [position] : ECS::iterate<Positions>())
+		for (auto[position] : ECS::iterate<Positions>())
 		{
 			CHECK(position.x == 10);
 			counter++;
@@ -227,3 +227,145 @@ TEST_CASE("entity component iteration tests")
 	ECS::remove<Entity>(entityC);
 	ECS::remove<Entity>(entityD);
 }
+
+template <typename Archetype>
+int iteration_counter()
+{
+	int counter = 0;
+	for (auto[position, rotation] : ECS::iterate<Archetype>()) {
+		(void) position;
+		(void) rotation;
+		counter++;
+	}
+	return counter;
+}
+
+TEST_CASE("archetype iteration predicate tests")
+{
+	struct FlagA {};
+	struct FlagB {};
+	struct FlagC {};
+	
+	auto create_default_entity = []{
+		Entity entity = ECS::create();
+		ECS::update<Position>(entity, {});
+		ECS::update<Quaternion>(entity, {});
+		return entity;
+	};
+
+	Entity entityA = create_default_entity();
+	Entity entityB = create_default_entity();
+	Entity entityC = create_default_entity();
+	Entity entityD = create_default_entity();
+	Entity entityE = create_default_entity();
+
+	// Always iterate over entities with postion and quaterion component.
+	using I = Iterate<Position, Quaternion>;
+	
+	SUBCASE("simple iteration without any additional predicates")
+	{
+		using System = Archetype<I>;
+
+		static_assert(std::is_same_v<System::iterate_types,
+			type_list<Position, Quaternion>
+		>);
+
+		// All 5 entities have position and quaternion components.
+		CHECK(iteration_counter<System>() == 5);
+
+		ECS::remove<Position>(entityA);
+		ECS::remove<Quaternion>(entityB);
+
+		// Now only 3 of them have position AND quaternion components.
+		CHECK(iteration_counter<System>() == 3);
+	}
+	
+	SUBCASE("iteration with additional required flags")
+	{
+		using System = Archetype<I, Require<FlagA, FlagB>>;
+		
+		static_assert(std::is_same_v<System::include_types,
+			type_list<Position, Quaternion, FlagA, FlagB>
+		>);
+
+		// No entity has FlagA and FlagB.
+		CHECK(iteration_counter<System>() == 0);
+
+		ECS::update<FlagA>(entityA);
+		ECS::update<FlagB>(entityA);
+		ECS::update<FlagA>(entityB);
+
+		// Only entityA has both flags.
+		CHECK(iteration_counter<System>() == 1);
+	}
+
+	SUBCASE("iteration with additional exluded flags")
+	{
+		using System = Archetype<I, Require<FlagA>, Exclude<FlagB>>;
+
+		ECS::update<FlagA>(entityA);
+		ECS::update<FlagA>(entityB);
+		
+		CHECK(iteration_counter<System>() == 2);
+
+		ECS::update<FlagA>(entityC);
+		
+		CHECK(iteration_counter<System>() == 3);
+
+		ECS::update<FlagB>(entityD);
+		ECS::update<FlagB>(entityA);
+
+		CHECK(iteration_counter<System>() == 2);
+	}
+	
+	SUBCASE("useless iteration predicate combination")
+	{
+		using System = Archetype<I, Exclude<Position>>;
+		
+		// Include Postion + Exclude Position = Zero Iteration
+		CHECK(iteration_counter<System>() == 0);
+	}
+
+	SUBCASE("consume iteration predicate")
+	{
+		using System = Archetype<I, Consume<FlagA, FlagB>>;
+
+		// Consume flags must be included.
+		CHECK(iteration_counter<System>() == 0);
+
+		ECS::update<FlagA>(entityA);
+		ECS::update<FlagB>(entityA);
+		ECS::update<FlagB>(entityB);
+
+		// Only entityA has both consume flags
+		CHECK(iteration_counter<System>() == 1);
+
+		CHECK(ECS::has<FlagA>(entityA) == false);
+		CHECK(ECS::has<FlagB>(entityA) == false);
+		CHECK(ECS::has<FlagB>(entityB) == true);
+
+		// Good for system that wait for other systems to produce flags.
+		CHECK(iteration_counter<System>() == 0);
+	}
+
+	SUBCASE("produce iteration predicate")
+	{
+		using System = Archetype<I, Produce<FlagA>>;
+
+		CHECK(iteration_counter<System>() == 5);
+		CHECK(iteration_counter<System>() == 0);
+
+		ECS::remove<FlagA>(entityA);
+		ECS::remove<FlagA>(entityE);
+
+		CHECK(iteration_counter<System>() == 2);
+		CHECK(iteration_counter<System>() == 0);
+	}
+
+	ECS::remove<Entity>(entityA);
+	ECS::remove<Entity>(entityB);
+	ECS::remove<Entity>(entityC);
+	ECS::remove<Entity>(entityD);
+	ECS::remove<Entity>(entityE);
+}
+

@@ -51,7 +51,8 @@ bool is_any_match(uint32_t minimum_length, const Iterable& ... inputs)
  * @param output The output iterator over itersecting elements.
  * @param inputs The input iterables that contain elements.
  */
-template <typename Iterator, typename ... Iterable>
+template <typename Iterator, typename ... Iterable,
+	typename = typename std::enable_if_t<sizeof...(Iterable) >= 2>>
 void sorted_intersection(Iterator output, Iterable ... inputs)
 {
 	uint32_t length = sizeof...(inputs);
@@ -65,7 +66,7 @@ void sorted_intersection(Iterator output, Iterable ... inputs)
 
 	advance:
 	while (!is_any_match(length, firsts, lasts)) {
-		for (uint32_t n = 0; n < length; n++) {
+		for (uint32_t n = 0; n < firsts.size(); n++) {
 			if (n == canditate_index) {
 				continue;
 			}
@@ -79,4 +80,24 @@ void sorted_intersection(Iterator output, Iterable ... inputs)
 	}
 }
 
+/**
+ * Do nothing when no iterables are specified.
+ */
+template <typename Iterator>
+void sorted_intersection(Iterator output)
+{
+	(void) output;
+	return;
 }
+
+/**
+ * Just copy the values when the there is only one input.
+ */
+template <typename Iterator, typename Iterable>
+void sorted_intersection(Iterator output, Iterable input)
+{
+	std::copy(input.begin(), input.end(), output);
+}
+
+}
+
