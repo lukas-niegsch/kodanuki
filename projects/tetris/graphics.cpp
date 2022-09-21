@@ -39,7 +39,7 @@ void draw_box(int x1, int y1, int x2, int y2)
 
 void draw_board_system()
 {
-	using System = Archetype<Iterator<Board>, Predicate<>>;
+	using System = Archetype<Iterate<Board>>;
 	for (auto[board] : ECS::iterate<System>()) {
 		mvaddstr(board.offsetY - 2, 2 * board.offsetX - 1, std::string(2 * board.sizeX + 2, ' ').c_str());
 		draw_box(2 * board.offsetX - 1, board.offsetY - 1, 2 * (board.offsetX + board.sizeX), board.offsetY + board.sizeY);
@@ -64,7 +64,7 @@ void draw_board_system()
 
 void draw_tetromino_system()
 {
-	using System = Archetype<Iterator<Tetromino, Color, Position, Board>, Predicate<>>;
+	using System = Archetype<Iterate<Tetromino, Color, Position, Board>>;
 	for (auto[tetromino, color, position, board] : ECS::iterate<System>()) {
 		attron(COLOR_PAIR(color.ncurses_mod8));
 		execute_blockwise(tetromino, [&](int x, int y) {

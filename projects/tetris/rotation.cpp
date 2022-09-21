@@ -24,10 +24,9 @@ TetrominoRotations calculate_tetromino_rotations()
 template <typename Flag, int count>
 void process_rotation_flags()
 {
-	using System = Archetype<Iterator<Entity, Rotation>, Predicate<Falling, Flag>>;
+	using System = Archetype<Iterate<Entity, Rotation>, Require<Falling>, Consume<Flag>>;
 	for (auto[entity, rotation] : ECS::iterate<System>()) {
 		rotation.target = (4 + rotation.source + count) % 4;
-		ECS::remove<Flag>(entity);
 	}
 }
 
@@ -35,7 +34,7 @@ void rotate_tetromino_system()
 {
 	process_rotation_flags<RotateLeftFlag, -1>();
 	process_rotation_flags<RotateRightFlag, 1>();
-	using System = Archetype<Iterator<Entity, Tetromino, Position, Rotation, Board, TetrominoRotations>, Predicate<Falling>>;
+	using System = Archetype<Iterate<Entity, Tetromino, Position, Rotation, Board, TetrominoRotations>, Require<Falling>>;
 	for (auto[entity, tetromino, position, rotation, board, base] : ECS::iterate<System>()) {
 		int index = tetromino.type + 7 * rotation.target;
 		Tetromino rotated = ECS::get<Tetromino>(base.rotations[index]);
