@@ -73,6 +73,15 @@ void print_vulkan_info(std::vector<T> info)
 		print_vulkan_struct<T>(info[i]);
 	}
 	std::cout << std::string(LINE_LENGTH, '=') << '\n';
+	std::cout << std::endl;
+}
+
+void print_vulkan_version(std::string name, uint32_t version)
+{
+	std::cout << name << ": ";
+	std::cout << VK_VERSION_MAJOR(version) << ".";
+	std::cout << VK_VERSION_MINOR(version) << ".";
+	std::cout << VK_VERSION_PATCH(version) << "\n";
 }
 
 //////////////////////////////// Specializations ///////////////////////////////
@@ -80,8 +89,56 @@ template <>
 void print_vulkan_struct(VkExtensionProperties info)
 {
 	std::cout << "extensionName: " << info.extensionName << '\n';
-	std::cout << "specVersion: ";
-	std::cout << VK_VERSION_MAJOR(info.specVersion) << ".";
-	std::cout << VK_VERSION_MINOR(info.specVersion) << ".";
-	std::cout << VK_VERSION_PATCH(info.specVersion) << "\n";
+	print_vulkan_version("specVersion", info.specVersion);
 }
+
+template <>
+void print_vulkan_struct(VkLayerProperties info)
+{
+	std::cout << "layerName: " << info.layerName << '\n';
+	print_vulkan_version("specVersion", info.specVersion);
+	print_vulkan_version("implementationVersion", info.implementationVersion);
+	std::cout << "description: " << info.description << '\n';
+}
+
+template <>
+void print_vulkan_struct(VkPhysicalDeviceProperties info)
+{
+	print_vulkan_version("apiVersion", info.apiVersion);
+	print_vulkan_version("driverVersion", info.driverVersion);
+	std::cout << "vendorID: " << info.vendorID << '\n';
+	std::cout << "deviceID: " << info.deviceID << '\n';
+	std::cout << "deviceType: ";
+	switch(info.deviceType)
+	{
+	case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+		std::cout << "VK_PHYSICAL_DEVICE_TYPE_OTHER";
+		break;
+	case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+		std::cout << "VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU";
+		break;
+	case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+		std::cout << "VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU";
+		break;
+	case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+		std::cout << "VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU";
+		break;
+	case VK_PHYSICAL_DEVICE_TYPE_CPU:
+		std::cout << "VK_PHYSICAL_DEVICE_TYPE_CPU";
+		break;
+	default:
+		std::cout << "unknown";
+	}
+	std::cout << '\n';
+	std::cout << "deviceName: " << info.deviceName << '\n';
+	std::cout << "pipelineCacheUUID: " << info.pipelineCacheUUID << '\n';
+}
+
+template <>
+void print_vulkan_struct(VkPhysicalDevice info)
+{
+	VkPhysicalDeviceProperties properties;
+	vkGetPhysicalDeviceProperties(info, &properties);
+	print_vulkan_struct(properties);
+}
+
