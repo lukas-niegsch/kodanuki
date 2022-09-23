@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/central/entity.h"
 #include "engine/central/storage.h"
 #include "engine/utility/algorithm.h"
 
