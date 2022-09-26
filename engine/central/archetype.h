@@ -80,5 +80,15 @@ struct Produce
 	using produce_types = type_list<T...>;
 };
 
+template <typename ... T>
+struct Calculate
+{
+	using iterate_types = type_list<T...>;
+	using include_types = type_list<>;
+	using exclude_types = type_list<T...>;
+	using consume_types = type_list<>;
+	using produce_types = type_list<T...>;
+};
+
 }
 
