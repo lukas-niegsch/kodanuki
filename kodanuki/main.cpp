@@ -161,7 +161,13 @@ int main()
 
 	bool running = true;
 	while(running && !glfwWindowShouldClose(window)) {
-		system_input_event_receiver(window);
+		system_update_key_receiver<KEY_ESCAPE>(window);
+		system_update_key_receiver<KEY_W>(window);
+		system_update_key_receiver<KEY_A>(window);
+		system_update_key_receiver<KEY_S>(window);
+		system_update_key_receiver<KEY_D>(window);
+		system_update_key_receiver<KEY_LEFT_SHIFT>(window);
+		system_update_key_receiver<KEY_SPACE>(window);
 
 		double xpos, ypos;
 		glfwGetCursorPos(window, &xpos, &ypos);
@@ -201,6 +207,14 @@ int main()
 
 		if (ECS::has<KEY_A>(player)) {
 			transform.position += left * speed;
+		}
+
+		if (ECS::has<KEY_LEFT_SHIFT>(player)) {
+			transform.position.y += speed;
+		}
+
+		if (ECS::has<KEY_SPACE>(player)) {
+			transform.position.y -= speed;
 		}
 
 		ECS::remove<CameraView>(player);
