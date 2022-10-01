@@ -49,6 +49,7 @@ int main()
 	glfwMakeContextCurrent(window);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	glewInit();
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
