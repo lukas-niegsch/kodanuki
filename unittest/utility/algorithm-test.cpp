@@ -1,4 +1,4 @@
-#include "engine/utility/algorithm.h"
+#include "engine/utility/algorithm/sorted_intersection.h"
 #include <doctest/doctest.h>
 #include <set>
 #include <iostream>

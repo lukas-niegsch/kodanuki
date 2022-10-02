@@ -1,7 +1,6 @@
 #pragma once
 #include "engine/central/toolbox.h"
 #include "engine/central/storage.h"
-#include "engine/utility/algorithm.h"
 #include "engine/utility/template/type_union.h"
 #include <tuple>
 #include <vector>
