@@ -1,7 +1,7 @@
 #include "engine/utility/algorithm/sorted_intersection.h"
 #include <doctest/doctest.h>
+#include <iterator>
 #include <set>
-#include <iostream>
 using namespace Kodanuki;
 
 TEST_CASE("is any match")
@@ -16,17 +16,28 @@ TEST_CASE("is any match")
 	CHECK(is_any_match(3, s3, s1) == true);
 }
 
-TEST_CASE("sorted multiset intersection")
+TEST_CASE("sorted_intersection")
 {
-	std::set<int> s1 = {2, 3, 3, 4, 5, 7, 10, 12};
-	std::set<int> s2 = {2, 3, 5, 10, 11, 12, 13};
-	std::set<int> s3 = {3, 4, 5, 10, 12};
+	SUBCASE("single set")
+	{
+		std::set<int> s1 = {2, 3, 4};
+		std::vector<int> result;
+		sorted_intersection(std::back_inserter(result), s1);
+		CHECK(result == std::vector<int>({2, 3, 4}));
+	}
 
-	std::vector<int> result1;
-	sorted_intersection(std::back_inserter(result1), s1, s2, s3);
-	CHECK(result1 == std::vector<int>({3, 5, 10, 12}));
+	SUBCASE("multiple sets")
+	{
+		std::set<int> s1 = {2, 3, 3, 4, 5, 7, 10, 12};
+		std::set<int> s2 = {2, 3, 5, 10, 11, 12, 13};
+		std::set<int> s3 = {3, 4, 5, 10, 12};
 
-	std::vector<int> result2;
-	sorted_intersection(std::back_inserter(result2), s1, s2);
-	CHECK(result2 == std::vector<int>({2, 3, 5, 10, 12}));
+		std::vector<int> result1;
+		sorted_intersection(std::back_inserter(result1), s1, s2, s3);
+		CHECK(result1 == std::vector<int>({3, 5, 10, 12}));
+
+		std::vector<int> result2;
+		sorted_intersection(std::back_inserter(result2), s1, s2);
+		CHECK(result2 == std::vector<int>({2, 3, 5, 10, 12}));
+	}
 }

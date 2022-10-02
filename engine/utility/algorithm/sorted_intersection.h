@@ -52,7 +52,7 @@ bool is_any_match(uint32_t minimum_length, const Iterable& ... inputs)
  * @param inputs The input iterables that contain elements.
  */
 template <typename Iterator, typename ... Iterable,
-	typename = typename std::enable_if_t<sizeof...(Iterable) >= 2>>
+	typename = typename std::enable_if_t<sizeof...(Iterable) >= 1>>
 void sorted_intersection(Iterator output, Iterable ... inputs)
 {
 	uint32_t length = sizeof...(inputs);
@@ -88,15 +88,6 @@ void sorted_intersection(Iterator output)
 {
 	(void) output;
 	return;
-}
-
-/**
- * Just copy the values when the there is only one input.
- */
-template <typename Iterator, typename Iterable>
-void sorted_intersection(Iterator output, Iterable input)
-{
-	std::copy(input.begin(), input.end(), output);
 }
 
 }
