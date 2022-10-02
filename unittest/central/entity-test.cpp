@@ -267,7 +267,7 @@ TEST_CASE("archetype iteration predicate tests")
 		using System = Archetype<I>;
 
 		static_assert(std::is_same_v<System::iterate_types,
-			type_list<Position, Quaternion>
+			std::tuple<Position, Quaternion>
 		>);
 
 		// All 5 entities have position and quaternion components.
@@ -285,7 +285,7 @@ TEST_CASE("archetype iteration predicate tests")
 		using System = Archetype<I, Require<FlagA, FlagB>>;
 		
 		static_assert(std::is_same_v<System::include_types,
-			type_list<Position, Quaternion, FlagA, FlagB>
+			std::tuple<Position, Quaternion, FlagA, FlagB>
 		>);
 
 		// No entity has FlagA and FlagB.

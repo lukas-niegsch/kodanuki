@@ -2,7 +2,8 @@
 #include "engine/central/toolbox.h"
 #include "engine/central/storage.h"
 #include "engine/utility/algorithm.h"
-#include "engine/utility/type_union.h"
+#include "engine/utility/template/type_union.h"
+#include <tuple>
 #include <vector>
 
 namespace Kodanuki
@@ -33,61 +34,61 @@ struct Archetype
 template <typename ... T>
 struct Iterate
 {
-	using iterate_types = type_list<T...>;
-	using include_types = type_list<T...>;
-	using exclude_types = type_list<>;
-	using consume_types = type_list<>;
-	using produce_types = type_list<>;
+	using iterate_types = std::tuple<T...>;
+	using include_types = std::tuple<T...>;
+	using exclude_types = std::tuple<>;
+	using consume_types = std::tuple<>;
+	using produce_types = std::tuple<>;
 };
 
 template <typename ... T>
 struct Require
 {
-	using iterate_types = type_list<>;
-	using include_types = type_list<T...>;
-	using exclude_types = type_list<>;
-	using consume_types = type_list<>;
-	using produce_types = type_list<>;
+	using iterate_types = std::tuple<>;
+	using include_types = std::tuple<T...>;
+	using exclude_types = std::tuple<>;
+	using consume_types = std::tuple<>;
+	using produce_types = std::tuple<>;
 };
 
 template <typename ... T>
 struct Exclude
 {
-	using iterate_types = type_list<>;
-	using include_types = type_list<>;
-	using exclude_types = type_list<T...>;
-	using consume_types = type_list<>;
-	using produce_types = type_list<>;
+	using iterate_types = std::tuple<>;
+	using include_types = std::tuple<>;
+	using exclude_types = std::tuple<T...>;
+	using consume_types = std::tuple<>;
+	using produce_types = std::tuple<>;
 };
 
 template <typename ... T>
 struct Consume
 {
-	using iterate_types = type_list<>;
-	using include_types = type_list<T...>;
-	using exclude_types = type_list<>;
-	using consume_types = type_list<T...>;
-	using produce_types = type_list<>;
+	using iterate_types = std::tuple<>;
+	using include_types = std::tuple<T...>;
+	using exclude_types = std::tuple<>;
+	using consume_types = std::tuple<T...>;
+	using produce_types = std::tuple<>;
 };
 
 template <typename ... T>
 struct Produce
 {
-	using iterate_types = type_list<>;
-	using include_types = type_list<>;
-	using exclude_types = type_list<T...>;
-	using consume_types = type_list<>;
-	using produce_types = type_list<T...>;
+	using iterate_types = std::tuple<>;
+	using include_types = std::tuple<>;
+	using exclude_types = std::tuple<T...>;
+	using consume_types = std::tuple<>;
+	using produce_types = std::tuple<T...>;
 };
 
 template <typename ... T>
 struct Calculate
 {
-	using iterate_types = type_list<T...>;
-	using include_types = type_list<>;
-	using exclude_types = type_list<T...>;
-	using consume_types = type_list<>;
-	using produce_types = type_list<T...>;
+	using iterate_types = std::tuple<T...>;
+	using include_types = std::tuple<>;
+	using exclude_types = std::tuple<T...>;
+	using consume_types = std::tuple<>;
+	using produce_types = std::tuple<T...>;
 };
 
 }
