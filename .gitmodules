@@ -1,0 +1,3 @@
+[submodule "engine/formats/rapidxml"]
+	path = engine/formats/rapidxml
+	url = git@github.com:discord/rapidxml.git
