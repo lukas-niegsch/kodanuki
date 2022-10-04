@@ -70,10 +70,10 @@ int main()
 	glm::mat4 Model = glm::mat4(1.0f);
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 	
-	Entity player = ECS::create();
-	ECS::update<Camera>(player);
-	ECS::update<Location>(player, {{5, 0, 0}, {-1, 0, 0}});
-	ECS::update<KeyReceiver>(player);
+	Entity player = ECS->create();
+	ECS->update<Camera>(player);
+	ECS->update<Location>(player, {{5, 0, 0}, {-1, 0, 0}});
+	ECS->update<KeyReceiver>(player);
 
 	float horizontalAngle = 0.00f;
 	float verticalAngle = 0.0f;
@@ -97,7 +97,7 @@ int main()
 		horizontalAngle -= mouseSpeed * float(width / 2 - xpos);
 		verticalAngle   -= mouseSpeed * float(height / 2 - ypos);
 
-		Location& transform = ECS::get<Location>(player);
+		Location& transform = ECS->get<Location>(player);
 
 		transform.direction = {
     		cos(verticalAngle) * sin(horizontalAngle),
@@ -109,38 +109,38 @@ int main()
 		glm::vec3 left = glm::cross(forward, {0.0f, 1.0f, 0.0f});
 		left = glm::normalize(left);
 
-		if (ECS::has<KEY_ESCAPE>(player)) {
+		if (ECS->has<KEY_ESCAPE>(player)) {
 			running = false;
 			continue;
 		}
 
-		if (ECS::has<KEY_W>(player)) {
+		if (ECS->has<KEY_W>(player)) {
 			transform.position += forward * speed;
 		}
 		
-		if (ECS::has<KEY_S>(player)) {
+		if (ECS->has<KEY_S>(player)) {
 			transform.position -= forward * speed;
 		}
 
-		if (ECS::has<KEY_D>(player)) {
+		if (ECS->has<KEY_D>(player)) {
 			transform.position -= left * speed;
 		}
 
-		if (ECS::has<KEY_A>(player)) {
+		if (ECS->has<KEY_A>(player)) {
 			transform.position += left * speed;
 		}
 
-		if (ECS::has<KEY_LEFT_SHIFT>(player)) {
+		if (ECS->has<KEY_LEFT_SHIFT>(player)) {
 			transform.position.y += speed;
 		}
 
-		if (ECS::has<KEY_SPACE>(player)) {
+		if (ECS->has<KEY_SPACE>(player)) {
 			transform.position.y -= speed;
 		}
 
-		ECS::remove<CameraView>(player);
+		ECS->remove<CameraView>(player);
 		execute_camera_system();
-		glm::mat4 view = ECS::get<CameraView>(player).view_matrix;
+		glm::mat4 view = ECS->get<CameraView>(player).view_matrix;
 		glm::mat4 mvp = Projection * view * Model;
 		
 		glClear(GL_COLOR_BUFFER_BIT);

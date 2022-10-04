@@ -28,16 +28,16 @@ using namespace Kodanuki;
 
 Entity create_falling_tetromino(Entity world, float speed)
 {
-	Entity tetromino = ECS::create();
-	ECS::bind<Board>(tetromino, world);
-	ECS::bind<TetrominoRotations>(tetromino, world);
-	ECS::update<Rotation>(tetromino, {0, 0});
-	ECS::update<Color>(tetromino, {1 + std::rand() % 6});
-	ECS::update<Falling>(tetromino, {speed, 0});
-	TetrominoRotations& rotations = ECS::get<TetrominoRotations>(tetromino);
-	ECS::bind<Tetromino>(tetromino, rotations.rotations[std::rand() % 7]);
-	int size = ECS::get<Tetromino>(tetromino).size;
-	ECS::update<Position>(tetromino, {std::rand() % (BOARD_WIDTH - size), -2});
+	Entity tetromino = ECS->create();
+	ECS->bind<Board>(tetromino, world);
+	ECS->bind<TetrominoRotations>(tetromino, world);
+	ECS->update<Rotation>(tetromino, {0, 0});
+	ECS->update<Color>(tetromino, {1 + std::rand() % 6});
+	ECS->update<Falling>(tetromino, {speed, 0});
+	TetrominoRotations& rotations = ECS->get<TetrominoRotations>(tetromino);
+	ECS->bind<Tetromino>(tetromino, rotations.rotations[std::rand() % 7]);
+	int size = ECS->get<Tetromino>(tetromino).size;
+	ECS->update<Position>(tetromino, {std::rand() % (BOARD_WIDTH - size), -2});
 	return tetromino;
 }
 
@@ -49,17 +49,17 @@ std::vector<Entity> create_boards()
 	int spacing = BOARD_SPACING;
 	std::vector<int> emptyBoard(size, 0);
 
-	Entity mainBoard = ECS::create();
-	ECS::update<Board>(mainBoard, {3, 4, width, height, emptyBoard, true});
-	ECS::update<TetrominoRotations>(mainBoard, calculate_tetromino_rotations());
+	Entity mainBoard = ECS->create();
+	ECS->update<Board>(mainBoard, {3, 4, width, height, emptyBoard, true});
+	ECS->update<TetrominoRotations>(mainBoard, calculate_tetromino_rotations());
 
 	std::vector<Entity> boards;
 	boards.push_back(mainBoard);
 
 	for (int i = 1; i < BOARD_COUNT; i++) {
-		Entity board = ECS::create();
-		ECS::update<Board>(board, {3 + (width + spacing / 2) * i, 4, width, height, emptyBoard, true});
-		ECS::bind<TetrominoRotations>(board, mainBoard);
+		Entity board = ECS->create();
+		ECS->update<Board>(board, {3 + (width + spacing / 2) * i, 4, width, height, emptyBoard, true});
+		ECS->bind<TetrominoRotations>(board, mainBoard);
 		boards.push_back(board);
 	}
 
@@ -82,7 +82,7 @@ void print_score_line(int score)
 void remove_entities(std::vector<Entity> entities)
 {
 	for (Entity entity : entities) {
-		ECS::remove<Entity>(entity);
+		ECS->remove<Entity>(entity);
 	}
 }
 
@@ -90,7 +90,7 @@ template <typename Flag>
 void update_entities(std::vector<Entity> entities)
 {
 	for (Entity entity : entities) {
-		ECS::update<Flag>(entity);
+		ECS->update<Flag>(entity);
 	}
 }
 
@@ -130,13 +130,13 @@ int main()
 		}
 
 		for (Entity entity : boards) {
-			Board& board = ECS::get<Board>(entity);
+			Board& board = ECS->get<Board>(entity);
 			lines += clear_lines(board);
 			running &= board.playable;
 		}
 
 		for (int i = 0; i < (int) boards.size(); i++) {
-			if (tetrominos[i] && ECS::has<Entity>(tetrominos[i])) {
+			if (tetrominos[i] && ECS->has<Entity>(tetrominos[i])) {
 				continue;
 			}
 			tetrominos[i] = create_falling_tetromino(boards[i], speed);
@@ -150,7 +150,7 @@ int main()
 		print_score_line(lines);
 	}
 
-	auto rotations = ECS::get<TetrominoRotations>(boards[0]).rotations;
+	auto rotations = ECS->get<TetrominoRotations>(boards[0]).rotations;
 	remove_entities(std::vector<Entity>(rotations.begin(), rotations.end()));
 	remove_entities(boards);
 	remove_entities(tetrominos);

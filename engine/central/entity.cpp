@@ -4,11 +4,11 @@
 namespace Kodanuki
 {
 
-Entity ECS::create()
+Entity ECS_t::create()
 {
 	uint64_t id = count();
 	Entity entity = std::make_optional<uint64_t>(id);
-	ECS::update<Entity>(entity, entity);
+	ECS->update<Entity>(entity, entity);
 	return entity;
 }
 

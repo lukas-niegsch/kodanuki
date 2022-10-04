@@ -22,54 +22,60 @@ typedef std::optional<uint64_t> Entity;
  * its own components. Each system must remove these components or provide
  * a cleanup strategy. Neglecting this will impact performance.
  */
-class ECS
+class ECS_t
 {
 public:
 	// Creates a new entity with a unique identifier.
-	static Entity create();
+	Entity create();
 
 	// Updates the given component inside the entity.
 	template <typename T>
-	static void update(Entity entity, T component = {});
+	void update(Entity entity, T component = {});
 
 	// Removes the given component from the entity.
 	template <typename T>
-	static void remove(Entity entity);
+	void remove(Entity entity);
 
 	// Returns true iff the entity has the given component.
 	template <typename T>
-	static bool has(Entity entity);
+	bool has(Entity entity);
 
 	// Returns the reference to the component.
 	template <typename T>
-	static T& get(Entity entity);
+	T& get(Entity entity);
 
 	// Copies the component from the source entity to the target entity.
 	template <typename T>
-	static void copy(Entity source, Entity target);
+	void copy(Entity source, Entity target);
 
 	// Moves the component from the source entity to the target entity.
 	template <typename T>
-	static void move(Entity source, Entity target);
+	void move(Entity source, Entity target);
 
 	// Swaps the component from the source entity with the target entity.
 	template <typename T>
-	static void swap(Entity source, Entity target);
+	void swap(Entity source, Entity target);
 
 	// Binds the component from the source entity to the target entity.
 	template <typename T>
-	static void bind(Entity source, Entity target);
+	void bind(Entity source, Entity target);
 
 	// Iterates over entities with the given archetype.
 	template <typename Archetype>
-	static auto iterate();
+	auto iterate();
 
 public:
 	using Storage = std::unique_ptr<EntityStorage>;
 	using Mapping = std::unordered_map<std::type_index, Storage>;
-	static inline Mapping mapping;
+	Mapping mapping;
 };
+
+/**
+ * Global ECS until I rewrote the rest of the engine.
+ */
+inline ECS_t* ECS = []{ return new ECS_t; }();
 
 }
 
 #include "engine/central/entity.tpp"
+

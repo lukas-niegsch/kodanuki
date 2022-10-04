@@ -11,7 +11,7 @@ namespace Kodanuki
 void execute_camera_system()
 {
 	using System = Archetype<Require<Camera>, Iterate<Location>, Calculate<CameraView>>;
-	for (auto[transform, view] : ECS::iterate<System>()) {
+	for (auto[transform, view] : ECS->iterate<System>()) {
 		glm::vec3 forward = glm::normalize(transform.direction);
 		glm::vec3 right = glm::cross(forward, {0.0f, 1.0f, 0.0f});
 		glm::vec3 up = glm::cross(forward, glm::normalize(right));
