@@ -12,4 +12,11 @@ Entity ECS_t::create()
 	return entity;
 }
 
+void ECS_t::clear(Entity entity)
+{
+	for (auto& pair : mapping) {
+		pair.second->remove(entity.value());
+	}
+}
+
 }

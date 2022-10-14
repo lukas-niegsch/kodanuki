@@ -46,8 +46,11 @@ void UpdateRootRecursive(Family& family, Entity newRoot)
 	}
 }
 
+// GCC Bugzilla #104606: remove pragmas once the bug is fixed
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 void UpdateRoot(Family& family, Entity oldParent, Entity newParent)
-{
+{	
 	Entity oldRoot = oldParent ? ECS->get<Family>(oldParent).root : std::nullopt;
 	Entity newRoot = newParent ? ECS->get<Family>(newParent).root : std::nullopt;
 	
@@ -58,6 +61,7 @@ void UpdateRoot(Family& family, Entity oldParent, Entity newParent)
 
 	UpdateRootRecursive(family, newRoot ? newRoot : family.itself);
 }
+#pragma GCC diagnostic pop
 
 void UpdateLocalFamily(Entity entity, Entity newParent)
 {

@@ -2,6 +2,7 @@
 #include "engine/central/storage.h"
 #include <cstdint>
 #include <optional>
+#include <any>
 
 namespace Kodanuki
 {
@@ -30,39 +31,86 @@ public:
 
 	// Updates the given component inside the entity.
 	template <typename T>
-	void update(Entity entity, T component = {});
+	void update(Entity entity, T component = {})
+	{
+		storage<T>()->update(entity.value(), component);
+	}
 
 	// Removes the given component from the entity.
 	template <typename T>
-	void remove(Entity entity);
+	void remove(Entity entity)
+	{
+		if constexpr (std::is_same<T, Entity>()) {
+			clear(entity);
+		} else {
+			storage<T>()->remove(entity.value());
+		}
+	}
 
 	// Returns true iff the entity has the given component.
 	template <typename T>
-	bool has(Entity entity);
+	bool has(Entity entity)
+	{
+		return storage<T>()->contains(entity.value());
+	}
 
 	// Returns the reference to the component.
 	template <typename T>
-	T& get(Entity entity);
+	T& get(Entity entity)
+	{
+		std::any& component = storage<T>()->get(entity.value());
+		return std::any_cast<T&>(component);
+	}
 
 	// Copies the component from the source entity to the target entity.
 	template <typename T>
-	void copy(Entity source, Entity target);
+	void copy(Entity source, Entity target)
+	{
+		storage<T>()->copy(source.value(), target.value());
+	}
 
 	// Moves the component from the source entity to the target entity.
 	template <typename T>
-	void move(Entity source, Entity target);
+	void move(Entity source, Entity target)
+	{
+		storage<T>()->move(source.value(), target.value());
+	}
 
 	// Swaps the component from the source entity with the target entity.
 	template <typename T>
-	void swap(Entity source, Entity target);
+	void swap(Entity source, Entity target)
+	{
+		storage<T>()->swap(source.value(), target.value());
+	}
 
 	// Binds the component from the source entity to the target entity.
 	template <typename T>
-	void bind(Entity source, Entity target);
+	void bind(Entity source, Entity target)
+	{
+		storage<T>()->bind(source.value(), target.value());
+	}
 
 	// Iterates over entities with the given archetype.
 	template <typename Archetype>
-	auto iterate();
+	auto iterate()
+	{
+		return Archetype::iterate(mapping);
+	}
+
+private:
+	// Strips the entity from all its components.
+	void clear(Entity entity);
+	
+	// Returns the correct entity storage for the given type.
+	template <typename T>
+	EntityStorage* storage()
+	{
+		auto type = std::type_index(typeid(T));
+		if (mapping.count(type) == 0) {
+			mapping[type] = std::make_unique<EntityStorage>();
+		}
+		return mapping[type].get();
+	}
 
 public:
 	using Storage = std::unique_ptr<EntityStorage>;
@@ -76,6 +124,3 @@ public:
 inline ECS_t* ECS = []{ return new ECS_t; }();
 
 }
-
-#include "engine/central/entity.tpp"
-
