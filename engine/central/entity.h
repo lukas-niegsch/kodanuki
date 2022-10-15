@@ -23,22 +23,22 @@ typedef std::optional<uint64_t> Entity;
  * its own components. Each system must remove these components or provide
  * a cleanup strategy. Neglecting this will impact performance.
  */
-class ECS_t
+class ECS
 {
 public:
 	// Creates a new entity with a unique identifier.
-	Entity create();
+	static Entity create();
 
 	// Updates the given component inside the entity.
 	template <typename T>
-	void update(Entity entity, T component = {})
+	static void update(Entity entity, T component = {})
 	{
 		storage<T>()->update(entity.value(), component);
 	}
 
 	// Removes the given component from the entity.
 	template <typename T>
-	void remove(Entity entity)
+	static void remove(Entity entity)
 	{
 		if constexpr (std::is_same<T, Entity>()) {
 			clear(entity);
@@ -49,14 +49,14 @@ public:
 
 	// Returns true iff the entity has the given component.
 	template <typename T>
-	bool has(Entity entity)
+	static bool has(Entity entity)
 	{
 		return storage<T>()->contains(entity.value());
 	}
 
 	// Returns the reference to the component.
 	template <typename T>
-	T& get(Entity entity)
+	static T& get(Entity entity)
 	{
 		std::any& component = storage<T>()->get(entity.value());
 		return std::any_cast<T&>(component);
@@ -64,14 +64,14 @@ public:
 
 	// Copies the component from the source entity to the target entity.
 	template <typename T>
-	void copy(Entity source, Entity target)
+	static void copy(Entity source, Entity target)
 	{
 		storage<T>()->copy(source.value(), target.value());
 	}
 
 	// Moves the component from the source entity to the target entity.
 	template <typename T>
-	void move(Entity source, Entity target)
+	static void move(Entity source, Entity target)
 	{
 		storage<T>()->move(source.value(), target.value());
 	}
@@ -85,25 +85,25 @@ public:
 
 	// Binds the component from the source entity to the target entity.
 	template <typename T>
-	void bind(Entity source, Entity target)
+	static void bind(Entity source, Entity target)
 	{
 		storage<T>()->bind(source.value(), target.value());
 	}
 
 	// Iterates over entities with the given archetype.
 	template <typename Archetype>
-	auto iterate()
+	static auto iterate()
 	{
 		return Archetype::iterate(mapping);
 	}
 
 private:
 	// Strips the entity from all its components.
-	void clear(Entity entity);
+	static void clear(Entity entity);
 	
 	// Returns the correct entity storage for the given type.
 	template <typename T>
-	EntityStorage* storage()
+	static EntityStorage* storage()
 	{
 		auto type = std::type_index(typeid(T));
 		if (mapping.count(type) == 0) {
@@ -112,15 +112,10 @@ private:
 		return mapping[type].get();
 	}
 
-public:
+private:
 	using Storage = std::unique_ptr<EntityStorage>;
 	using Mapping = std::unordered_map<std::type_index, Storage>;
-	Mapping mapping;
+	static inline Mapping mapping;
 };
-
-/**
- * Global ECS until I rewrote the rest of the engine.
- */
-inline ECS_t* ECS = []{ return new ECS_t; }();
 
 }

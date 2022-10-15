@@ -71,7 +71,7 @@ private:
 template <typename T>
 bool remove_with_return(Entity entity)
 {
-	ECS->remove<T>(entity);
+	ECS::remove<T>(entity);
 	return 0;
 }
 
@@ -94,7 +94,7 @@ void remove_entity_tags(std::vector<Entity> entities)
 template <typename T>
 bool update_with_return(Entity entity)
 {
-	ECS->update<T>(entity);
+	ECS::update<T>(entity);
 	return 0;
 }
 

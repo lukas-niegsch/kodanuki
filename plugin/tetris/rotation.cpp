@@ -12,8 +12,8 @@ TetrominoRotations calculate_tetromino_rotations()
 	for (int t = 0; t < 7; t++) {
 		Tetromino tetromino = create_tetromino(t);
 		for (int r = 0; r < 4; r++) {
-			Entity entity = ECS->create();
-			ECS->update<Tetromino>(entity, tetromino);
+			Entity entity = ECS::create();
+			ECS::update<Tetromino>(entity, tetromino);
 			result.rotations[7 * r + t] = entity;
 			rotate_tetromino(tetromino);
 		}
@@ -25,7 +25,7 @@ template <typename Flag, int count>
 void process_rotation_flags()
 {
 	using System = Archetype<Iterate<Entity, Rotation>, Require<Falling>, Consume<Flag>>;
-	for (auto[entity, rotation] : ECS->iterate<System>()) {
+	for (auto[entity, rotation] : ECS::iterate<System>()) {
 		rotation.target = (4 + rotation.source + count) % 4;
 	}
 }
@@ -35,9 +35,9 @@ void rotate_tetromino_system()
 	process_rotation_flags<RotateLeftFlag, -1>();
 	process_rotation_flags<RotateRightFlag, 1>();
 	using System = Archetype<Iterate<Entity, Tetromino, Position, Rotation, Board, TetrominoRotations>, Require<Falling>>;
-	for (auto[entity, tetromino, position, rotation, board, base] : ECS->iterate<System>()) {
+	for (auto[entity, tetromino, position, rotation, board, base] : ECS::iterate<System>()) {
 		int index = tetromino.type + 7 * rotation.target;
-		Tetromino rotated = ECS->get<Tetromino>(base.rotations[index]);
+		Tetromino rotated = ECS::get<Tetromino>(base.rotations[index]);
 		for (int attempt = 0; attempt < 5; attempt++) {
 			auto offset = wallkick(rotation.source, rotation.target, tetromino.type, attempt);
 			int localX = position.x + offset.first;
@@ -45,7 +45,7 @@ void rotate_tetromino_system()
 			if (is_valid_position(board, rotated, localX, localY)) {
 				position.x = localX;
 				position.y = localY;
-				ECS->bind<Tetromino>(entity, base.rotations[index]);
+				ECS::bind<Tetromino>(entity, base.rotations[index]);
 				rotation.source = rotation.target;
 				break;
 			}

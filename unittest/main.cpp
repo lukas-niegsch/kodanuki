@@ -18,6 +18,8 @@ private:
 	std::array<T, width * height> data;
 };
 
+#include "plugin/vulkan/device.h"
+
 TEST_CASE("playground")
 {
 	const Matrix<int, 5, 5> matrix {};

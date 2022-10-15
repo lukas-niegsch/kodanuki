@@ -1,10 +1,17 @@
 #pragma once
-#include "engine/utility/types.h"
+#include "plugin/vulkan/types.h"
 #include <vulkan/vulkan.h>
 #include <iostream>
 #include <tuple>
 #include <vector>
+#include <stdexcept>
 #define LINE_LENGTH 80
+
+#define CHECK_VULKAN(result) \
+	if (result != VK_SUCCESS) { \
+		std::cout << "[Vulkan Error] " << result << '\n'; \
+		throw std::runtime_error(""); \
+	}
 
 /**
  * Vectorizes properties that can be enumerated using vulkan.

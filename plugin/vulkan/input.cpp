@@ -144,10 +144,10 @@ void system_update_key_receiver(GLFWwindow* window)
 {
 	switch (glfwGetKey(window, get_type<Key>())) {
 	case GLFW_PRESS:
-		ECS->iterate<Archetype<Require<KeyReceiver>, Produce<Key>>>();
+		ECS::iterate<Archetype<Require<KeyReceiver>, Produce<Key>>>();
 		break;
 	case GLFW_RELEASE:
-		ECS->iterate<Archetype<Require<KeyReceiver>, Consume<Key>>>();
+		ECS::iterate<Archetype<Require<KeyReceiver>, Consume<Key>>>();
 		break;
 	}
 }
