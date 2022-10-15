@@ -8,7 +8,7 @@ library     = true
 description = "The upcoming kodanuki game."
 path        = "kodanuki/"
 depends     = ["kodanuki.engine", "kodanuki.opengl", "kodanuki.vulkan",
-				"glfw", "GL", "GLEW"]
+				"glfw", "GL", "GLEW", "vulkan"]
 library     = false
 
 [unittest]
