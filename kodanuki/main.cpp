@@ -42,9 +42,11 @@ constexpr GLfloat cube_strip[] = {
 DeviceCreateInfo get_device_create_info()
 {
     DeviceCreateInfo result;
-	result.enabled_layers.push_back("VK_LAYER_KHRONOS_validation");
-	result.enabled_extensions.push_back("VK_KHR_surface");
-	result.enabled_extensions.push_back("VK_KHR_xcb_surface");
+	result.instance_layers.push_back("VK_LAYER_KHRONOS_validation");
+	result.instance_extensions.push_back("VK_KHR_surface");
+	result.instance_extensions.push_back("VK_KHR_xcb_surface");
+	result.device_extensions.push_back("VK_KHR_swapchain");
+
 	result.gpu_score = [](VkPhysicalDevice device) {
 		VkPhysicalDeviceProperties properties;
 		vkGetPhysicalDeviceProperties(device, &properties);
@@ -83,6 +85,7 @@ int main()
 	// print_vulkan_info(vectorize<vkEnumerateInstanceExtensionProperties>(nullptr));
 	// print_vulkan_info(vectorize<vkEnumerateInstanceLayerProperties>());
 	// print_vulkan_info(ECS::get<VkPhysicalDevice>(device));
+	// print_vulkan_info(vectorize<vkEnumerateDeviceExtensionProperties>(ECS::get<VkPhysicalDevice>(device), nullptr));
 
 	vkDestroySurfaceKHR(instance, surface, nullptr);
 	remove_device(device);

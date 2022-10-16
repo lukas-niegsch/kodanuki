@@ -29,11 +29,14 @@ typedef Entity Device;
  */
 struct DeviceCreateInfo
 {
-    // Enables the given layers for the device.
-    std::vector<const char*> enabled_layers;
+    // Enables the given layers for the vulkan instance.
+    std::vector<const char*> instance_layers;
 
-    // Enables the given extensions for the device.
-    std::vector<const char*> enabled_extensions;
+    // Enables the given extensions for the vulkan instance.
+    std::vector<const char*> instance_extensions;
+
+    // Enables the given extensions for the vulkan device.
+    std::vector<const char*> device_extensions;
 
     // Selects the device with the best score.
     std::function<int(VkPhysicalDevice)> gpu_score;

@@ -56,7 +56,7 @@ VkDeviceQueueCreateInfo pick_queue_family(VkPhysicalDevice device, std::function
     return queue_info;
 }
 
-VkDevice create_logical_device(VkPhysicalDevice physical_device, VkDeviceQueueCreateInfo queue_family)
+VkDevice create_logical_device(VkPhysicalDevice physical_device, VkDeviceQueueCreateInfo queue_family, std::vector<const char*> extensions)
 {
     VkPhysicalDeviceFeatures device_features = {};
 
@@ -68,8 +68,8 @@ VkDevice create_logical_device(VkPhysicalDevice physical_device, VkDeviceQueueCr
     device_info.pQueueCreateInfos = &queue_family;
     device_info.enabledLayerCount = 0;
     device_info.ppEnabledLayerNames = nullptr;
-    device_info.enabledExtensionCount = 0;
-    device_info.ppEnabledExtensionNames = nullptr;
+    device_info.enabledExtensionCount = extensions.size();
+    device_info.ppEnabledExtensionNames = extensions.data();
     device_info.pEnabledFeatures = &device_features;
 
     VkDevice result;
@@ -92,10 +92,10 @@ Device create_device(DeviceCreateInfo seed)
 {
     Entity device = ECS::create();
 
-    VkInstance instance = create_instance(seed.enabled_layers, seed.enabled_extensions);
+    VkInstance instance = create_instance(seed.instance_layers, seed.instance_extensions);
     VkPhysicalDevice physical_device = pick_physical_device(instance, seed.gpu_score);
     VkDeviceQueueCreateInfo queue_family = pick_queue_family(physical_device, seed.queue_score, seed.queue_priorities);
-    VkDevice logical_device = create_logical_device(physical_device, queue_family);
+    VkDevice logical_device = create_logical_device(physical_device, queue_family, seed.device_extensions);
     std::vector<VkQueue> queues = get_queue_handles(logical_device, queue_family);
 
     ECS::update<VkInstance>(device, instance);
