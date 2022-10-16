@@ -7,6 +7,8 @@
 #include "plugin/opengl/shader.h"
 #include "plugin/vulkan/input.h"
 #include <GL/glew.h>
+
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <glm/geometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -59,30 +61,38 @@ DeviceCreateInfo get_device_create_info()
 
 int main()
 {
+	int width = 1024;
+	int height = 768;
+
+	glfwInit();
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	
+	GLFWwindow* window = glfwCreateWindow(width, height, "", NULL, NULL);
+	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
 	Device device = create_device(get_device_create_info());
 	
+	VkInstance instance = ECS::get<VkInstance>(device);
+	VkSurfaceKHR surface;
+
+	CHECK_VULKAN(glfwCreateWindowSurface(instance, window, nullptr, &surface));
+
 	// optional debug info:
 	// print_vulkan_info(vectorize<vkEnumerateInstanceExtensionProperties>(nullptr));
 	// print_vulkan_info(vectorize<vkEnumerateInstanceLayerProperties>());
 	// print_vulkan_info(ECS::get<VkPhysicalDevice>(device));
 
+	vkDestroySurfaceKHR(instance, surface, nullptr);
 	remove_device(device);
 
 	return 0;
 	
-	int width = 1024;
-	int height = 768;
-
-	glfwInit();
-	glfwWindowHint(GLFW_SAMPLES, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	GLFWwindow* window = glfwCreateWindow(width, height, "", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
 	glewInit();
 
 	glEnable(GL_DEPTH_TEST);

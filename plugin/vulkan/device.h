@@ -45,7 +45,26 @@ struct DeviceCreateInfo
     std::vector<float> queue_priorities;
 };
 
+/**
+ * Creates a new graphics device from the given seed.
+ *
+ * The device is an entity that holds several vulkan
+ * struct. It should only be used as an opaque handle.
+ *
+ * @param seed The creation information for the device.
+ * @return The new graphics device.
+ */
 Device create_device(DeviceCreateInfo seed);
+
+/**
+ * Removes the given graphics device.
+ *
+ * This will destroy all the vulkan handles and removes
+ * all components from the device (potentially including
+ * custom ones).
+ *
+ * @param device The graphics devices that should be removed.
+ */
 void remove_device(Device device);
 
 }
