@@ -1,3 +1,4 @@
+#include "engine/utility/template/signature.h"
 #include "engine/utility/template/type_name.h"
 #include "engine/utility/template/type_union.h"
 #include <doctest/doctest.h>
@@ -34,6 +35,41 @@ TEST_CASE("type_union")
 	CHECK(std::is_same_v<
 		std::tuple<int, double, float>,
 		type_union_t<std::tuple<int, double>, std::tuple<int, float>>
+	>);
+}
+
+void example(float a, int b, double c);
+
+TEST_CASE("signature")
+{
+	CHECK(std::is_same_v<
+		float,
+		forward_signature_t<0, example>
+	>);
+
+	CHECK(std::is_same_v<
+		int,
+		forward_signature_t<1, example>
+	>);
+
+	CHECK(std::is_same_v<
+		double,
+		forward_signature_t<2, example>
+	>);
+
+	CHECK(std::is_same_v<
+		double,
+		reverse_signature_t<0, example>
+	>);
+
+	CHECK(std::is_same_v<
+		int,
+		reverse_signature_t<1, example>
+	>);
+
+	CHECK(std::is_same_v<
+		float,
+		reverse_signature_t<2, example>
 	>);
 }
 

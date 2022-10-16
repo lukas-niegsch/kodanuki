@@ -78,7 +78,7 @@ public:
 
 	// Swaps the component from the source entity with the target entity.
 	template <typename T>
-	void swap(Entity source, Entity target)
+	static void swap(Entity source, Entity target)
 	{
 		storage<T>()->swap(source.value(), target.value());
 	}

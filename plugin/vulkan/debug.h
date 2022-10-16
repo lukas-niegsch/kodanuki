@@ -1,10 +1,12 @@
 #pragma once
-#include "plugin/vulkan/types.h"
+#include "engine/utility/template/signature.h"
+#include "engine/utility/template/type_name.h"
 #include <vulkan/vulkan.h>
 #include <iostream>
 #include <tuple>
 #include <vector>
 #include <stdexcept>
+#include <string_view>
 #define LINE_LENGTH 80
 
 #define CHECK_VULKAN(result) \
@@ -27,8 +29,8 @@
 template <auto Function, typename ... Args>
 auto vectorize(Args ... args)
 {
-	using Q = FinalArgument<decltype(Function)>::type;
-	using T = std::remove_pointer<Q>::type;
+	using Q = Kodanuki::reverse_signature_t<0, Function>;
+	using T = std::remove_pointer_t<Q>;
 	uint32_t size;
 	Function(args... , &size, nullptr);
 	std::vector<T> result(size);
@@ -67,7 +69,7 @@ void print_vulkan_struct(std::vector<T> info)
 template <typename T>
 void print_vulkan_info(T info)
 {
-	std::cout << "[Info] " << type_name<T>() << '\n';
+	std::cout << "[Info] " << Kodanuki::type_name<T>() << '\n';
 	std::cout << std::string(LINE_LENGTH, '=') << '\n';
 	print_vulkan_struct<T>(info);
 	std::cout << std::string(LINE_LENGTH, '=') << '\n';
@@ -83,7 +85,7 @@ void print_vulkan_info(T info)
 template <typename T>
 void print_vulkan_info(std::vector<T> info)
 {
-	std::cout << "[Info] Vector of " << type_name<T>() << '\n';
+	std::cout << "[Info] Vector of " << Kodanuki::type_name<T>() << '\n';
 	std::cout << std::string(LINE_LENGTH, '=') << '\n';
 	for (int i = 0; i < (int) info.size(); i++) {
 		if (i != 0) {
