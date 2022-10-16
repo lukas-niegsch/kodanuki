@@ -41,7 +41,7 @@ constexpr GLfloat cube_strip[] = {
 
 DeviceCreateInfo get_device_create_info()
 {
-    DeviceCreateInfo result;
+	DeviceCreateInfo result;
 	result.instance_layers.push_back("VK_LAYER_KHRONOS_validation");
 	result.instance_extensions.push_back("VK_KHR_surface");
 	result.instance_extensions.push_back("VK_KHR_xcb_surface");
@@ -58,20 +58,12 @@ DeviceCreateInfo get_device_create_info()
 		return score;
 	};
 	result.queue_priorities = {1.0f, 1.0f};
-    return result;
-}
-
-void do_something(VulkanDevice device)
-{
-	(void) device;
-	std::cout << "Hello, I am doing something!" << '\n';
+	return result;
 }
 
 int main()
 {
 	VulkanDevice device = {get_device_create_info()};
-	do_something(device);
-	do_something(device);
 	print_vulkan_info(device.get_physical_device());
 
 	// optional debug info:
@@ -163,9 +155,9 @@ int main()
 		Location& transform = ECS::get<Location>(player);
 
 		transform.direction = {
-    		cos(verticalAngle) * sin(horizontalAngle),
-    		sin(verticalAngle),
-    		cos(verticalAngle) * cos(horizontalAngle)
+			cos(verticalAngle) * sin(horizontalAngle),
+			sin(verticalAngle),
+			cos(verticalAngle) * cos(horizontalAngle)
 		};
 
 		glm::vec3 forward = glm::normalize(transform.direction);
