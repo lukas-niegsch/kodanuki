@@ -7,15 +7,6 @@ namespace Kodanuki
 {
 
 /**
- * The device hold all the information about the graphics card.
- *
- * It combines the concepts of an vulkan instance, vulkan physical
- * device, and vulkan device into one entity. Currently, it is not
- * possible to use multiple graphics card together.
- */
-typedef Entity Device;
-
-/**
  * Contains all the configurable information for creating a device.
  *
  * These values will be considered as much as possible when selecting
@@ -25,49 +16,62 @@ typedef Entity Device;
  * Example:
  * The layers/extensions are available.
  * The user has a gpu with graphics compute capabilities.
- * The selected gpu has at least the selected amount of queue families.
+ * The gpu has at least the selected amount of queue families.
  */
 struct DeviceCreateInfo
 {
-    // Enables the given layers for the vulkan instance.
-    std::vector<const char*> instance_layers;
+	// Enables the given layers for the vulkan instance.
+	std::vector<const char*> instance_layers;
 
-    // Enables the given extensions for the vulkan instance.
-    std::vector<const char*> instance_extensions;
+	// Enables the given extensions for the vulkan instance.
+	std::vector<const char*> instance_extensions;
 
-    // Enables the given extensions for the vulkan device.
-    std::vector<const char*> device_extensions;
+	// Enables the given extensions for the vulkan device.
+	std::vector<const char*> device_extensions;
 
-    // Selects the device with the best score.
-    std::function<int(VkPhysicalDevice)> gpu_score;
+	// Selects the device with the best score.
+	std::function<int(VkPhysicalDevice)> gpu_score;
 
-    // Selects the queue with the best score.
-    std::function<int(VkQueueFamilyProperties)> queue_score;
+	// Selects the queue with the best score.
+	std::function<int(VkQueueFamilyProperties)> queue_score;
 
-    // The number of queues and their priorities.
-    std::vector<float> queue_priorities;
+	// The number of queues and their priorities.
+	std::vector<float> queue_priorities;
 };
 
 /**
- * Creates a new graphics device from the given seed.
+ * The vulkan device is a wrapper around the graphics card.
  *
- * The device is an entity that holds several vulkan
- * struct. It should only be used as an opaque handle.
+ * Each vulkan device creates its own vulkan instance and picks
+ * some graphics card based on the provided builder. This class
+ * handles the interaction with the graphics card.
  *
- * @param seed The creation information for the device.
- * @return The new graphics device.
+ * Instances can be copied around freely and will release all
+ * ressources once unused.
  */
-Device create_device(DeviceCreateInfo seed);
+class VulkanDevice
+{
+public:
+	/**
+	 * Creates a new vulkan device from the given builder.
+	 *
+	 * @param builder The information on how to build the device.
+	 */
+	VulkanDevice(DeviceCreateInfo builder);
 
-/**
- * Removes the given graphics device.
- *
- * This will destroy all the vulkan handles and removes
- * all components from the device (potentially including
- * custom ones).
- *
- * @param device The graphics devices that should be removed.
- */
-void remove_device(Device device);
+public:
+	// Returns the handle to the instance.
+	VkInstance get_instance();
+
+	// Returns the handle to the physical device.
+	VkPhysicalDevice get_physical_device();
+
+	// Returns the handle to the logical device.
+	VkDevice get_logical_device();
+
+private:
+	// Destroys unused devices automatically.
+	std::shared_ptr<Entity> pimpl;
+};
 
 }

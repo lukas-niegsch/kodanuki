@@ -61,8 +61,28 @@ DeviceCreateInfo get_device_create_info()
     return result;
 }
 
+void do_something(VulkanDevice device)
+{
+	(void) device;
+	std::cout << "Hello, I am doing something!" << '\n';
+}
+
 int main()
 {
+	VulkanDevice device = {get_device_create_info()};
+	do_something(device);
+	do_something(device);
+	print_vulkan_info(device.get_physical_device());
+
+	// optional debug info:
+	// print_vulkan_info(vectorize<vkEnumerateInstanceExtensionProperties>(nullptr));
+	// print_vulkan_info(vectorize<vkEnumerateInstanceLayerProperties>());
+	// print_vulkan_info(vectorize<vkEnumerateDeviceExtensionProperties>(ECS::get<VkPhysicalDevice>(device), nullptr));
+
+	return 0;
+
+
+
 	int width = 1024;
 	int height = 768;
 
@@ -74,21 +94,17 @@ int main()
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
-	Device device = create_device(get_device_create_info());
+	//Device device = create_device(get_device_create_info());
 	
-	VkInstance instance = ECS::get<VkInstance>(device);
-	VkSurfaceKHR surface;
+	//VkInstance instance = ECS::get<VkInstance>(device);
+	//VkSurfaceKHR surface;
 
-	CHECK_VULKAN(glfwCreateWindowSurface(instance, window, nullptr, &surface));
+	// CHECK_VULKAN(glfwCreateWindowSurface(instance, window, nullptr, &surface));
 
-	// optional debug info:
-	// print_vulkan_info(vectorize<vkEnumerateInstanceExtensionProperties>(nullptr));
-	// print_vulkan_info(vectorize<vkEnumerateInstanceLayerProperties>());
-	// print_vulkan_info(ECS::get<VkPhysicalDevice>(device));
-	// print_vulkan_info(vectorize<vkEnumerateDeviceExtensionProperties>(ECS::get<VkPhysicalDevice>(device), nullptr));
 
-	vkDestroySurfaceKHR(instance, surface, nullptr);
-	remove_device(device);
+
+	//vkDestroySurfaceKHR(instance, surface, nullptr);
+	//remove_device(device);
 
 	return 0;
 	

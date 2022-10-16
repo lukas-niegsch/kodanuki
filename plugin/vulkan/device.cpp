@@ -88,29 +88,44 @@ std::vector<VkQueue> get_queue_handles(VkDevice logical_device, VkDeviceQueueCre
     return result;
 }
 
-Device create_device(DeviceCreateInfo seed)
+void remove_device(Entity* device)
 {
-    Entity device = ECS::create();
+    vkDestroyDevice(ECS::get<VkDevice>(*device), nullptr);
+    vkDestroyInstance(ECS::get<VkInstance>(*device), nullptr);
+    ECS::remove<Entity>(*device);
+    delete device;
+}
 
-    VkInstance instance = create_instance(seed.instance_layers, seed.instance_extensions);
-    VkPhysicalDevice physical_device = pick_physical_device(instance, seed.gpu_score);
-    VkDeviceQueueCreateInfo queue_family = pick_queue_family(physical_device, seed.queue_score, seed.queue_priorities);
-    VkDevice logical_device = create_logical_device(physical_device, queue_family, seed.device_extensions);
+VulkanDevice::VulkanDevice(DeviceCreateInfo builder)
+{
+    pimpl = std::shared_ptr<Entity>(new Entity, &remove_device);
+    Entity device = *pimpl = ECS::create();
+    
+    VkInstance instance = create_instance(builder.instance_layers, builder.instance_extensions);
+    VkPhysicalDevice physical_device = pick_physical_device(instance, builder.gpu_score);
+    VkDeviceQueueCreateInfo queue_family = pick_queue_family(physical_device, builder.queue_score, builder.queue_priorities);
+    VkDevice logical_device = create_logical_device(physical_device, queue_family, builder.device_extensions);
     std::vector<VkQueue> queues = get_queue_handles(logical_device, queue_family);
 
     ECS::update<VkInstance>(device, instance);
     ECS::update<VkPhysicalDevice>(device, physical_device);
     ECS::update<VkDevice>(device, logical_device);
     ECS::update<std::vector<VkQueue>>(device, queues);
-    
-    return device;
 }
 
-void remove_device(Device device)
+VkInstance VulkanDevice::get_instance()
 {
-    vkDestroyDevice(ECS::get<VkDevice>(device), nullptr);
-    vkDestroyInstance(ECS::get<VkInstance>(device), nullptr);
-    ECS::remove<Entity>(device);
+    return ECS::get<VkInstance>(*pimpl);
+}
+
+VkPhysicalDevice VulkanDevice::get_physical_device()
+{
+    return ECS::get<VkPhysicalDevice>(*pimpl);
+}
+
+VkDevice VulkanDevice::get_logical_device()
+{
+    return ECS::get<VkDevice>(*pimpl);
 }
 
 }
