@@ -37,29 +37,35 @@ constexpr GLfloat cube_strip[] = {
 #include "plugin/vulkan/device.h"
 #include "plugin/vulkan/debug.h"
 
-int main()
+DeviceCreateInfo get_device_create_info()
 {
-	// print_vulkan_info(vectorize<vkEnumerateInstanceExtensionProperties>(nullptr));
-	// print_vulkan_info(vectorize<vkEnumerateInstanceLayerProperties>());
-
-	DeviceCreateInfo device_info;
-	device_info.enabled_layers.push_back("VK_LAYER_KHRONOS_validation");
-	device_info.enabled_extensions.push_back("VK_KHR_surface");
-	device_info.enabled_extensions.push_back("VK_KHR_xcb_surface");
-	device_info.gpu_score = [](VkPhysicalDevice device) {
+    DeviceCreateInfo result;
+	result.enabled_layers.push_back("VK_LAYER_KHRONOS_validation");
+	result.enabled_extensions.push_back("VK_KHR_surface");
+	result.enabled_extensions.push_back("VK_KHR_xcb_surface");
+	result.gpu_score = [](VkPhysicalDevice device) {
 		VkPhysicalDeviceProperties properties;
 		vkGetPhysicalDeviceProperties(device, &properties);
 		return properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
 	};
-	device_info.queue_score = [](VkQueueFamilyProperties family) {
+	result.queue_score = [](VkQueueFamilyProperties family) {
 		int score = family.queueCount;
 		score *= family.queueFlags & VK_QUEUE_GRAPHICS_BIT;
 		return score;
 	};
-	device_info.queue_priorities = {1.0f};
+	result.queue_priorities = {1.0f, 1.0f};
+    return result;
+}
 
-	Device device = create_device(device_info);
+int main()
+{
+	Device device = create_device(get_device_create_info());
+	
+	// optional debug info:
+	// print_vulkan_info(vectorize<vkEnumerateInstanceExtensionProperties>(nullptr));
+	// print_vulkan_info(vectorize<vkEnumerateInstanceLayerProperties>());
 	// print_vulkan_info(ECS::get<VkPhysicalDevice>(device));
+
 	remove_device(device);
 
 	return 0;
