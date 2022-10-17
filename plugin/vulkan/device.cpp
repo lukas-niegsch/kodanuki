@@ -96,7 +96,7 @@ void remove_device(Entity* device)
 	delete device;
 }
 
-VulkanDevice::VulkanDevice(DeviceCreateInfo builder)
+VulkanDevice::VulkanDevice(DeviceBuilder builder)
 {
 	pimpl = std::shared_ptr<Entity>(new Entity, &remove_device);
 	Entity device = *pimpl = ECS::create();

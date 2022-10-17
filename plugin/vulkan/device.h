@@ -19,7 +19,7 @@ namespace Kodanuki
  * The user has a gpu with graphics compute capabilities.
  * The gpu has at least the selected amount of queue families.
  */
-struct DeviceCreateInfo
+struct DeviceBuilder
 {
 	// Enables the given layers for the vulkan instance.
 	std::vector<const char*> instance_layers;
@@ -53,12 +53,8 @@ struct DeviceCreateInfo
 class VulkanDevice
 {
 public:
-	/**
-	 * Creates a new vulkan device from the given builder.
-	 *
-	 * @param builder The information on how to build the device.
-	 */
-	VulkanDevice(DeviceCreateInfo builder);
+	// Creates a new vulkan device from the given builder.
+	VulkanDevice(DeviceBuilder builder);
 
 public:
 	// Returns the handle to the instance.

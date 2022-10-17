@@ -4,7 +4,7 @@
 namespace Kodanuki
 {
 
-VkSwapchainKHR create_swapchain(SwapchainCreateInfo builder)
+VkSwapchainKHR create_swapchain(SwapchainBuilder builder)
 {
 	VkSurfaceCapabilitiesKHR capabilities;
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(builder.device.physical_device(), builder.surface, &capabilities);
@@ -32,7 +32,7 @@ VkSwapchainKHR create_swapchain(SwapchainCreateInfo builder)
 	return result;
 }
 
-std::vector<VkImageView> create_image_views(SwapchainCreateInfo builder, VkSwapchainKHR swapchain)
+std::vector<VkImageView> create_image_views(SwapchainBuilder builder, VkSwapchainKHR swapchain)
 {
 	VkDevice logical_device = builder.device.logical_device();
 	std::vector<VkImage> images = vectorize<vkGetSwapchainImagesKHR>(logical_device, swapchain);
@@ -77,7 +77,7 @@ void remove_swapchain(Entity* swapchain)
 	delete swapchain;
 }
 
-VulkanSwapchain::VulkanSwapchain(SwapchainCreateInfo builder)
+VulkanSwapchain::VulkanSwapchain(SwapchainBuilder builder)
 {
 	pimpl = std::shared_ptr<Entity>(new Entity, &remove_swapchain);
 	Entity swapchain = *pimpl = ECS::create();

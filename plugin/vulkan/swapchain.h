@@ -19,7 +19,7 @@ namespace Kodanuki
  * The gpu has at least the selected amount of queue families.
  * The present mode must be available.
  */
-struct SwapchainCreateInfo
+struct SwapchainBuilder
 {
 	// The vulkan device for which the swapchain is created.
 	VulkanDevice device;
@@ -51,12 +51,8 @@ struct SwapchainCreateInfo
 class VulkanSwapchain
 {
 public:
-	/**
-	 * Creates a new vulkan swapchain from the given builder.
-	 *
-	 * @param builder The information on how to build the swapchain.
-	 */
-	VulkanSwapchain(SwapchainCreateInfo builder);
+	// Creates a new vulkan swapchain from the given builder.
+	VulkanSwapchain(SwapchainBuilder builder);
 
 public:
 	// Returns the handle to the surface.

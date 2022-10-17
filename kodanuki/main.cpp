@@ -1,6 +1,7 @@
-#include "plugin/vulkan/device.h"
-#include "plugin/vulkan/swapchain.h"
 #include "plugin/vulkan/debug.h"
+#include "plugin/vulkan/device.h"
+#include "plugin/vulkan/pipeline.h"
+#include "plugin/vulkan/swapchain.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 using namespace Kodanuki;
@@ -47,11 +48,14 @@ int score_queue_family(VkQueueFamilyProperties family)
 	return score;
 }
 
-DeviceCreateInfo get_device_create_info()
+DeviceBuilder get_device_builder()
 {
+	uint32_t count;
+	const char** extensions = glfwGetRequiredInstanceExtensions(&count);
+
 	return {
 		.instance_layers = {"VK_LAYER_KHRONOS_validation"},
-		.instance_extensions = {"VK_KHR_surface", "VK_KHR_xcb_surface"},
+		.instance_extensions = std::vector(extensions, extensions + count),
 		.device_extensions = {"VK_KHR_swapchain"},
 		.gpu_score = &score_physical_device,
 		.queue_score = &score_queue_family,
@@ -59,7 +63,7 @@ DeviceCreateInfo get_device_create_info()
 	};
 }
 
-SwapchainCreateInfo get_swapchain_create_info(VulkanDevice device, GLFWwindow* window)
+SwapchainBuilder get_swapchain_builder(VulkanDevice device, GLFWwindow* window)
 {
 	VkInstance instance = device.instance();
 	VkSurfaceKHR surface;
@@ -74,11 +78,23 @@ SwapchainCreateInfo get_swapchain_create_info(VulkanDevice device, GLFWwindow* w
 	};
 }
 
+PipelineBuilder get_example_pipeline_builder(VulkanDevice device)
+{
+	return {
+		.device = device,
+		.vertex_shader = {},
+		.tesselation = {},
+		.geometry_shader = {},
+		.fragment_shader = {}
+	};
+}
+
 int main()
 {
 	GLFWwindow* window = create_default_window(1024, 768);
-	VulkanDevice device = {get_device_create_info()};
-	VulkanSwapchain swapchain = {get_swapchain_create_info(device, window)};
+	VulkanDevice device = {get_device_builder()};
+	VulkanSwapchain swapchain = {get_swapchain_builder(device, window)};
+	VulkanPipeline pipeline = {get_example_pipeline_builder(device)};
 	glfwTerminate();
 	return 0;
 }
