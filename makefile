@@ -30,9 +30,9 @@ ninja: build
 compile: ninja
 	ninja -C $(BIN_DIR) $(OUT_DIR)/$(RUNNABLE)
 
-shader:
-	glslc engine/graphics/shader/polygon.frag -o engine/graphics/shader/polygon.frag.spv
-	glslc engine/graphics/shader/polygon.vert -o engine/graphics/shader/polygon.vert.spv
+shaders:
+	glslc shader/example.vert -o shader/example.vert.spv
+	glslc shader/example.frag -o shader/example.frag.spv
 
 stats:
 	pygount --format=summary

@@ -1,5 +1,6 @@
 #pragma once
 #include "plugin/vulkan/device.h"
+#include "plugin/vulkan/shader.h"
 #include "engine/central/entity.h"
 #include <vulkan/vulkan.h>
 #include <memory>
@@ -23,16 +24,16 @@ struct PipelineBuilder
 	VulkanDevice device;
 
 	// The handle to the vertex shader module.
-	std::optional<VkShaderModule> vertex_shader;
+	std::optional<VulkanShader> vertex_shader;
 
 	// The handle to the tesselation shader module.
-	std::optional<VkShaderModule> tesselation;
+	std::optional<VulkanShader> tesselation;
 
 	// The handle to the geometry shader module.
-	std::optional<VkShaderModule> geometry_shader;
+	std::optional<VulkanShader> geometry_shader;
 
 	// The handle to the fragment shader module.
-	std::optional<VkShaderModule> fragment_shader;
+	std::optional<VulkanShader> fragment_shader;
 };
 
 /**
@@ -42,7 +43,7 @@ struct PipelineBuilder
  * builder and handles the iteration with them. Pipelines must be recreated
  * manually for every changes in the shader.
  * 
- * Instances can be compied around freely and will release all
+ * Instances can be copied around freely and will release all
  * ressources once unused.
  */
 class VulkanPipeline

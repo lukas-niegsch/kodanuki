@@ -1,7 +1,9 @@
 #include "plugin/vulkan/debug.h"
 #include "plugin/vulkan/device.h"
 #include "plugin/vulkan/pipeline.h"
+#include "plugin/vulkan/shader.h"
 #include "plugin/vulkan/swapchain.h"
+#include "engine/utility/file.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 using namespace Kodanuki;
@@ -80,12 +82,15 @@ SwapchainBuilder get_swapchain_builder(VulkanDevice device, GLFWwindow* window)
 
 PipelineBuilder get_example_pipeline_builder(VulkanDevice device)
 {
+	ShaderBuilder example_vertex_builder = {device, read_file_into_buffer("shader/example.vert.spv")};
+	ShaderBuilder example_fragment_builder = {device, read_file_into_buffer("shader/example.frag.spv")};
+
 	return {
 		.device = device,
-		.vertex_shader = {},
+		.vertex_shader = VulkanShader(example_vertex_builder),
 		.tesselation = {},
 		.geometry_shader = {},
-		.fragment_shader = {}
+		.fragment_shader = VulkanShader(example_fragment_builder)
 	};
 }
 

@@ -44,7 +44,7 @@ struct SwapchainBuilder
  * and handles the swapping of the buffered images. It handles the
  * output of some vulkan pipeline.
  *
- * Instances can be compied around freely and will release all
+ * Instances can be copied around freely and will release all
  * ressources once unused. The vulkan swapchain maintains the give
  * surface (including destroying it afterwards).
  */
