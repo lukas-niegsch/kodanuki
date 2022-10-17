@@ -30,10 +30,6 @@ void RenderModule::detach(Family)
 	}
 	vkDestroyPipeline(device, graphicsPipeline, nullptr);
 	vkDestroyRenderPass(device, renderPass, nullptr);
-	for (auto imageView : imageViews) {
-		vkDestroyImageView(device, imageView, nullptr);
-	}
-	vkDestroySwapchainKHR(device, swapchain, nullptr);
 }
 
 void RenderModule::update(Family)
@@ -48,64 +44,6 @@ void RenderModule::update(Family)
 	recordCommandBuffer(commandBuffer, imageIndex);
 	submitCommandBuffer(commandBuffer);
 	presentImage(imageIndex);
-}
-
-void RenderModule::createSwapChain()
-{
-	VkSurfaceCapabilitiesKHR surfaceCapabilities;
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities);
-
-	imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
-	imageExtent = surfaceCapabilities.currentExtent;
-
-	VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
-	swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	swapchainCreateInfo.surface = surface;
-	swapchainCreateInfo.minImageCount = 3;
-	swapchainCreateInfo.imageFormat = imageFormat;
-	swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-	swapchainCreateInfo.imageExtent = imageExtent;
-	swapchainCreateInfo.imageArrayLayers = 1;
-	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	swapchainCreateInfo.queueFamilyIndexCount = 1;
-	swapchainCreateInfo.pQueueFamilyIndices = &queueFamilyIndex;
-	swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-	swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-	swapchainCreateInfo.clipped = true;
-	swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
-
-	auto result = vkCreateSwapchainKHR(device, &swapchainCreateInfo, nullptr, &swapchain);
-	VERIFY_VULKAN_RESULT(result);
-
-	images = getSwapchainImagesKHR(device, swapchain);
-}
-
-void RenderModule::createImageViews()
-{
-	imageViews.resize(images.size());
-
-	VkImageViewCreateInfo viewCreateInfo = {};
-	viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	viewCreateInfo.format = imageFormat;
-	viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-	viewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-	viewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-	viewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-	viewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	viewCreateInfo.subresourceRange.baseMipLevel = 0;
-	viewCreateInfo.subresourceRange.levelCount = 1;
-	viewCreateInfo.subresourceRange.baseArrayLayer = 0;
-	viewCreateInfo.subresourceRange.layerCount = 1;
-
-	for (uint32_t i = 0; i < imageViews.size(); i++)
-	{
-		viewCreateInfo.image = images[i];
-		auto result = vkCreateImageView(device, &viewCreateInfo, nullptr, &imageViews[i]);
-		VERIFY_VULKAN_RESULT(result);
-	}
 }
 
 void RenderModule::createRenderPass()
@@ -153,29 +91,6 @@ void RenderModule::createRenderPass()
 void RenderModule::createGraphicsPipeline()
 {
 	graphicsPipeline = CreatePipelineForPolygon(device, renderPass);
-}
-
-void RenderModule::createFramebuffers()
-{
-	framebuffers.resize(imageViews.size());
-
-	for (size_t i = 0; i < imageViews.size(); i++) {
-		VkImageView attachments[] = {
-			imageViews[i]
-		};
-
-		VkFramebufferCreateInfo framebufferInfo = {};
-		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-		framebufferInfo.renderPass = renderPass;
-		framebufferInfo.attachmentCount = 1;
-		framebufferInfo.pAttachments = attachments;
-		framebufferInfo.width = imageExtent.width;
-		framebufferInfo.height = imageExtent.height;
-		framebufferInfo.layers = 1;
-
-		auto result = vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebuffers[i]);
-		VERIFY_VULKAN_RESULT(result);
-	}
 }
 
 void RenderModule::createCommandPool()
