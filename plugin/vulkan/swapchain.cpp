@@ -27,16 +27,16 @@ VkSwapchainKHR create_swapchain(SwapchainCreateInfo builder)
 	swapchain_info.clipped = true;
 	swapchain_info.oldSwapchain = VK_NULL_HANDLE;
 
-    VkSwapchainKHR result;
+	VkSwapchainKHR result;
 	CHECK_VULKAN(vkCreateSwapchainKHR(builder.device.logical_device(), &swapchain_info, nullptr, &result));
 	return result;
 }
 
 std::vector<VkImageView> create_image_views(SwapchainCreateInfo builder, VkSwapchainKHR swapchain)
 {
-    VkDevice logical_device = builder.device.logical_device();
-    std::vector<VkImage> images = vectorize<vkGetSwapchainImagesKHR>(logical_device, swapchain);
-    std::vector<VkImageView> views(images.size());
+	VkDevice logical_device = builder.device.logical_device();
+	std::vector<VkImage> images = vectorize<vkGetSwapchainImagesKHR>(logical_device, swapchain);
+	std::vector<VkImageView> views(images.size());
 
 	VkImageViewCreateInfo view_info = {};
 	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -58,21 +58,21 @@ std::vector<VkImageView> create_image_views(SwapchainCreateInfo builder, VkSwapc
 		CHECK_VULKAN(vkCreateImageView(logical_device, &view_info, nullptr, &views[i]));
 	}
 
-    return views;
+	return views;
 }
 
 void remove_swapchain(Entity* swapchain)
 {
-    VulkanDevice device = ECS::get<VulkanDevice>(*swapchain);
-    VkSurfaceKHR surface = ECS::get<VkSurfaceKHR>(*swapchain);
-    VkSwapchainKHR actual_swapchain = ECS::get<VkSwapchainKHR>(*swapchain);
-    std::vector<VkImageView> views = ECS::get<std::vector<VkImageView>>(*swapchain);
-    
+	VulkanDevice device = ECS::get<VulkanDevice>(*swapchain);
+	VkSurfaceKHR surface = ECS::get<VkSurfaceKHR>(*swapchain);
+	VkSwapchainKHR actual_swapchain = ECS::get<VkSwapchainKHR>(*swapchain);
+	std::vector<VkImageView> views = ECS::get<std::vector<VkImageView>>(*swapchain);
+	
 	for (auto view : views) {
 		vkDestroyImageView(device.logical_device(), view, nullptr);
 	}
-    vkDestroySwapchainKHR(device.logical_device(), actual_swapchain, nullptr);
-    vkDestroySurfaceKHR(device.instance(), surface, nullptr);
+	vkDestroySwapchainKHR(device.logical_device(), actual_swapchain, nullptr);
+	vkDestroySurfaceKHR(device.instance(), surface, nullptr);
 	ECS::remove<Entity>(*swapchain);
 	delete swapchain;
 }
@@ -82,23 +82,23 @@ VulkanSwapchain::VulkanSwapchain(SwapchainCreateInfo builder)
 	pimpl = std::shared_ptr<Entity>(new Entity, &remove_swapchain);
 	Entity swapchain = *pimpl = ECS::create();
 
-    VkSwapchainKHR actual_swapchain = create_swapchain(builder);
-    std::vector<VkImageView> views = create_image_views(builder, actual_swapchain);
+	VkSwapchainKHR actual_swapchain = create_swapchain(builder);
+	std::vector<VkImageView> views = create_image_views(builder, actual_swapchain);
 
-    ECS::update<VulkanDevice>(swapchain, builder.device);
-    ECS::update<VkSurfaceKHR>(swapchain, builder.surface);
-    ECS::update<VkSwapchainKHR>(swapchain, actual_swapchain);
-    ECS::update<std::vector<VkImageView>>(swapchain, views);
+	ECS::update<VulkanDevice>(swapchain, builder.device);
+	ECS::update<VkSurfaceKHR>(swapchain, builder.surface);
+	ECS::update<VkSwapchainKHR>(swapchain, actual_swapchain);
+	ECS::update<std::vector<VkImageView>>(swapchain, views);
 }
 
 VkSurfaceKHR VulkanSwapchain::surface()
 {
-    return ECS::get<VkSurfaceKHR>(*pimpl);
+	return ECS::get<VkSurfaceKHR>(*pimpl);
 }
 
 std::vector<VkImageView> VulkanSwapchain::image_views()
 {
-    return ECS::get<std::vector<VkImageView>>(*pimpl);
+	return ECS::get<std::vector<VkImageView>>(*pimpl);
 }
 
 }
