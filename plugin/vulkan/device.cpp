@@ -113,19 +113,24 @@ VulkanDevice::VulkanDevice(DeviceCreateInfo builder)
 	ECS::update<std::vector<VkQueue>>(device, queues);
 }
 
-VkInstance VulkanDevice::get_instance()
+VkInstance VulkanDevice::instance()
 {
 	return ECS::get<VkInstance>(*pimpl);
 }
 
-VkPhysicalDevice VulkanDevice::get_physical_device()
+VkPhysicalDevice VulkanDevice::physical_device()
 {
 	return ECS::get<VkPhysicalDevice>(*pimpl);
 }
 
-VkDevice VulkanDevice::get_logical_device()
+VkDevice VulkanDevice::logical_device()
 {
 	return ECS::get<VkDevice>(*pimpl);
+}
+
+std::vector<VkQueue> VulkanDevice::queues()
+{
+	return ECS::get<std::vector<VkQueue>>(*pimpl);
 }
 
 }

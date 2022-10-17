@@ -61,13 +61,16 @@ public:
 
 public:
 	// Returns the handle to the instance.
-	VkInstance get_instance();
+	VkInstance instance();
 
 	// Returns the handle to the physical device.
-	VkPhysicalDevice get_physical_device();
+	VkPhysicalDevice physical_device();
 
 	// Returns the handle to the logical device.
-	VkDevice get_logical_device();
+	VkDevice logical_device();
+
+	// Returns the handles to the queues.
+	std::vector<VkQueue> queues();
 
 private:
 	// Destroys unused devices automatically.
