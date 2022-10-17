@@ -61,6 +61,9 @@ public:
 	// Returns the handles to the image views.
 	std::vector<VkImageView> image_views();
 
+	// Returns the used surface format.
+	VkSurfaceFormatKHR surface_format();
+
 private:
 	// Destroys unused swapchains automatically.
 	std::shared_ptr<Entity> pimpl;

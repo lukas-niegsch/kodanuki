@@ -89,6 +89,7 @@ VulkanSwapchain::VulkanSwapchain(SwapchainBuilder builder)
 	ECS::update<VkSurfaceKHR>(swapchain, builder.surface);
 	ECS::update<VkSwapchainKHR>(swapchain, actual_swapchain);
 	ECS::update<std::vector<VkImageView>>(swapchain, views);
+	ECS::update<VkSurfaceFormatKHR>(swapchain, builder.surface_format);
 }
 
 VkSurfaceKHR VulkanSwapchain::surface()
@@ -99,6 +100,11 @@ VkSurfaceKHR VulkanSwapchain::surface()
 std::vector<VkImageView> VulkanSwapchain::image_views()
 {
 	return ECS::get<std::vector<VkImageView>>(*pimpl);
+}
+
+VkSurfaceFormatKHR VulkanSwapchain::surface_format()
+{
+	return ECS::get<VkSurfaceFormatKHR>(*pimpl);
 }
 
 }

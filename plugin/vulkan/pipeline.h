@@ -17,11 +17,15 @@ namespace Kodanuki
  *
  * Example:
  * The shader must be formatted correctly.
+ * Input attachments and shader's must match.
  */
 struct PipelineBuilder
 {
 	// The vulkan device for which the pipeline is created.
 	VulkanDevice device;
+
+	// The renderpass that the pipeline should use.
+	VkRenderPass renderpass;
 
 	// The handle to the vertex shader module.
 	std::optional<VulkanShader> vertex_shader;
@@ -34,6 +38,27 @@ struct PipelineBuilder
 
 	// The handle to the fragment shader module.
 	std::optional<VulkanShader> fragment_shader;
+	
+	// The configuration of the dynamic state.
+	VkPipelineDynamicStateCreateInfo dynamic_state;
+
+	// The configuration of the vertex input state.
+	VkPipelineVertexInputStateCreateInfo vertex_input;
+
+	// The configuration of the input assembly state.
+	VkPipelineInputAssemblyStateCreateInfo input_assembly;
+
+	// The configuration of the rasterization state.
+	VkPipelineRasterizationStateCreateInfo resterization;
+
+	// The configuration of the color blend state.
+	VkPipelineColorBlendStateCreateInfo color_blend;
+
+	// The configuration of the viewport state.
+	VkPipelineViewportStateCreateInfo viewport;
+
+	// The configuration of the multisample state.
+	VkPipelineMultisampleStateCreateInfo multisample;
 };
 
 /**
@@ -45,6 +70,8 @@ struct PipelineBuilder
  * 
  * Instances can be copied around freely and will release all
  * ressources once unused.
+ *
+ * TODO: @design Does the pipeline (own|includes|weakrefs) an renderpass?
  */
 class VulkanPipeline
 {

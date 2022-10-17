@@ -1,3 +1,4 @@
+#include "pipelines/example.h"
 #include "plugin/vulkan/debug.h"
 #include "plugin/vulkan/device.h"
 #include "plugin/vulkan/pipeline.h"
@@ -27,7 +28,6 @@ constexpr GLfloat cube_strip[] = {
 
 GLFWwindow* create_default_window(int width, int height)
 {
-	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	GLFWwindow* window = glfwCreateWindow(width, height, "", NULL, NULL);
@@ -80,26 +80,45 @@ SwapchainBuilder get_swapchain_builder(VulkanDevice device, GLFWwindow* window)
 	};
 }
 
-PipelineBuilder get_example_pipeline_builder(VulkanDevice device)
+PipelineBuilder get_example_pipeline_builder(ExamplePipelineInfo example, VulkanDevice device, VulkanSwapchain swapchain)
 {
-	ShaderBuilder example_vertex_builder = {device, read_file_into_buffer("shader/example.vert.spv")};
-	ShaderBuilder example_fragment_builder = {device, read_file_into_buffer("shader/example.frag.spv")};
+	ShaderBuilder example_vertex_builder = {
+		.device = device,
+		.code = read_file_into_buffer("shader/example.vert.spv"),
+		.entry_point = "main"
+	};
+
+	ShaderBuilder example_fragment_builder = {
+		.device = device,
+		.code = read_file_into_buffer("shader/example.frag.spv"),
+		.entry_point = "main"
+	};
 
 	return {
 		.device = device,
+		.renderpass = example.get_renderpass(device, swapchain),
 		.vertex_shader = VulkanShader(example_vertex_builder),
 		.tesselation = {},
 		.geometry_shader = {},
-		.fragment_shader = VulkanShader(example_fragment_builder)
+		.fragment_shader = VulkanShader(example_fragment_builder),
+		.dynamic_state = example.get_dynamic_state(),
+		.vertex_input = example.get_vertex_input(),
+		.input_assembly = example.get_input_assembly(),
+		.resterization = example.get_resterization(),
+		.color_blend = example.get_color_blend(),
+		.viewport = example.get_viewport(),
+		.multisample = example.get_multisample()
 	};
 }
 
 int main()
 {
+	glfwInit();
 	GLFWwindow* window = create_default_window(1024, 768);
 	VulkanDevice device = {get_device_builder()};
 	VulkanSwapchain swapchain = {get_swapchain_builder(device, window)};
-	VulkanPipeline pipeline = {get_example_pipeline_builder(device)};
+	ExamplePipelineInfo example;
+	VulkanPipeline pipeline = {get_example_pipeline_builder(example, device, swapchain)};
 	glfwTerminate();
 	return 0;
 }

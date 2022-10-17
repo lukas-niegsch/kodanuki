@@ -27,20 +27,32 @@ void remove_shader(Entity* shader)
     delete shader;
 }
 
+struct VulkanShaderInfo
+{
+    std::string entry_point;
+};
+
 VulkanShader::VulkanShader(ShaderBuilder builder)
 {
 	pimpl = std::shared_ptr<Entity>(new Entity, &remove_shader);
 	Entity shader = *pimpl = ECS::create();
 
     VkShaderModule shader_module = create_shader_module(builder);
+    VulkanShaderInfo info = {builder.entry_point};
 
     ECS::update<VulkanDevice>(shader, builder.device);
     ECS::update<VkShaderModule>(shader, shader_module);
+    ECS::update<VulkanShaderInfo>(shader, info);
 }
 
 VkShaderModule VulkanShader::shader_module()
 {
     return ECS::get<VkShaderModule>(*pimpl);
+}
+
+std::string VulkanShader::entry_point()
+{
+    return ECS::get<VulkanShaderInfo>(*pimpl).entry_point;
 }
 
 }

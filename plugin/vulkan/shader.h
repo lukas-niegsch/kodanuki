@@ -23,6 +23,9 @@ struct ShaderBuilder
 
 	// The code content of the shader.
 	std::vector<char> code;
+
+	// The entry point of the shader.
+	std::string entry_point;
 };
 
 /**
@@ -43,6 +46,9 @@ public:
 public:
 	// Returns the handle to the shader module.
 	VkShaderModule shader_module();
+
+	// Returns the entry point of the shader.
+	std::string entry_point();
 
 private:
 	// Destroys unused shaders automatically.
