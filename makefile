@@ -2,7 +2,7 @@
 # Configuration                                                                #
 ################################################################################
 SHELL := /bin/bash
-FLAGS := -O2 -std=c++2b -Wall -Wextra -Werror
+FLAGS := -O2 -std=c++2b -Wall -Wextra -Werror -g
 SRC_DIR := $(CURDIR)
 OUT_DIR := /var/tmp/kodanuki
 BIN_DIR := $(OUT_DIR)/build

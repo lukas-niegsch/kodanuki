@@ -64,15 +64,12 @@ SwapchainCreateInfo get_swapchain_create_info(VulkanDevice device, GLFWwindow* w
 	VkInstance instance = device.instance();
 	VkSurfaceKHR surface;
 	CHECK_VULKAN(glfwCreateWindowSurface(instance, window, nullptr, &surface));
-	uint32_t width, height;
-	glfwGetWindowSize(window, (int*) &width, (int*) &height);
 
 	return {
 		.device = device,
 		.surface = surface,
-		.format = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
+		.surface_format = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
 		.present_mode = VK_PRESENT_MODE_FIFO_KHR,
-		.extent = {width, height},
 		.frame_count = 2
 	};
 }

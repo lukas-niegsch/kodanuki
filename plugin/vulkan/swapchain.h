@@ -28,13 +28,10 @@ struct SwapchainCreateInfo
 	VkSurfaceKHR surface;
 
 	// The surface format that the swapchain will use.
-	VkSurfaceFormatKHR format;
+	VkSurfaceFormatKHR surface_format;
 
 	// The present mode in which the frames will be rendered.
 	VkPresentModeKHR present_mode;
-
-	// The extent of the given surface.
-	VkExtent2D extent;
 
 	// The number of frames that should be buffered.
 	uint32_t frame_count;
