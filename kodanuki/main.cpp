@@ -1,4 +1,5 @@
 #include "plugin/vulkan/device.h"
+#include "plugin/vulkan/swapchain.h"
 #include "plugin/vulkan/debug.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -58,16 +59,29 @@ DeviceCreateInfo get_device_create_info()
 	};
 }
 
-int main()
+SwapchainCreateInfo get_swapchain_create_info(VulkanDevice device, GLFWwindow* window)
 {
-	VulkanDevice device = {get_device_create_info()};
-	GLFWwindow* window = create_default_window(1024, 768);
 	VkInstance instance = device.instance();
-
 	VkSurfaceKHR surface;
 	CHECK_VULKAN(glfwCreateWindowSurface(instance, window, nullptr, &surface));
-	
-	vkDestroySurfaceKHR(instance, surface, nullptr);
+	uint32_t width, height;
+	glfwGetWindowSize(window, (int*) &width, (int*) &height);
+
+	return {
+		.device = device,
+		.surface = surface,
+		.format = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
+		.present_mode = VK_PRESENT_MODE_FIFO_KHR,
+		.extent = {width, height},
+		.frame_count = 2
+	};
+}
+
+int main()
+{
+	GLFWwindow* window = create_default_window(1024, 768);
+	VulkanDevice device = {get_device_create_info()};
+	VulkanSwapchain swapchain = {get_swapchain_create_info(device, window)};
 	glfwTerminate();
 	return 0;
 }

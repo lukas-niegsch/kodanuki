@@ -2,6 +2,7 @@
 #include "engine/central/entity.h"
 #include <vulkan/vulkan.h>
 #include <functional>
+#include <memory>
 
 namespace Kodanuki
 {

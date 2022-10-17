@@ -105,6 +105,11 @@ void print_vulkan_version(std::string name, uint32_t version)
 	std::cout << VK_VERSION_PATCH(version) << "\n";
 }
 
+void print_vulkan_extend(std::string name, VkExtent2D extend)
+{
+	std::cout << name << ": " << extend.width << ' ' << extend.height << '\n';
+}
+
 //////////////////////////////// Specializations ///////////////////////////////
 template <>
 void print_vulkan_struct(VkExtensionProperties info)
@@ -262,4 +267,50 @@ void print_vulkan_info(VkPhysicalDevice info)
 	VkPhysicalDeviceFeatures features;
 	vkGetPhysicalDeviceFeatures(info, &features);
 	print_vulkan_info(features);
+}
+
+template <>
+void print_vulkan_struct(VkSurfaceFormatKHR info)
+{
+	std::cout << "format: " << info.format << '\n';
+	std::cout << "colorSpace: " << info.colorSpace << '\n';
+}
+
+template <>
+void print_vulkan_struct(VkPresentModeKHR info)
+{
+	std::cout << "mode: ";
+	switch(info)
+	{
+	case VK_PRESENT_MODE_IMMEDIATE_KHR:
+		std::cout << "VK_PRESENT_MODE_IMMEDIATE_KHR";
+		break;
+	case VK_PRESENT_MODE_MAILBOX_KHR:
+		std::cout << "VK_PRESENT_MODE_MAILBOX_KHR";
+		break;
+	case VK_PRESENT_MODE_FIFO_KHR:
+		std::cout << "VK_PRESENT_MODE_FIFO_KHR";
+		break;
+	case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+		std::cout << "VK_PRESENT_MODE_FIFO_RELAXED_KHR";
+		break;
+	default:
+		std::cout << "unknown";
+	}
+	std::cout << '\n';
+}
+
+template <>
+void print_vulkan_struct(VkSurfaceCapabilitiesKHR info)
+{
+	std::cout << "minImageCount: " << info.minImageCount << '\n';
+	std::cout << "maxImageCount: " << info.maxImageCount << '\n';
+	print_vulkan_extend("currentExtent", info.currentExtent);
+	print_vulkan_extend("minImageExtent", info.minImageExtent);
+	print_vulkan_extend("maxImageExtent", info.maxImageExtent);
+	std::cout << "maxImageArrayLayers: " << info.maxImageArrayLayers << '\n';
+	std::cout << "supportedTransforms: " << info.supportedTransforms << '\n';
+	std::cout << "currentTransform: " << info.currentTransform << '\n';
+	std::cout << "supportedCompositeAlpha: " << info.supportedCompositeAlpha << '\n';
+	std::cout << "supportedUsageFlags: " << info.supportedUsageFlags << '\n';
 }
