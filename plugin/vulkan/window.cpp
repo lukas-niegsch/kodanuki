@@ -16,7 +16,7 @@ GLFWwindow* create_window(WindowBuilder builder)
 	glfwWindowHint(GLFW_RESIZABLE, builder.resizeable ? GLFW_TRUE : GLFW_FALSE);
 	window = glfwCreateWindow(size.width, size.height, builder.title.c_str(), NULL, NULL);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	return window;
 }
 
