@@ -64,6 +64,15 @@ public:
 	// Returns the used surface format.
 	VkSurfaceFormatKHR surface_format();
 
+	// Returns the handle to the actual swapchain.
+	VkSwapchainKHR swapchain();
+
+	// Returns the current surface extent.
+	VkExtent2D surface_extent();
+
+	// Returns the number of frames that are used simultaneously.
+	uint32_t frame_count();
+
 private:
 	// Destroys unused swapchains automatically.
 	std::shared_ptr<Entity> pimpl;

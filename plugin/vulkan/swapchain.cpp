@@ -107,4 +107,22 @@ VkSurfaceFormatKHR VulkanSwapchain::surface_format()
 	return ECS::get<VkSurfaceFormatKHR>(*pimpl);
 }
 
+VkSwapchainKHR VulkanSwapchain::swapchain()
+{
+	return ECS::get<VkSwapchainKHR>(*pimpl);
+}
+
+VkExtent2D VulkanSwapchain::surface_extent()
+{
+	VkPhysicalDevice device = ECS::get<VulkanDevice>(*pimpl).physical_device();
+	VkSurfaceCapabilitiesKHR capabilities;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface(), &capabilities);
+	return capabilities.currentExtent;
+}
+
+uint32_t VulkanSwapchain::frame_count()
+{
+	return image_views().size();
+}
+
 }
