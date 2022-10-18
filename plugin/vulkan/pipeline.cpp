@@ -64,25 +64,25 @@ VkPipeline create_pipeline(PipelineBuilder& builder)
 	CHECK_VULKAN(vkCreatePipelineLayout(device, &layout_info, nullptr, &layout));
 
 	VkGraphicsPipelineCreateInfo pipeline_info;
-    pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipeline_info.pNext = nullptr;
-    pipeline_info.flags = 0;
-    pipeline_info.stageCount = shader_stages.size();
-    pipeline_info.pStages = shader_stages.data();
-    pipeline_info.pVertexInputState = &builder.vertex_input;
-    pipeline_info.pInputAssemblyState = &builder.input_assembly;
-    pipeline_info.pTessellationState = nullptr;
-    pipeline_info.pViewportState = &builder.viewport;
-    pipeline_info.pRasterizationState = &builder.resterization;
-    pipeline_info.pMultisampleState = &builder.multisample;
-    pipeline_info.pDepthStencilState = nullptr;
-    pipeline_info.pColorBlendState = &builder.color_blend;
-    pipeline_info.pDynamicState = &builder.dynamic_state;
-    pipeline_info.layout = layout;
-    pipeline_info.renderPass = builder.renderpass;
-    pipeline_info.subpass = 0;
-    pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
-    pipeline_info.basePipelineIndex = -1;
+	pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipeline_info.pNext = nullptr;
+	pipeline_info.flags = 0;
+	pipeline_info.stageCount = shader_stages.size();
+	pipeline_info.pStages = shader_stages.data();
+	pipeline_info.pVertexInputState = &builder.vertex_input;
+	pipeline_info.pInputAssemblyState = &builder.input_assembly;
+	pipeline_info.pTessellationState = nullptr;
+	pipeline_info.pViewportState = &builder.viewport;
+	pipeline_info.pRasterizationState = &builder.resterization;
+	pipeline_info.pMultisampleState = &builder.multisample;
+	pipeline_info.pDepthStencilState = nullptr;
+	pipeline_info.pColorBlendState = &builder.color_blend;
+	pipeline_info.pDynamicState = &builder.dynamic_state;
+	pipeline_info.layout = layout;
+	pipeline_info.renderPass = builder.renderpass;
+	pipeline_info.subpass = 0;
+	pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
+	pipeline_info.basePipelineIndex = -1;
 
 	VkPipeline pipeline;
 	CHECK_VULKAN(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &pipeline));
@@ -109,7 +109,7 @@ VulkanPipeline::VulkanPipeline(PipelineBuilder builder)
 	
 	VkPipeline actual_pipeline = create_pipeline(builder);
 
-    ECS::update<VulkanDevice>(pipeline, builder.device);
+	ECS::update<VulkanDevice>(pipeline, builder.device);
 	ECS::update<VkPipeline>(pipeline, actual_pipeline);
 	ECS::update<VkRenderPass>(pipeline, builder.renderpass);
 }

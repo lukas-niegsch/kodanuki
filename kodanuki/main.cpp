@@ -4,9 +4,8 @@
 #include "plugin/vulkan/pipeline.h"
 #include "plugin/vulkan/shader.h"
 #include "plugin/vulkan/swapchain.h"
+#include "plugin/vulkan/window.h"
 #include "engine/utility/file.h"
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 using namespace Kodanuki;
 
 constexpr GLfloat cube_strip[] = {
@@ -26,14 +25,13 @@ constexpr GLfloat cube_strip[] = {
 	-1,  1, -1
 };
 
-GLFWwindow* create_default_window(int width, int height)
+WindowBuilder get_window_builder(std::string title, int width, int height)
 {
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-	GLFWwindow* window = glfwCreateWindow(width, height, "", NULL, NULL);
-	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-	return window;
+	return {
+		.title = title,
+		.default_size = {(uint32_t) width, (uint32_t) height},
+		.resizeable = false
+	};
 }
 
 int score_physical_device(VkPhysicalDevice device)
@@ -50,14 +48,11 @@ int score_queue_family(VkQueueFamilyProperties family)
 	return score;
 }
 
-DeviceBuilder get_device_builder()
+DeviceBuilder get_device_builder(VulkanWindow window)
 {
-	uint32_t count;
-	const char** extensions = glfwGetRequiredInstanceExtensions(&count);
-
 	return {
 		.instance_layers = {"VK_LAYER_KHRONOS_validation"},
-		.instance_extensions = std::vector(extensions, extensions + count),
+		.instance_extensions = window.required_instance_extensions(),
 		.device_extensions = {"VK_KHR_swapchain"},
 		.gpu_score = &score_physical_device,
 		.queue_score = &score_queue_family,
@@ -65,15 +60,11 @@ DeviceBuilder get_device_builder()
 	};
 }
 
-SwapchainBuilder get_swapchain_builder(VulkanDevice device, GLFWwindow* window)
+SwapchainBuilder get_swapchain_builder(VulkanDevice device, VulkanWindow window)
 {
-	VkInstance instance = device.instance();
-	VkSurfaceKHR surface;
-	CHECK_VULKAN(glfwCreateWindowSurface(instance, window, nullptr, &surface));
-
 	return {
 		.device = device,
-		.surface = surface,
+		.surface = window.create_surface(device),
 		.surface_format = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
 		.present_mode = VK_PRESENT_MODE_FIFO_KHR,
 		.frame_count = 2
@@ -113,12 +104,10 @@ PipelineBuilder get_example_pipeline_builder(ExamplePipelineInfo example, Vulkan
 
 int main()
 {
-	glfwInit();
-	GLFWwindow* window = create_default_window(1024, 768);
-	VulkanDevice device = {get_device_builder()};
-	VulkanSwapchain swapchain = {get_swapchain_builder(device, window)};
 	ExamplePipelineInfo example;
+	VulkanWindow window = {get_window_builder("Kodanuki", 1024, 768)};
+	VulkanDevice device = {get_device_builder(window)};
+	VulkanSwapchain swapchain = {get_swapchain_builder(device, window)};
 	VulkanPipeline pipeline = {get_example_pipeline_builder(example, device, swapchain)};
-	glfwTerminate();
 	return 0;
 }
