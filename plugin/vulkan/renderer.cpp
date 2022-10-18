@@ -166,6 +166,7 @@ void VulkanRenderer::record_command_buffer(std::function<void(VkCommandBuffer)> 
 	vkCmdBeginRenderPass(current_buffer, &renderpass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 	callback(current_buffer);
 	vkCmdEndRenderPass(current_buffer);
+
 	CHECK_VULKAN(vkEndCommandBuffer(current_buffer));
 }
 
@@ -178,20 +179,34 @@ void VulkanRenderer::submit_command_buffers(uint32_t queue_index)
 	VkSubmitInfo submit_info = {};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.waitSemaphoreCount = 1;
-	submit_info.pWaitSemaphores = &(values.image_available_semaphores[frame]);
+	submit_info.pWaitSemaphores = &values.image_available_semaphores[frame];
 	submit_info.pWaitDstStageMask = values.stage_masks.data();
 	submit_info.commandBufferCount = values.command_buffers.size();
 	submit_info.pCommandBuffers = values.command_buffers.data();
 	submit_info.signalSemaphoreCount = 1;
-	submit_info.pSignalSemaphores = &(values.render_finished_semaphores[frame]);
+	submit_info.pSignalSemaphores = &values.render_finished_semaphores[frame];
 
 	CHECK_VULKAN(vkQueueSubmit(queue, 1, &submit_info, values.draw_frame_fences[frame]));
 	values.current_frame = (frame + 1) % values.frame_count;
 }
 
-void VulkanRenderer::render_next_frame()
+void VulkanRenderer::render_next_frame(uint32_t queue_index)
 {
+	RenderValues& values = ECS::get<RenderValues>(*pimpl);
+	uint32_t frame = values.current_frame;
+	VkQueue queue = values.device.queues()[queue_index];
+	VkSwapchainKHR swapchain = values.swapchain.swapchain();
 
+	VkPresentInfoKHR present_Info = {};
+	present_Info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	present_Info.waitSemaphoreCount = 1;
+	present_Info.pWaitSemaphores = &values.render_finished_semaphores[frame];
+	present_Info.swapchainCount = 1;
+	present_Info.pSwapchains = &swapchain;
+	present_Info.pImageIndices = &frame;
+	present_Info.pResults = nullptr;
+
+	vkQueuePresentKHR(queue, &present_Info);
 }
 
 }

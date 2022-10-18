@@ -111,9 +111,9 @@ VulkanPipeline::VulkanPipeline(PipelineBuilder builder)
 	ECS::update<VkPipeline>(pipeline, actual_pipeline);
 }
 
-VkRenderPass VulkanPipeline::renderpass()
+VkPipeline VulkanPipeline::pipeline()
 {
-	return ECS::get<VkRenderPass>(*pimpl);
+	return ECS::get<VkPipeline>(*pimpl);
 }
 
 }

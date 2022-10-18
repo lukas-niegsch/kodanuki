@@ -61,7 +61,7 @@ public:
 	void submit_command_buffers(uint32_t queue_index = 0);
 
 	// Renders the next available frame to the surface.
-	void render_next_frame();
+	void render_next_frame(uint32_t queue_index = 0);
 
 private:
 	// Destroys unused renderers automatically.

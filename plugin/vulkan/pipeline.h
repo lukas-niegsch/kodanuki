@@ -81,8 +81,8 @@ public:
 	VulkanPipeline(PipelineBuilder builder);
 
 public:
-	// Returns the handle to the renderpass
-	VkRenderPass renderpass();
+	// Returns the handle to the actual pipeline.
+	VkPipeline pipeline();
 
 private:
 	// Destroys unused pipelines automatically.
