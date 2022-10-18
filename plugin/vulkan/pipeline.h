@@ -79,6 +79,10 @@ public:
 	// Creates a new vulkan pipeline from the given builder.
 	VulkanPipeline(PipelineBuilder builder);
 
+public:
+	// Returns the handle to the renderpass
+	VkRenderPass renderpass();
+
 private:
 	// Destroys unused pipelines automatically.
 	std::shared_ptr<Entity> pimpl;

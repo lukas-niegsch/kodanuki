@@ -2,6 +2,7 @@
 #include "plugin/vulkan/debug.h"
 #include "plugin/vulkan/device.h"
 #include "plugin/vulkan/pipeline.h"
+#include "plugin/vulkan/renderer.h"
 #include "plugin/vulkan/shader.h"
 #include "plugin/vulkan/swapchain.h"
 #include "plugin/vulkan/window.h"
@@ -102,12 +103,28 @@ PipelineBuilder get_example_pipeline_builder(ExamplePipelineInfo example, Vulkan
 	};
 }
 
-int main()
+RendererBuilder get_renderer_builder(VulkanDevice device, VulkanSwapchain swapchain, VulkanPipeline pipeline)
+{
+	return {
+		.device = device,
+		.swapchain = swapchain,
+		.pipeline = pipeline,
+	};
+}
+
+VulkanRenderer create_example_renderer(VulkanWindow window)
 {
 	ExamplePipelineInfo example;
-	VulkanWindow window = {get_window_builder("Kodanuki", 1024, 768)};
 	VulkanDevice device = {get_device_builder(window)};
 	VulkanSwapchain swapchain = {get_swapchain_builder(device, window)};
 	VulkanPipeline pipeline = {get_example_pipeline_builder(example, device, swapchain)};
+	VulkanRenderer renderer = {get_renderer_builder(device, swapchain, pipeline)};
+	return renderer;
+}
+
+int main()
+{
+	VulkanWindow window = {get_window_builder("Kodanuki", 1024, 768)};
+	VulkanRenderer renderer = create_example_renderer(window);
 	return 0;
 }
