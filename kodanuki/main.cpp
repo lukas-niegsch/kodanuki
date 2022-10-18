@@ -8,7 +8,7 @@
 #include "engine/utility/file.h"
 using namespace Kodanuki;
 
-constexpr GLfloat cube_strip[] = {
+constexpr float cube_strip[] = {
 	 1,  1,  1,
 	-1,  1,  1,
 	 1, -1,  1,

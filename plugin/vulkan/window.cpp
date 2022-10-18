@@ -1,12 +1,12 @@
 #include "plugin/vulkan/window.h"
 #include "plugin/vulkan/debug.h"
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 namespace Kodanuki
 {
 
 static int window_counter = 0;
-
-
 
 GLFWwindow* create_window(WindowBuilder builder)
 {

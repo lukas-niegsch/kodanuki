@@ -1,8 +1,7 @@
 #pragma once
 #include "plugin/vulkan/device.h"
 #include "engine/central/entity.h"
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 #include <memory>
 #include <string>
 #include <vector>
