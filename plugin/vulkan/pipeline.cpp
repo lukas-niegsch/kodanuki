@@ -79,7 +79,7 @@ VkPipeline create_pipeline(PipelineBuilder& builder)
 	pipeline_info.pColorBlendState = &builder.color_blend;
 	pipeline_info.pDynamicState = &builder.dynamic_state;
 	pipeline_info.layout = layout;
-	pipeline_info.renderPass = builder.renderpass;
+	pipeline_info.renderPass = builder.renderpass.renderpass();
 	pipeline_info.subpass = 0;
 	pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 	pipeline_info.basePipelineIndex = -1;
@@ -95,9 +95,7 @@ void remove_pipeline(Entity* pipeline)
 {
 	VkDevice device = ECS::get<VulkanDevice>(*pipeline).logical_device();
 	VkPipeline actual_pipeline = ECS::get<VkPipeline>(*pipeline);
-	VkRenderPass renderpass = ECS::get<VkRenderPass>(*pipeline);
 	vkDestroyPipeline(device, actual_pipeline, nullptr);
-	vkDestroyRenderPass(device, renderpass, nullptr);
 	ECS::remove<Entity>(*pipeline);
 	delete pipeline;
 }
@@ -111,7 +109,6 @@ VulkanPipeline::VulkanPipeline(PipelineBuilder builder)
 
 	ECS::update<VulkanDevice>(pipeline, builder.device);
 	ECS::update<VkPipeline>(pipeline, actual_pipeline);
-	ECS::update<VkRenderPass>(pipeline, builder.renderpass);
 }
 
 VkRenderPass VulkanPipeline::renderpass()

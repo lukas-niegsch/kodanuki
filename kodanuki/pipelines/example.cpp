@@ -1,7 +1,28 @@
 #include "example.h"
 #include "plugin/vulkan/debug.h"
+#include "engine/utility/file.h"
 
-VkRenderPass ExamplePipelineInfo::get_renderpass(VulkanDevice device, VulkanSwapchain swapchain)
+class ExamplePipelineInfo
+{
+public:
+	VkSubpassDependency get_dependency();
+	VkAttachmentDescription get_color_attachment(VulkanSwapchain swapchain);
+	VkSubpassDescription get_subpasses();
+	VkPipelineDynamicStateCreateInfo get_dynamic_state();
+	VkPipelineVertexInputStateCreateInfo get_vertex_input();
+	VkPipelineInputAssemblyStateCreateInfo get_input_assembly();
+	VkPipelineRasterizationStateCreateInfo get_resterization();
+	VkPipelineColorBlendStateCreateInfo get_color_blend();
+	VkPipelineViewportStateCreateInfo get_viewport();
+	VkPipelineMultisampleStateCreateInfo get_multisample();
+
+private:
+	std::vector<VkDynamicState> states;
+	VkPipelineColorBlendAttachmentState color_blend_attachment = {};
+	VkAttachmentReference color_attachment_reference = {};
+};
+
+VkSubpassDependency ExamplePipelineInfo::get_dependency()
 {
 	VkSubpassDependency dependency = {};
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -10,7 +31,11 @@ VkRenderPass ExamplePipelineInfo::get_renderpass(VulkanDevice device, VulkanSwap
 	dependency.srcAccessMask = 0;
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	return dependency;
+}
 
+VkAttachmentDescription ExamplePipelineInfo::get_color_attachment(VulkanSwapchain swapchain)
+{
 	VkAttachmentDescription color_attachment = {};
 	color_attachment.format = swapchain.surface_format().format;
 	color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -20,8 +45,11 @@ VkRenderPass ExamplePipelineInfo::get_renderpass(VulkanDevice device, VulkanSwap
 	color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	return color_attachment;
+}
 
-	VkAttachmentReference color_attachment_reference = {};
+VkSubpassDescription ExamplePipelineInfo::get_subpasses()
+{
 	color_attachment_reference.attachment = 0;
 	color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
@@ -29,19 +57,7 @@ VkRenderPass ExamplePipelineInfo::get_renderpass(VulkanDevice device, VulkanSwap
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &color_attachment_reference;
-
-	VkRenderPassCreateInfo renderpass_info = {};
-	renderpass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderpass_info.attachmentCount = 1;
-	renderpass_info.pAttachments = &color_attachment;
-	renderpass_info.subpassCount = 1;
-	renderpass_info.pSubpasses = &subpass;
-	renderpass_info.dependencyCount = 1;
-	renderpass_info.pDependencies = &dependency;
-
-	VkRenderPass renderpass;
-	CHECK_VULKAN(vkCreateRenderPass(device.logical_device(), &renderpass_info, nullptr, &renderpass));
-	return renderpass;
+	return subpass;
 }
 
 VkPipelineDynamicStateCreateInfo ExamplePipelineInfo::get_dynamic_state()
@@ -141,4 +157,53 @@ VkPipelineMultisampleStateCreateInfo ExamplePipelineInfo::get_multisample()
 	multisample.alphaToCoverageEnable = VK_FALSE;
 	multisample.alphaToOneEnable = VK_FALSE;
 	return multisample;
+}
+
+VulkanRenderpass get_example_triangle_renderpass(VulkanDevice device, VulkanSwapchain swapchain)
+{
+	ExamplePipelineInfo example;
+
+	RenderpassBuilder builder = {
+		.device = device,
+		.dependencies = {example.get_dependency()},
+		.attachments = {example.get_color_attachment(swapchain)},
+		.subpasses = {example.get_subpasses()}
+	};
+
+	return VulkanRenderpass(builder);
+}
+
+VulkanPipeline get_example_triangle_pipeline(VulkanDevice device, VulkanRenderpass renderpass)
+{
+	ExamplePipelineInfo example;
+
+	ShaderBuilder example_vertex_builder = {
+		.device = device,
+		.code = read_file_into_buffer("shader/example.vert.spv"),
+		.entry_point = "main"
+	};
+
+	ShaderBuilder example_fragment_builder = {
+		.device = device,
+		.code = read_file_into_buffer("shader/example.frag.spv"),
+		.entry_point = "main"
+	};
+
+	PipelineBuilder builder = {
+		.device = device,
+		.renderpass = renderpass,
+		.vertex_shader = VulkanShader(example_vertex_builder),
+		.tesselation = {},
+		.geometry_shader = {},
+		.fragment_shader = VulkanShader(example_fragment_builder),
+		.dynamic_state = example.get_dynamic_state(),
+		.vertex_input = example.get_vertex_input(),
+		.input_assembly = example.get_input_assembly(),
+		.resterization = example.get_resterization(),
+		.color_blend = example.get_color_blend(),
+		.viewport = example.get_viewport(),
+		.multisample = example.get_multisample()
+	};
+
+	return VulkanPipeline(builder);	
 }

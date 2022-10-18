@@ -2,6 +2,7 @@
 #include "plugin/vulkan/device.h"
 #include "plugin/vulkan/swapchain.h"
 #include "plugin/vulkan/pipeline.h"
+#include "plugin/vulkan/renderpass.h"
 #include "engine/central/entity.h"
 #include <vulkan/vulkan.h>
 #include <memory>
@@ -23,8 +24,8 @@ struct RendererBuilder
 	// The vulkan swapchain for which the pipeline is created.
 	VulkanSwapchain swapchain;
 
-	// The vulkan pipeline for which the pipeline is created.
-	VulkanPipeline pipeline;
+	// The vulkan renderpass for which the pipeline is created.
+	VulkanRenderpass renderpass;
 };
 
 /**

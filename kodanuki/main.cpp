@@ -6,7 +6,6 @@
 #include "plugin/vulkan/shader.h"
 #include "plugin/vulkan/swapchain.h"
 #include "plugin/vulkan/window.h"
-#include "engine/utility/file.h"
 using namespace Kodanuki;
 
 constexpr float cube_strip[] = {
@@ -72,59 +71,22 @@ SwapchainBuilder get_swapchain_builder(VulkanDevice device, VulkanWindow window)
 	};
 }
 
-PipelineBuilder get_example_pipeline_builder(ExamplePipelineInfo example, VulkanDevice device, VulkanSwapchain swapchain)
-{
-	ShaderBuilder example_vertex_builder = {
-		.device = device,
-		.code = read_file_into_buffer("shader/example.vert.spv"),
-		.entry_point = "main"
-	};
-
-	ShaderBuilder example_fragment_builder = {
-		.device = device,
-		.code = read_file_into_buffer("shader/example.frag.spv"),
-		.entry_point = "main"
-	};
-
-	return {
-		.device = device,
-		.renderpass = example.get_renderpass(device, swapchain),
-		.vertex_shader = VulkanShader(example_vertex_builder),
-		.tesselation = {},
-		.geometry_shader = {},
-		.fragment_shader = VulkanShader(example_fragment_builder),
-		.dynamic_state = example.get_dynamic_state(),
-		.vertex_input = example.get_vertex_input(),
-		.input_assembly = example.get_input_assembly(),
-		.resterization = example.get_resterization(),
-		.color_blend = example.get_color_blend(),
-		.viewport = example.get_viewport(),
-		.multisample = example.get_multisample()
-	};
-}
-
-RendererBuilder get_renderer_builder(VulkanDevice device, VulkanSwapchain swapchain, VulkanPipeline pipeline)
+RendererBuilder get_renderer_builder(VulkanDevice device, VulkanSwapchain swapchain, VulkanRenderpass renderpass)
 {
 	return {
 		.device = device,
 		.swapchain = swapchain,
-		.pipeline = pipeline,
+		.renderpass = renderpass,
 	};
-}
-
-VulkanRenderer create_example_renderer(VulkanWindow window)
-{
-	ExamplePipelineInfo example;
-	VulkanDevice device = {get_device_builder(window)};
-	VulkanSwapchain swapchain = {get_swapchain_builder(device, window)};
-	VulkanPipeline pipeline = {get_example_pipeline_builder(example, device, swapchain)};
-	VulkanRenderer renderer = {get_renderer_builder(device, swapchain, pipeline)};
-	return renderer;
 }
 
 int main()
 {
 	VulkanWindow window = {get_window_builder("Kodanuki", 1024, 768)};
-	VulkanRenderer renderer = create_example_renderer(window);
+	VulkanDevice device = {get_device_builder(window)};
+	VulkanSwapchain swapchain = {get_swapchain_builder(device, window)};
+	VulkanRenderpass renderpass = get_example_triangle_renderpass(device, swapchain);
+	VulkanPipeline pipeline = get_example_triangle_pipeline(device, renderpass);
+	VulkanRenderer renderer = {get_renderer_builder(device, swapchain, renderpass)};
 	return 0;
 }

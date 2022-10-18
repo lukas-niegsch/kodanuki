@@ -1,6 +1,7 @@
 #pragma once
 #include "plugin/vulkan/device.h"
 #include "plugin/vulkan/shader.h"
+#include "plugin/vulkan/renderpass.h"
 #include "engine/central/entity.h"
 #include <vulkan/vulkan.h>
 #include <memory>
@@ -25,7 +26,7 @@ struct PipelineBuilder
 	VulkanDevice device;
 
 	// The renderpass that the pipeline should use.
-	VkRenderPass renderpass;
+	VulkanRenderpass renderpass;
 
 	// The handle to the vertex shader module.
 	std::optional<VulkanShader> vertex_shader;

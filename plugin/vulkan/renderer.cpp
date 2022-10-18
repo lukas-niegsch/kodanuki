@@ -21,7 +21,7 @@ std::vector<VkFramebuffer> create_frame_buffers(RendererBuilder builder)
 
 	VkFramebufferCreateInfo framebuffer_info = {};
 	framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-	framebuffer_info.renderPass = builder.pipeline.renderpass();
+	framebuffer_info.renderPass = builder.renderpass.renderpass();
 	framebuffer_info.layers = 1;
 	framebuffer_info.width = size.width;
 	framebuffer_info.height = size.height;
@@ -57,7 +57,7 @@ VulkanRenderer::VulkanRenderer(RendererBuilder builder)
 
 	ECS::update<VulkanDevice>(renderer, builder.device);
 	ECS::update<VulkanSwapchain>(renderer, builder.swapchain);
-	ECS::update<VulkanPipeline>(renderer, builder.pipeline);
+	ECS::update<VulkanRenderpass>(renderer, builder.renderpass);
 	ECS::update<std::vector<VkFramebuffer>>(renderer, framebuffers);
 }
 

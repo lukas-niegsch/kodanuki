@@ -1,22 +1,12 @@
 #pragma once
 #include "plugin/vulkan/device.h"
 #include "plugin/vulkan/swapchain.h"
-#include <vulkan/vulkan.h>
+#include "plugin/vulkan/renderpass.h"
+#include "plugin/vulkan/pipeline.h"
 using namespace Kodanuki;
 
-class ExamplePipelineInfo
-{
-public:
-	VkRenderPass get_renderpass(VulkanDevice device, VulkanSwapchain swapchain);
-	VkPipelineDynamicStateCreateInfo get_dynamic_state();
-	VkPipelineVertexInputStateCreateInfo get_vertex_input();
-	VkPipelineInputAssemblyStateCreateInfo get_input_assembly();
-	VkPipelineRasterizationStateCreateInfo get_resterization();
-	VkPipelineColorBlendStateCreateInfo get_color_blend();
-	VkPipelineViewportStateCreateInfo get_viewport();
-	VkPipelineMultisampleStateCreateInfo get_multisample();
+// Creates the renderpass that describes the rendering of the example triangle.
+VulkanRenderpass get_example_triangle_renderpass(VulkanDevice device, VulkanSwapchain swapchain);
 
-private:
-	std::vector<VkDynamicState> states;
-	VkPipelineColorBlendAttachmentState color_blend_attachment = {};
-};
+// Creates the pipeline that renders the example triangle.
+VulkanPipeline get_example_triangle_pipeline(VulkanDevice device, VulkanRenderpass renderpass);
