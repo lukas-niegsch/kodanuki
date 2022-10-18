@@ -37,12 +37,27 @@ std::vector<VkFramebuffer> create_frame_buffers(RendererBuilder builder)
 	return framebuffers;
 }
 
+std::vector<VkCommandBuffer> create_command_buffers(RendererBuilder builder)
+{
+	VkCommandBufferAllocateInfo buffer_info;
+    buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    buffer_info.pNext = nullptr;
+    buffer_info.commandPool = builder.device.command_pool();
+    buffer_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    buffer_info.commandBufferCount = builder.command_buffer_count;
+
+	VkDevice device = builder.device.logical_device();
+	std::vector<VkCommandBuffer> command_buffers(builder.command_buffer_count);
+	CHECK_VULKAN(vkAllocateCommandBuffers(device, &buffer_info, command_buffers.data()));
+	return command_buffers;
+}
+
 void remove_renderer(Entity* renderer)
 {
 	VkDevice device = ECS::get<VulkanDevice>(*renderer).logical_device();
-	std::vector<VkFramebuffer> framebuffers = ECS::get<std::vector<VkFramebuffer>>(*renderer);
-	for (auto framebuffer : framebuffers) {
-		vkDestroyFramebuffer(device, framebuffer, nullptr);
+	std::vector<VkFramebuffer> frame_buffers = ECS::get<std::vector<VkFramebuffer>>(*renderer);
+	for (auto frame_buffer : frame_buffers) {
+		vkDestroyFramebuffer(device, frame_buffer, nullptr);
 	}
 	ECS::remove<Entity>(*renderer);
 	delete renderer;
@@ -53,12 +68,14 @@ VulkanRenderer::VulkanRenderer(RendererBuilder builder)
 	pimpl = std::shared_ptr<Entity>(new Entity, &remove_renderer);
 	Entity renderer = *pimpl = ECS::create();
 
-	std::vector<VkFramebuffer> framebuffers = create_frame_buffers(builder);
+	std::vector<VkFramebuffer> frame_buffers = create_frame_buffers(builder);
+	std::vector<VkCommandBuffer> command_buffers = create_command_buffers(builder);
 
 	ECS::update<VulkanDevice>(renderer, builder.device);
 	ECS::update<VulkanSwapchain>(renderer, builder.swapchain);
 	ECS::update<VulkanRenderpass>(renderer, builder.renderpass);
-	ECS::update<std::vector<VkFramebuffer>>(renderer, framebuffers);
+	ECS::update<std::vector<VkFramebuffer>>(renderer, frame_buffers);
+	ECS::update<std::vector<VkCommandBuffer>>(renderer, command_buffers);
 }
 
 }
