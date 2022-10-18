@@ -29,6 +29,9 @@ struct RendererBuilder
 
 	// The number of command buffers that are created.
 	uint32_t command_buffer_count;
+
+	// The color with which the frames should be cleared.
+	VkClearValue clear_color;
 };
 
 /**
@@ -46,6 +49,19 @@ class VulkanRenderer
 public:
 	// Creates a new vulkan renderer from the given builder.
 	VulkanRenderer(RendererBuilder builder);
+
+public:
+	// Aquires the next frame for which work can be submitted.
+	void aquire_next_frame();
+
+	// Records the command buffer at the given index with draw commands.
+	void record_command_buffer(std::function<void(VkCommandBuffer)> callback, uint32_t buffer_index = 0);
+
+	// Submits the command buffers to the vulkan device asynchronously.
+	void submit_command_buffers();
+
+	// Renders the next available frame to the surface.
+	void render_next_frame();
 
 private:
 	// Destroys unused renderers automatically.

@@ -77,7 +77,8 @@ RendererBuilder get_renderer_builder(VulkanDevice device, VulkanSwapchain swapch
 		.device = device,
 		.swapchain = swapchain,
 		.renderpass = renderpass,
-		.command_buffer_count = 1
+		.command_buffer_count = 1,
+		.clear_color = {{{0.0f, 0.0f, 0.0f, 1.0f}}}
 	};
 }
 
@@ -89,10 +90,16 @@ int main()
 	VulkanRenderpass renderpass = get_example_triangle_renderpass(device, swapchain);
 	VulkanPipeline pipeline = get_example_triangle_pipeline(device, renderpass);
 	VulkanRenderer renderer = {get_renderer_builder(device, swapchain, renderpass)};
+	auto record_pipeline = [](VkCommandBuffer buffer) {
+		(void) buffer;
+	};
 
 	while (!window.should_close())
 	{
-		
+		renderer.aquire_next_frame();
+		renderer.record_command_buffer(record_pipeline);
+		renderer.submit_command_buffers();
+		renderer.render_next_frame();
 	}
 
 	return 0;
