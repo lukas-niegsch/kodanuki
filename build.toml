@@ -7,7 +7,7 @@ library     = true
 [kodanuki]
 description = "The upcoming kodanuki game."
 path        = "kodanuki/"
-depends     = ["kodanuki.engine", "kodanuki.vulkan", "glfw", "vulkan"]
+depends     = ["kodanuki.engine", "kodanuki.vulkan", "vulkan"]
 library     = false
 
 [unittest]
@@ -28,9 +28,3 @@ description = "An renderer that uses vulkan and glfw."
 path		= "plugin/vulkan/"
 depends		= ["kodanuki.engine", "glfw", "vulkan"]
 library		= true
-
-[opengl]
-description = "An renderer that uses opengl and glfw."
-path		= "plugin/opengl/"
-depends		= ["kodanuki.engine", "glfw", "GL", "GLEW"]
-library     = true
