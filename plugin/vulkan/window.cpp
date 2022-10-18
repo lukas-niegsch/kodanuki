@@ -62,4 +62,11 @@ std::vector<const char*> VulkanWindow::required_instance_extensions()
 	return std::vector<const char*>(extensions, extensions + count);
 }
 
+bool VulkanWindow::should_close()
+{
+	GLFWwindow* window = ECS::get<GLFWwindow*>(*pimpl);
+	glfwPollEvents();
+	return glfwWindowShouldClose(window);
+}
+
 };

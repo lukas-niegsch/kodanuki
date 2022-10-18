@@ -89,5 +89,11 @@ int main()
 	VulkanRenderpass renderpass = get_example_triangle_renderpass(device, swapchain);
 	VulkanPipeline pipeline = get_example_triangle_pipeline(device, renderpass);
 	VulkanRenderer renderer = {get_renderer_builder(device, swapchain, renderpass)};
+
+	while (!window.should_close())
+	{
+		
+	}
+
 	return 0;
 }

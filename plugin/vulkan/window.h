@@ -46,6 +46,9 @@ public:
 	// Returns the list of required instance extensions.
 	std::vector<const char*> required_instance_extensions();
 
+	// Returns true iff the window should close.
+	bool should_close();
+
 private:
 	// Destroys unused windows automatically.
 	std::shared_ptr<Entity> pimpl;
