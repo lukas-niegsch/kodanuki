@@ -39,20 +39,22 @@ VkPhysicalDevice pick_physical_device(VkInstance instance, std::function<int(VkP
 	return *std::max_element(devices.begin(), devices.end(), compare);
 }
 
-VkDeviceQueueCreateInfo pick_queue_family(VkPhysicalDevice device, std::function<int(VkQueueFamilyProperties)> queue_score, std::vector<float>& properties)
+uint32_t pick_queue_family_index(VkPhysicalDevice device, std::function<int(VkQueueFamilyProperties)> queue_score)
 {
 	auto queues = vectorize<vkGetPhysicalDeviceQueueFamilyProperties>(device);
 	auto compare = [&](auto a, auto b) { return queue_score(a) < queue_score(b); };
-	auto index = std::distance(queues.begin(), std::max_element(queues.begin(), queues.end(), compare));
+	return std::distance(queues.begin(), std::max_element(queues.begin(), queues.end(), compare));
+}
 
+VkDeviceQueueCreateInfo pick_queue_family(uint32_t queue_index, std::vector<float>& properties)
+{
 	VkDeviceQueueCreateInfo queue_info;
 	queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 	queue_info.pNext = nullptr;
 	queue_info.flags = 0;
-	queue_info.queueFamilyIndex = index;
+	queue_info.queueFamilyIndex = queue_index;
 	queue_info.queueCount = properties.size();
 	queue_info.pQueuePriorities = properties.data();
-
 	return queue_info;
 }
 
@@ -77,6 +79,19 @@ VkDevice create_logical_device(VkPhysicalDevice physical_device, VkDeviceQueueCr
 	return result;
 }
 
+VkCommandPool create_command_pool(VkDevice device, uint32_t queue_index)
+{
+	VkCommandPoolCreateInfo pool_info;
+    pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    pool_info.pNext = nullptr;
+    pool_info.flags = 0;
+    pool_info.queueFamilyIndex = queue_index;
+
+	VkCommandPool command_pool;
+	CHECK_VULKAN(vkCreateCommandPool(device, &pool_info, nullptr, &command_pool));
+	return command_pool;
+}
+
 std::vector<VkQueue> get_queue_handles(VkDevice logical_device, VkDeviceQueueCreateInfo queue_family)
 {
 	std::vector<VkQueue> result(queue_family.queueCount);
@@ -90,7 +105,9 @@ std::vector<VkQueue> get_queue_handles(VkDevice logical_device, VkDeviceQueueCre
 
 void remove_device(Entity* device)
 {
-	vkDestroyDevice(ECS::get<VkDevice>(*device), nullptr);
+	VkDevice logical_device = ECS::get<VkDevice>(*device);
+	vkDestroyCommandPool(logical_device, ECS::get<VkCommandPool>(*device), nullptr);
+	vkDestroyDevice(logical_device, nullptr);
 	vkDestroyInstance(ECS::get<VkInstance>(*device), nullptr);
 	ECS::remove<Entity>(*device);
 	delete device;
@@ -103,13 +120,16 @@ VulkanDevice::VulkanDevice(DeviceBuilder builder)
 	
 	VkInstance instance = create_instance(builder.instance_layers, builder.instance_extensions);
 	VkPhysicalDevice physical_device = pick_physical_device(instance, builder.gpu_score);
-	VkDeviceQueueCreateInfo queue_family = pick_queue_family(physical_device, builder.queue_score, builder.queue_priorities);
+	uint32_t queue_index = pick_queue_family_index(physical_device, builder.queue_score);
+	VkDeviceQueueCreateInfo queue_family = pick_queue_family(queue_index, builder.queue_priorities);
 	VkDevice logical_device = create_logical_device(physical_device, queue_family, builder.device_extensions);
+	VkCommandPool command_pool = create_command_pool(logical_device, queue_index);
 	std::vector<VkQueue> queues = get_queue_handles(logical_device, queue_family);
 
 	ECS::update<VkInstance>(device, instance);
 	ECS::update<VkPhysicalDevice>(device, physical_device);
 	ECS::update<VkDevice>(device, logical_device);
+	ECS::update<VkCommandPool>(device, command_pool);
 	ECS::update<std::vector<VkQueue>>(device, queues);
 }
 
@@ -126,6 +146,11 @@ VkPhysicalDevice VulkanDevice::physical_device()
 VkDevice VulkanDevice::logical_device()
 {
 	return ECS::get<VkDevice>(*pimpl);
+}
+
+VkCommandPool VulkanDevice::command_pool()
+{
+	return ECS::get<VkCommandPool>(*pimpl);
 }
 
 std::vector<VkQueue> VulkanDevice::queues()

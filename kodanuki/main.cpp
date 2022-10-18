@@ -77,6 +77,7 @@ RendererBuilder get_renderer_builder(VulkanDevice device, VulkanSwapchain swapch
 		.device = device,
 		.swapchain = swapchain,
 		.renderpass = renderpass,
+		.command_buffer_count = 1
 	};
 }
 

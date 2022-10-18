@@ -26,6 +26,9 @@ struct RendererBuilder
 
 	// The vulkan renderpass for which the pipeline is created.
 	VulkanRenderpass renderpass;
+
+	// The number of command buffers that are created.
+	uint32_t command_buffer_count;
 };
 
 /**

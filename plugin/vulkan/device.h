@@ -66,6 +66,9 @@ public:
 	// Returns the handle to the logical device.
 	VkDevice logical_device();
 
+	// Returns the handle to the command pool.
+	VkCommandPool command_pool();
+
 	// Returns the handles to the queues.
 	std::vector<VkQueue> queues();
 
