@@ -106,6 +106,7 @@ std::vector<VkQueue> get_queue_handles(VkDevice logical_device, VkDeviceQueueCre
 void remove_device(Entity* device)
 {
 	VkDevice logical_device = ECS::get<VkDevice>(*device);
+	CHECK_VULKAN(vkDeviceWaitIdle(logical_device));
 	vkDestroyCommandPool(logical_device, ECS::get<VkCommandPool>(*device), nullptr);
 	vkDestroyDevice(logical_device, nullptr);
 	vkDestroyInstance(ECS::get<VkInstance>(*device), nullptr);

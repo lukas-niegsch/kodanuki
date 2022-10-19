@@ -55,7 +55,7 @@ public:
 	void aquire_next_frame();
 
 	// Records the command buffer at the given index with draw commands.
-	void record_command_buffer(std::function<void(VkCommandBuffer)> callback, uint32_t buffer_index = 0);
+	void record_command_buffer(std::function<void(VkCommandBuffer)> callback);
 
 	// Submits the command buffers to the vulkan device asynchronously.
 	void submit_command_buffers(uint32_t queue_index = 0);

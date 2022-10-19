@@ -90,6 +90,7 @@ int main()
 	VulkanRenderpass renderpass = get_example_triangle_renderpass(device, swapchain);
 	VulkanPipeline pipeline = get_example_triangle_pipeline(device, renderpass);
 	VulkanRenderer renderer = {get_renderer_builder(device, swapchain, renderpass)};
+	
 	auto record_pipeline = [&](VkCommandBuffer buffer) {
 		
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline());
