@@ -167,12 +167,12 @@ void print_vulkan_info(VkPhysicalDevice info)
 	vkGetPhysicalDeviceProperties(info, &properties);
 	print_vulkan_info(properties);
 
-	auto queue_families = vectorize<vkGetPhysicalDeviceQueueFamilyProperties>(info);
-	print_vulkan_info(queue_families);
+	// auto queue_families = vectorize<vkGetPhysicalDeviceQueueFamilyProperties>(info);
+	// print_vulkan_info(queue_families);
 
-	VkPhysicalDeviceFeatures features;
-	vkGetPhysicalDeviceFeatures(info, &features);
-	print_vulkan_info(features);
+	// VkPhysicalDeviceFeatures features;
+	// vkGetPhysicalDeviceFeatures(info, &features);
+	// print_vulkan_info(features);
 }
 
 template <>

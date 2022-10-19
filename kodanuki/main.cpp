@@ -7,6 +7,7 @@
 #include "plugin/vulkan/swapchain.h"
 #include "plugin/vulkan/window.h"
 #include <GLFW/glfw3.h>
+#include <iomanip>
 using namespace Kodanuki;
 
 constexpr float cube_strip[] = {
@@ -67,7 +68,7 @@ SwapchainBuilder get_swapchain_builder(VulkanDevice device, VulkanWindow window)
 		.device = device,
 		.surface = window.create_surface(device),
 		.surface_format = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
-		.present_mode = VK_PRESENT_MODE_FIFO_KHR,
+		.present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR,
 		.frame_count = 3
 	};
 }
@@ -97,6 +98,12 @@ int main()
 		vkCmdDraw(buffer, 3, 1, 0, 0);
 	};
 
+	std::cout << std::endl;
+	print_vulkan_info(device.physical_device());
+	print_vulkan_info(vectorize<vkGetPhysicalDeviceSurfacePresentModesKHR>(device.physical_device(), swapchain.surface()));
+	
+	std::cout << "Average time per frame: " << '\n';
+	std::cout << std::setprecision(4);
 	double previous_time = glfwGetTime();
 	uint32_t frame_count = 0;
 

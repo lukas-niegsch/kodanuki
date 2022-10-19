@@ -106,4 +106,32 @@ void print_vulkan_info(std::vector<T> info)
 	std::cout << std::endl;
 }
 
+//////////////////////////////// Specializations ///////////////////////////////
+template <>
+void print_vulkan_struct(VkExtensionProperties info);
+
+template <>
+void print_vulkan_struct(VkLayerProperties info);
+
+template <>
+void print_vulkan_struct(VkPhysicalDeviceProperties info);
+
+template <>
+void print_vulkan_struct(VkQueueFamilyProperties info);
+
+template <>
+void print_vulkan_struct(VkPhysicalDeviceFeatures info);
+
+template <>
+void print_vulkan_struct(VkSurfaceFormatKHR info);
+
+template <>
+void print_vulkan_struct(VkPresentModeKHR info);
+
+template <>
+void print_vulkan_struct(VkSurfaceCapabilitiesKHR info);
+
+template <>
+void print_vulkan_info(VkPhysicalDevice info);
+
 }
