@@ -88,27 +88,11 @@ int main()
 	VulkanDevice device = {get_device_builder(window)};
 	VulkanSwapchain swapchain = {get_swapchain_builder(device, window)};
 	VulkanRenderpass renderpass = get_example_triangle_renderpass(device, swapchain);
-	VulkanPipeline pipeline = get_example_triangle_pipeline(device, renderpass);
+	VulkanPipeline pipeline = get_example_triangle_pipeline(device, swapchain, renderpass);
 	VulkanRenderer renderer = {get_renderer_builder(device, swapchain, renderpass)};
 	
 	auto record_pipeline = [&](VkCommandBuffer buffer) {
-		
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline());
-
-		VkViewport viewport = {};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = swapchain.surface_extent().width;
-		viewport.height = swapchain.surface_extent().height;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(buffer, 0, 1, &viewport);
-
-		VkRect2D scissor = {};
-		scissor.offset = {0, 0};
-		scissor.extent = swapchain.surface_extent();
-		vkCmdSetScissor(buffer, 0, 1, &scissor);
-
 		vkCmdDraw(buffer, 3, 1, 0, 0);
 	};
 

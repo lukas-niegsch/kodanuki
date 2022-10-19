@@ -9,4 +9,4 @@ using namespace Kodanuki;
 VulkanRenderpass get_example_triangle_renderpass(VulkanDevice device, VulkanSwapchain swapchain);
 
 // Creates the pipeline that renders the example triangle.
-VulkanPipeline get_example_triangle_pipeline(VulkanDevice device, VulkanRenderpass renderpass);
+VulkanPipeline get_example_triangle_pipeline(VulkanDevice device, VulkanSwapchain swapchain, VulkanRenderpass renderpass);

@@ -13,13 +13,15 @@ public:
 	VkPipelineInputAssemblyStateCreateInfo get_input_assembly();
 	VkPipelineRasterizationStateCreateInfo get_resterization();
 	VkPipelineColorBlendStateCreateInfo get_color_blend();
-	VkPipelineViewportStateCreateInfo get_viewport();
+	VkPipelineViewportStateCreateInfo get_viewport(VulkanSwapchain swapchain);
 	VkPipelineMultisampleStateCreateInfo get_multisample();
 
 private:
 	std::vector<VkDynamicState> states;
 	VkPipelineColorBlendAttachmentState color_blend_attachment = {};
 	VkAttachmentReference color_attachment_reference = {};
+	VkViewport viewport = {};
+	VkRect2D scissor = {};
 };
 
 VkSubpassDependency ExamplePipelineInfo::get_dependency()
@@ -69,8 +71,8 @@ VkPipelineDynamicStateCreateInfo ExamplePipelineInfo::get_dynamic_state()
 
 	VkPipelineDynamicStateCreateInfo dynamic_state = {};
 	dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dynamic_state.dynamicStateCount = static_cast<uint32_t>(states.size());
-	dynamic_state.pDynamicStates = states.data();
+	dynamic_state.dynamicStateCount = 0; // static_cast<uint32_t>(states.size());
+	dynamic_state.pDynamicStates = nullptr; // states.data();
 	return dynamic_state;
 }
 
@@ -135,15 +137,24 @@ VkPipelineColorBlendStateCreateInfo ExamplePipelineInfo::get_color_blend()
 	return color_blend;
 }
 
-VkPipelineViewportStateCreateInfo ExamplePipelineInfo::get_viewport()
+VkPipelineViewportStateCreateInfo ExamplePipelineInfo::get_viewport(VulkanSwapchain swapchain)
 {
-	VkPipelineViewportStateCreateInfo viewport = {};
-	viewport.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	viewport.viewportCount = 1;
-	viewport.pViewports = nullptr;
-	viewport.scissorCount = 1;
-	viewport.pScissors = nullptr;
-	return viewport;
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = swapchain.surface_extent().width;
+	viewport.height = swapchain.surface_extent().height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	scissor.offset = {0, 0};
+	scissor.extent = swapchain.surface_extent();
+
+	VkPipelineViewportStateCreateInfo viewport_info = {};
+	viewport_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewport_info.viewportCount = 1;
+	viewport_info.pViewports = &viewport;
+	viewport_info.scissorCount = 1;
+	viewport_info.pScissors = &scissor;
+	return viewport_info;
 }
 
 VkPipelineMultisampleStateCreateInfo ExamplePipelineInfo::get_multisample()
@@ -173,7 +184,7 @@ VulkanRenderpass get_example_triangle_renderpass(VulkanDevice device, VulkanSwap
 	return VulkanRenderpass(builder);
 }
 
-VulkanPipeline get_example_triangle_pipeline(VulkanDevice device, VulkanRenderpass renderpass)
+VulkanPipeline get_example_triangle_pipeline(VulkanDevice device, VulkanSwapchain swapchain, VulkanRenderpass renderpass)
 {
 	ExamplePipelineInfo example;
 
@@ -201,7 +212,7 @@ VulkanPipeline get_example_triangle_pipeline(VulkanDevice device, VulkanRenderpa
 		.input_assembly = example.get_input_assembly(),
 		.resterization = example.get_resterization(),
 		.color_blend = example.get_color_blend(),
-		.viewport = example.get_viewport(),
+		.viewport = example.get_viewport(swapchain),
 		.multisample = example.get_multisample()
 	};
 
