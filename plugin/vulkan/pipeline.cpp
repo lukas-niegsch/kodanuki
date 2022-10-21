@@ -49,7 +49,7 @@ VkPipeline create_pipeline(PipelineBuilder& builder)
 	int count = get_number_of_shader_stages(builder);
 	std::vector<VkPipelineShaderStageCreateInfo> shader_stages(count);
 	fill_builder_shader_stages(shader_stages, builder);
-	VkDevice device = builder.device.logical_device();
+	VkDevice device = builder.device;
 	
 	VkPipelineLayoutCreateInfo layout_info;
 	layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -93,7 +93,7 @@ VkPipeline create_pipeline(PipelineBuilder& builder)
 
 void remove_pipeline(Entity* pipeline)
 {
-	VkDevice device = ECS::get<VulkanDevice>(*pipeline).logical_device();
+	VkDevice device = ECS::get<VulkanDevice>(*pipeline);
 	VkPipeline actual_pipeline = ECS::get<VkPipeline>(*pipeline);
 	vkDestroyPipeline(device, actual_pipeline, nullptr);
 	ECS::remove<Entity>(*pipeline);

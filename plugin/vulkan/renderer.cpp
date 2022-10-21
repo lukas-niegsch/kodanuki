@@ -8,7 +8,7 @@ std::vector<VkFramebuffer> create_frame_buffers(RendererBuilder builder)
 {
 	std::vector<VkImageView> views = builder.swapchain.image_views();
 	std::vector<VkFramebuffer> framebuffers(views.size());
-	VkDevice logical_device = builder.device.logical_device();
+	VkDevice logical_device = builder.device;
 	VkExtent2D size = builder.swapchain.surface_extent();
 
 	VkFramebufferCreateInfo framebuffer_info = {};
@@ -42,6 +42,19 @@ std::vector<VkCommandBuffer> create_command_buffers(VkDevice device, VkCommandPo
 	return result;
 }
 
+VkCommandPool create_command_pool(VkDevice device, uint32_t queue_index)
+{
+	VkCommandPoolCreateInfo pool_info;
+	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	pool_info.pNext = nullptr;
+	pool_info.flags = 0;
+	pool_info.queueFamilyIndex = queue_index;
+
+	VkCommandPool command_pool;
+	CHECK_VULKAN(vkCreateCommandPool(device, &pool_info, nullptr, &command_pool));
+	return command_pool;
+}
+
 class RenderValues
 {
 public:
@@ -56,6 +69,7 @@ public:
 		clear_color = builder.clear_color;
 		stage_masks = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 		create_synchronization_objects();
+		command_pool = create_command_pool(device, device.queue_family_index());
 	}
 
 	void create_synchronization_objects()
@@ -72,27 +86,28 @@ public:
 		fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 		for (uint32_t i = 0; i < frame_count; i++) {
-			CHECK_VULKAN(vkCreateSemaphore(device.logical_device(), &semaphore_info, nullptr, &image_available_semaphores[i]));
-			CHECK_VULKAN(vkCreateSemaphore(device.logical_device(), &semaphore_info, nullptr, &render_finished_semaphores[i]));
-			CHECK_VULKAN(vkCreateFence(device.logical_device(), &fence_info, nullptr, &draw_frame_fences[i]));
+			CHECK_VULKAN(vkCreateSemaphore(device, &semaphore_info, nullptr, &image_available_semaphores[i]));
+			CHECK_VULKAN(vkCreateSemaphore(device, &semaphore_info, nullptr, &render_finished_semaphores[i]));
+			CHECK_VULKAN(vkCreateFence(device, &fence_info, nullptr, &draw_frame_fences[i]));
 		}
 	}
 
 	void destroy()
 	{
-		CHECK_VULKAN(vkDeviceWaitIdle(device.logical_device()));
+		CHECK_VULKAN(vkDeviceWaitIdle(device));
 		for (VkSemaphore semaphore : image_available_semaphores) {
-			vkDestroySemaphore(device.logical_device(), semaphore, nullptr);
+			vkDestroySemaphore(device, semaphore, nullptr);
 		}
 		for (VkSemaphore semaphore : render_finished_semaphores) {
-			vkDestroySemaphore(device.logical_device(), semaphore, nullptr);
+			vkDestroySemaphore(device, semaphore, nullptr);
 		}
 		for (VkFence fence : draw_frame_fences) {
-			vkDestroyFence(device.logical_device(), fence, nullptr);
+			vkDestroyFence(device, fence, nullptr);
 		}
 		for (VkFramebuffer frame_buffer : frame_buffers) {
-			vkDestroyFramebuffer(device.logical_device(), frame_buffer, nullptr);
+			vkDestroyFramebuffer(device, frame_buffer, nullptr);
 		}
+		vkDestroyCommandPool(device, command_pool, nullptr);
 	}
 
 public:
@@ -105,6 +120,7 @@ public:
 	std::vector<VkFramebuffer> frame_buffers;
 	std::vector<VkCommandBuffer> command_buffers;
 	VkClearValue clear_color;
+	VkCommandPool command_pool;
 	std::vector<VkPipelineStageFlags> stage_masks;
 	std::vector<VkSemaphore> image_available_semaphores;
 	std::vector<VkSemaphore> render_finished_semaphores;
@@ -128,7 +144,7 @@ VulkanRenderer::VulkanRenderer(RendererBuilder builder)
 void VulkanRenderer::aquire_next_frame()
 {
 	RenderValues& values = ECS::get<RenderValues>(*pimpl);
-	VkDevice device = values.device.logical_device();
+	VkDevice device = values.device;
 	VkFence draw_fence = values.draw_frame_fences[values.submit_frame]; 
 	CHECK_VULKAN(vkWaitForFences(device, 1, &draw_fence, VK_TRUE, UINT64_MAX));
 	CHECK_VULKAN(vkResetFences(device, 1, &draw_fence));
@@ -141,8 +157,8 @@ void VulkanRenderer::aquire_next_frame()
 void VulkanRenderer::record_command_buffer(std::function<void(VkCommandBuffer)> callback)
 {
 	RenderValues& values = ECS::get<RenderValues>(*pimpl);
-	VkDevice device = values.device.logical_device();
-	VkCommandPool pool = values.device.command_pool();
+	VkDevice device = values.device;
+	VkCommandPool pool = values.command_pool;
 	VkCommandBuffer command_buffer = create_command_buffers(device, pool, 1)[0];
 
 	VkCommandBufferBeginInfo command_buffer_begin_info = {};

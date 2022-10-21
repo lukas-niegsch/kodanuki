@@ -17,7 +17,7 @@ VkRenderPass create_renderpass(RenderpassBuilder builder)
 	renderpass_info.dependencyCount = builder.dependencies.size();
 	renderpass_info.pDependencies = builder.dependencies.data();
 
-	VkDevice device = builder.device.logical_device();
+	VkDevice device = builder.device;
 	VkRenderPass renderpass;
 	CHECK_VULKAN(vkCreateRenderPass(device, &renderpass_info, nullptr, &renderpass));
 	return renderpass;
@@ -25,7 +25,7 @@ VkRenderPass create_renderpass(RenderpassBuilder builder)
 
 void remove_renderpass(Entity* renderpass)
 {
-	VkDevice device = ECS::get<VulkanDevice>(*renderpass).logical_device();
+	VkDevice device = ECS::get<VulkanDevice>(*renderpass);
 	VkRenderPass actual_renderpass = ECS::get<VkRenderPass>(*renderpass);
 	vkDestroyRenderPass(device, actual_renderpass, nullptr);
 	ECS::remove<Entity>(*renderpass);

@@ -92,6 +92,7 @@ int main()
 	VulkanRenderpass renderpass = get_example_triangle_renderpass(device, swapchain);
 	VulkanPipeline pipeline = get_example_triangle_pipeline(device, swapchain, renderpass);
 	VulkanRenderer renderer = {get_renderer_builder(device, swapchain, renderpass)};
+
 	
 	auto record_pipeline = [&](VkCommandBuffer buffer) {
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline());
@@ -100,7 +101,7 @@ int main()
 
 	std::cout << std::endl;
 	print_vulkan_info(device.physical_device());
-	print_vulkan_info(vectorize<vkGetPhysicalDeviceSurfacePresentModesKHR>(device.physical_device(), swapchain.surface()));
+	print_vulkan_info(vectorize<vkGetPhysicalDeviceQueueFamilyProperties>(device.physical_device()));
 	
 	std::cout << "Average time per frame: " << '\n';
 	std::cout << std::setprecision(4);

@@ -56,6 +56,9 @@ public:
 	// Creates a new vulkan device from the given builder.
 	VulkanDevice(DeviceBuilder builder);
 
+	// Returns the handle to the logical device.
+	operator VkDevice();
+
 public:
 	// Returns the handle to the instance.
 	VkInstance instance();
@@ -63,14 +66,15 @@ public:
 	// Returns the handle to the physical device.
 	VkPhysicalDevice physical_device();
 
-	// Returns the handle to the logical device.
-	VkDevice logical_device();
-
-	// Returns the handle to the command pool.
-	VkCommandPool command_pool();
-
 	// Returns the handles to the queues.
 	std::vector<VkQueue> queues();
+
+	// Returns the used queue family index.
+	uint32_t queue_family_index();
+
+private:
+	// Called once all device copies are unused.
+	void shared_destructor(Entity* pimpl);
 
 private:
 	// Destroys unused devices automatically.

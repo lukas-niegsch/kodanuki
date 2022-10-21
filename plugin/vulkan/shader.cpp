@@ -14,7 +14,7 @@ VkShaderModule create_shader_module(ShaderBuilder builder)
 	shader_module_info.pCode = reinterpret_cast<const uint32_t*>(builder.code.data());
 
 	VkShaderModule result;
-	CHECK_VULKAN(vkCreateShaderModule(builder.device.logical_device(), &shader_module_info, nullptr, &result));
+	CHECK_VULKAN(vkCreateShaderModule(builder.device, &shader_module_info, nullptr, &result));
 	return result;
 }
 
@@ -22,7 +22,7 @@ void remove_shader(Entity* shader)
 {
 	VulkanDevice device = ECS::get<VulkanDevice>(*shader);
 	VkShaderModule shader_module = ECS::get<VkShaderModule>(*shader);
-	vkDestroyShaderModule(device.logical_device(), shader_module, nullptr);
+	vkDestroyShaderModule(device, shader_module, nullptr);
 	ECS::remove<Entity>(*shader);
 	delete shader;
 }

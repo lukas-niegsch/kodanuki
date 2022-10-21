@@ -1,5 +1,6 @@
 #include "plugin/vulkan/device.h"
 #include "plugin/vulkan/debug.h"
+#include <functional>
 #include <cassert>
 
 namespace Kodanuki
@@ -79,19 +80,6 @@ VkDevice create_logical_device(VkPhysicalDevice physical_device, VkDeviceQueueCr
 	return result;
 }
 
-VkCommandPool create_command_pool(VkDevice device, uint32_t queue_index)
-{
-	VkCommandPoolCreateInfo pool_info;
-    pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    pool_info.pNext = nullptr;
-    pool_info.flags = 0;
-    pool_info.queueFamilyIndex = queue_index;
-
-	VkCommandPool command_pool;
-	CHECK_VULKAN(vkCreateCommandPool(device, &pool_info, nullptr, &command_pool));
-	return command_pool;
-}
-
 std::vector<VkQueue> get_queue_handles(VkDevice logical_device, VkDeviceQueueCreateInfo queue_family)
 {
 	std::vector<VkQueue> result(queue_family.queueCount);
@@ -103,20 +91,16 @@ std::vector<VkQueue> get_queue_handles(VkDevice logical_device, VkDeviceQueueCre
 	return result;
 }
 
-void remove_device(Entity* device)
+struct Queues
 {
-	VkDevice logical_device = ECS::get<VkDevice>(*device);
-	CHECK_VULKAN(vkDeviceWaitIdle(logical_device));
-	vkDestroyCommandPool(logical_device, ECS::get<VkCommandPool>(*device), nullptr);
-	vkDestroyDevice(logical_device, nullptr);
-	vkDestroyInstance(ECS::get<VkInstance>(*device), nullptr);
-	ECS::remove<Entity>(*device);
-	delete device;
-}
+	uint32_t queue_family_index;
+	std::vector<VkQueue> queues;
+};
 
 VulkanDevice::VulkanDevice(DeviceBuilder builder)
 {
-	pimpl = std::shared_ptr<Entity>(new Entity, &remove_device);
+	auto deleter = [this](Entity* pimpl) { shared_destructor(pimpl); };
+	pimpl = std::shared_ptr<Entity>(new Entity, deleter);
 	Entity device = *pimpl = ECS::create();
 	
 	VkInstance instance = create_instance(builder.instance_layers, builder.instance_extensions);
@@ -124,14 +108,26 @@ VulkanDevice::VulkanDevice(DeviceBuilder builder)
 	uint32_t queue_index = pick_queue_family_index(physical_device, builder.queue_score);
 	VkDeviceQueueCreateInfo queue_family = pick_queue_family(queue_index, builder.queue_priorities);
 	VkDevice logical_device = create_logical_device(physical_device, queue_family, builder.device_extensions);
-	VkCommandPool command_pool = create_command_pool(logical_device, queue_index);
 	std::vector<VkQueue> queues = get_queue_handles(logical_device, queue_family);
 
 	ECS::update<VkInstance>(device, instance);
 	ECS::update<VkPhysicalDevice>(device, physical_device);
 	ECS::update<VkDevice>(device, logical_device);
-	ECS::update<VkCommandPool>(device, command_pool);
-	ECS::update<std::vector<VkQueue>>(device, queues);
+	ECS::update<Queues>(device, {queue_index, queues});
+}
+
+void VulkanDevice::shared_destructor(Entity* pimpl)
+{
+	CHECK_VULKAN(vkDeviceWaitIdle(*this));
+	vkDestroyDevice(*this, nullptr);
+	vkDestroyInstance(instance(), nullptr);
+	ECS::remove<Entity>(*pimpl);
+	delete pimpl;
+}
+
+VulkanDevice::operator VkDevice()
+{
+	return ECS::get<VkDevice>(*pimpl);
 }
 
 VkInstance VulkanDevice::instance()
@@ -144,19 +140,14 @@ VkPhysicalDevice VulkanDevice::physical_device()
 	return ECS::get<VkPhysicalDevice>(*pimpl);
 }
 
-VkDevice VulkanDevice::logical_device()
-{
-	return ECS::get<VkDevice>(*pimpl);
-}
-
-VkCommandPool VulkanDevice::command_pool()
-{
-	return ECS::get<VkCommandPool>(*pimpl);
-}
-
 std::vector<VkQueue> VulkanDevice::queues()
 {
-	return ECS::get<std::vector<VkQueue>>(*pimpl);
+	return ECS::get<Queues>(*pimpl).queues;
+}
+
+uint32_t VulkanDevice::queue_family_index()
+{
+	return ECS::get<Queues>(*pimpl).queue_family_index;
 }
 
 }
