@@ -1,8 +1,8 @@
 #pragma once
 #include "plugin/vulkan/device.h"
-#include "engine/central/entity.h"
+#include "engine/template/copyable.h"
 #include <vulkan/vulkan.h>
-#include <memory>
+#include <string>
 #include <vector>
 
 namespace Kodanuki
@@ -33,11 +33,8 @@ struct ShaderBuilder
  * 
  * Each vulkan shader creates a shader module and manages its destruction.
  * They do not contain any information for which stage the shader is used.
- *
- * Instances can be copied around freely and will release all
- * ressources once unused.
  */
-class VulkanShader
+class VulkanShader : public CopyableWrapper<VulkanShader>
 {
 public:
 	// Creates a new vulkan shader from the given builder.
@@ -51,8 +48,9 @@ public:
 	std::string entry_point();
 
 private:
-	// Destroys unused shaders automatically.
-	std::shared_ptr<Entity> pimpl;
+	// Called once all shaders copies are unused.
+	void shared_destructor();
+	friend class CopyableWrapper<VulkanShader>;
 };
 
 }

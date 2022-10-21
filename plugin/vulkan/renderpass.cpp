@@ -23,29 +23,21 @@ VkRenderPass create_renderpass(RenderpassBuilder builder)
 	return renderpass;
 }
 
-void remove_renderpass(Entity* renderpass)
-{
-	VkDevice device = ECS::get<VulkanDevice>(*renderpass);
-	VkRenderPass actual_renderpass = ECS::get<VkRenderPass>(*renderpass);
-	vkDestroyRenderPass(device, actual_renderpass, nullptr);
-	ECS::remove<Entity>(*renderpass);
-	delete renderpass;
-}
-
 VulkanRenderpass::VulkanRenderpass(RenderpassBuilder builder)
 {
-	pimpl = std::shared_ptr<Entity>(new Entity, &remove_renderpass);
-	Entity renderpass = *pimpl = ECS::create();
+	ECS::update<VulkanDevice>(impl, builder.device);
+	ECS::update<VkRenderPass>(impl, create_renderpass(builder));
+}
 
-	VkRenderPass actual_renderpass = create_renderpass(builder);
-
-	ECS::update<VulkanDevice>(renderpass, builder.device);
-	ECS::update<VkRenderPass>(renderpass, actual_renderpass);
+void VulkanRenderpass::shared_destructor()
+{
+	VkDevice device = ECS::get<VulkanDevice>(impl);
+	vkDestroyRenderPass(device, renderpass(), nullptr);
 }
 
 VkRenderPass VulkanRenderpass::renderpass()
 {
-	return ECS::get<VkRenderPass>(*pimpl);
+	return ECS::get<VkRenderPass>(impl);
 }
 
 }

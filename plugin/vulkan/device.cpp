@@ -98,11 +98,7 @@ struct Queues
 };
 
 VulkanDevice::VulkanDevice(DeviceBuilder builder)
-{
-	auto deleter = [this](Entity* pimpl) { shared_destructor(pimpl); };
-	pimpl = std::shared_ptr<Entity>(new Entity, deleter);
-	Entity device = *pimpl = ECS::create();
-	
+{	
 	VkInstance instance = create_instance(builder.instance_layers, builder.instance_extensions);
 	VkPhysicalDevice physical_device = pick_physical_device(instance, builder.gpu_score);
 	uint32_t queue_index = pick_queue_family_index(physical_device, builder.queue_score);
@@ -110,44 +106,42 @@ VulkanDevice::VulkanDevice(DeviceBuilder builder)
 	VkDevice logical_device = create_logical_device(physical_device, queue_family, builder.device_extensions);
 	std::vector<VkQueue> queues = get_queue_handles(logical_device, queue_family);
 
-	ECS::update<VkInstance>(device, instance);
-	ECS::update<VkPhysicalDevice>(device, physical_device);
-	ECS::update<VkDevice>(device, logical_device);
-	ECS::update<Queues>(device, {queue_index, queues});
+	ECS::update<VkInstance>(impl, instance);
+	ECS::update<VkPhysicalDevice>(impl, physical_device);
+	ECS::update<VkDevice>(impl, logical_device);
+	ECS::update<Queues>(impl, {queue_index, queues});
 }
 
-void VulkanDevice::shared_destructor(Entity* pimpl)
+void VulkanDevice::shared_destructor()
 {
 	CHECK_VULKAN(vkDeviceWaitIdle(*this));
 	vkDestroyDevice(*this, nullptr);
 	vkDestroyInstance(instance(), nullptr);
-	ECS::remove<Entity>(*pimpl);
-	delete pimpl;
 }
 
 VulkanDevice::operator VkDevice()
 {
-	return ECS::get<VkDevice>(*pimpl);
+	return ECS::get<VkDevice>(impl);
 }
 
 VkInstance VulkanDevice::instance()
 {
-	return ECS::get<VkInstance>(*pimpl);
+	return ECS::get<VkInstance>(impl);
 }
 
 VkPhysicalDevice VulkanDevice::physical_device()
 {
-	return ECS::get<VkPhysicalDevice>(*pimpl);
+	return ECS::get<VkPhysicalDevice>(impl);
 }
 
 std::vector<VkQueue> VulkanDevice::queues()
 {
-	return ECS::get<Queues>(*pimpl).queues;
+	return ECS::get<Queues>(impl).queues;
 }
 
 uint32_t VulkanDevice::queue_family_index()
 {
-	return ECS::get<Queues>(*pimpl).queue_family_index;
+	return ECS::get<Queues>(impl).queue_family_index;
 }
 
 }

@@ -101,7 +101,6 @@ int main()
 
 	std::cout << std::endl;
 	print_vulkan_info(device.physical_device());
-	print_vulkan_info(vectorize<vkGetPhysicalDeviceQueueFamilyProperties>(device.physical_device()));
 	
 	std::cout << "Average time per frame: " << '\n';
 	std::cout << std::setprecision(4);

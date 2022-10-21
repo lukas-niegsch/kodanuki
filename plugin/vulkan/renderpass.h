@@ -1,8 +1,7 @@
 #pragma once
 #include "plugin/vulkan/device.h"
-#include "engine/central/entity.h"
+#include "engine/template/copyable.h"
 #include <vulkan/vulkan.h>
-#include <memory>
 #include <vector>
 
 namespace Kodanuki
@@ -40,7 +39,7 @@ struct RenderpassBuilder
  * Instances can be copied around freely and will release all
  * ressources once unused.
  */
-class VulkanRenderpass
+class VulkanRenderpass : private CopyableWrapper<VulkanRenderpass>
 {
 public:
 	// Creates a new vulkan rendererpass from the given builder.
@@ -51,8 +50,9 @@ public:
 	VkRenderPass renderpass();
 
 private:
-	// Destroys unused rendererpasses automatically.
-	std::shared_ptr<Entity> pimpl;
+	// Called once all renderpass copies are unused.
+	void shared_destructor();
+	friend class CopyableWrapper<VulkanRenderpass>;
 };
 
 }

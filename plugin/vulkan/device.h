@@ -1,8 +1,8 @@
 #pragma once
-#include "engine/central/entity.h"
+#include "engine/template/copyable.h"
 #include <vulkan/vulkan.h>
 #include <functional>
-#include <memory>
+#include <vector>
 
 namespace Kodanuki
 {
@@ -46,11 +46,8 @@ struct DeviceBuilder
  * Each vulkan device creates its own vulkan instance and picks
  * some graphics card based on the provided builder. This class
  * handles the interaction with the graphics card.
- *
- * Instances can be copied around freely and will release all
- * ressources once unused.
  */
-class VulkanDevice
+class VulkanDevice : private CopyableWrapper<VulkanDevice>
 {
 public:
 	// Creates a new vulkan device from the given builder.
@@ -74,11 +71,8 @@ public:
 
 private:
 	// Called once all device copies are unused.
-	void shared_destructor(Entity* pimpl);
-
-private:
-	// Destroys unused devices automatically.
-	std::shared_ptr<Entity> pimpl;
+	void shared_destructor();
+	friend class CopyableWrapper<VulkanDevice>;
 };
 
 }

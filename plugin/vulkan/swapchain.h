@@ -54,6 +54,9 @@ public:
 	// Creates a new vulkan swapchain from the given builder.
 	VulkanSwapchain(SwapchainBuilder builder);
 
+	// Recreates the swapchain for the given renderpass.
+	// void recreate_swapchain(VulkanRenderpass renderpass);
+
 public:
 	// Returns the handle to the surface.
 	VkSurfaceKHR surface();
@@ -72,6 +75,10 @@ public:
 
 	// Returns the number of frames that are used simultaneously.
 	uint32_t frame_count();
+
+private:
+	// Called once all device copies are unused.
+	void shared_destructor(Entity* pimpl);
 
 private:
 	// Destroys unused swapchains automatically.

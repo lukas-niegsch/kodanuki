@@ -92,6 +92,11 @@ VulkanSwapchain::VulkanSwapchain(SwapchainBuilder builder)
 	ECS::update<VkSurfaceFormatKHR>(swapchain, builder.surface_format);
 }
 
+void VulkanSwapchain::shared_destructor(Entity* pimpl)
+{
+	(void) pimpl;
+}
+
 VkSurfaceKHR VulkanSwapchain::surface()
 {
 	return ECS::get<VkSurfaceKHR>(*pimpl);

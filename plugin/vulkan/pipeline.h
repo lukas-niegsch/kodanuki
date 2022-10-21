@@ -3,8 +3,9 @@
 #include "plugin/vulkan/shader.h"
 #include "plugin/vulkan/renderpass.h"
 #include "engine/central/entity.h"
+#include "engine/template/copyable.h"
 #include <vulkan/vulkan.h>
-#include <memory>
+#include <optional>
 
 namespace Kodanuki
 {
@@ -74,7 +75,7 @@ struct PipelineBuilder
  *
  * TODO: @design Does the pipeline (own|includes|weakrefs) an renderpass?
  */
-class VulkanPipeline
+class VulkanPipeline : private CopyableWrapper<VulkanPipeline>
 {
 public:
 	// Creates a new vulkan pipeline from the given builder.
@@ -85,8 +86,9 @@ public:
 	VkPipeline pipeline();
 
 private:
-	// Destroys unused pipelines automatically.
-	std::shared_ptr<Entity> pimpl;
+	// Called once all pipeline copies are unused.
+	void shared_destructor();
+	friend class CopyableWrapper<VulkanPipeline>;
 };
 
 }

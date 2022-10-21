@@ -91,29 +91,21 @@ VkPipeline create_pipeline(PipelineBuilder& builder)
 	return pipeline;
 }
 
-void remove_pipeline(Entity* pipeline)
-{
-	VkDevice device = ECS::get<VulkanDevice>(*pipeline);
-	VkPipeline actual_pipeline = ECS::get<VkPipeline>(*pipeline);
-	vkDestroyPipeline(device, actual_pipeline, nullptr);
-	ECS::remove<Entity>(*pipeline);
-	delete pipeline;
-}
-
 VulkanPipeline::VulkanPipeline(PipelineBuilder builder)
 {
-	pimpl = std::shared_ptr<Entity>(new Entity, &remove_pipeline);
-	Entity pipeline = *pimpl = ECS::create();
-	
-	VkPipeline actual_pipeline = create_pipeline(builder);
+	ECS::update<VulkanDevice>(impl, builder.device);
+	ECS::update<VkPipeline>(impl, create_pipeline(builder));
+}
 
-	ECS::update<VulkanDevice>(pipeline, builder.device);
-	ECS::update<VkPipeline>(pipeline, actual_pipeline);
+void VulkanPipeline::shared_destructor()
+{
+	VkDevice device = ECS::get<VulkanDevice>(impl);
+	vkDestroyPipeline(device, pipeline(), nullptr);
 }
 
 VkPipeline VulkanPipeline::pipeline()
 {
-	return ECS::get<VkPipeline>(*pimpl);
+	return ECS::get<VkPipeline>(impl);
 }
 
 }
