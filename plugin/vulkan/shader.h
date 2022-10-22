@@ -34,7 +34,7 @@ struct ShaderBuilder
  * Each vulkan shader creates a shader module and manages its destruction.
  * They do not contain any information for which stage the shader is used.
  */
-class VulkanShader : public CopyableWrapper<VulkanShader>
+class VulkanShader : public Copyable<VulkanShader>
 {
 public:
 	// Creates a new vulkan shader from the given builder.
@@ -50,7 +50,7 @@ public:
 private:
 	// Called once all shaders copies are unused.
 	void shared_destructor();
-	friend class CopyableWrapper<VulkanShader>;
+	friend class Copyable<VulkanShader>;
 };
 
 }

@@ -39,7 +39,7 @@ struct RenderpassBuilder
  * Instances can be copied around freely and will release all
  * ressources once unused.
  */
-class VulkanRenderpass : private CopyableWrapper<VulkanRenderpass>
+class VulkanRenderpass : private Copyable<VulkanRenderpass>
 {
 public:
 	// Creates a new vulkan rendererpass from the given builder.
@@ -52,7 +52,7 @@ public:
 private:
 	// Called once all renderpass copies are unused.
 	void shared_destructor();
-	friend class CopyableWrapper<VulkanRenderpass>;
+	friend class Copyable<VulkanRenderpass>;
 };
 
 }

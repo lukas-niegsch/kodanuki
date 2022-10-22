@@ -47,7 +47,7 @@ struct DeviceBuilder
  * some graphics card based on the provided builder. This class
  * handles the interaction with the graphics card.
  */
-class VulkanDevice : private CopyableWrapper<VulkanDevice>
+class VulkanDevice : private Copyable<VulkanDevice>
 {
 public:
 	// Creates a new vulkan device from the given builder.
@@ -72,7 +72,7 @@ public:
 private:
 	// Called once all device copies are unused.
 	void shared_destructor();
-	friend class CopyableWrapper<VulkanDevice>;
+	friend class Copyable<VulkanDevice>;
 };
 
 }

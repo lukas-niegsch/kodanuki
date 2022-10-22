@@ -75,7 +75,7 @@ struct PipelineBuilder
  *
  * TODO: @design Does the pipeline (own|includes|weakrefs) an renderpass?
  */
-class VulkanPipeline : private CopyableWrapper<VulkanPipeline>
+class VulkanPipeline : private Copyable<VulkanPipeline>
 {
 public:
 	// Creates a new vulkan pipeline from the given builder.
@@ -88,7 +88,7 @@ public:
 private:
 	// Called once all pipeline copies are unused.
 	void shared_destructor();
-	friend class CopyableWrapper<VulkanPipeline>;
+	friend class Copyable<VulkanPipeline>;
 };
 
 }

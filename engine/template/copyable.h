@@ -17,10 +17,10 @@ namespace Kodanuki
  * Subclasses are required to provide a shared_destructor() function.
  */
 template <typename CRTP>
-struct CopyableWrapper
+struct Copyable
 {
 public:
-	CopyableWrapper()
+	Copyable()
 	{
 		auto deleter = [this](Entity* pimpl) { shared_destructor(pimpl); };
 		pimpl = std::shared_ptr<Entity>(new Entity, deleter);
