@@ -81,6 +81,9 @@ public:
 	// Creates a new vulkan pipeline from the given builder.
 	VulkanPipeline(PipelineBuilder builder);
 
+	// Returns the handle to the native vulkan pipeline.
+	operator VkPipeline();
+
 public:
 	// Returns the handle to the actual pipeline.
 	VkPipeline pipeline();

@@ -28,9 +28,6 @@ struct RendererBuilder
 	// The vulkan renderpass for which the pipeline is created.
 	VulkanRenderpass renderpass;
 
-	// The number of command buffers that are created.
-	uint32_t command_buffer_count;
-
 	// The color with which the frames should be cleared.
 	VkClearValue clear_color;
 };
@@ -55,33 +52,21 @@ public:
 	void shared_destructor();
 
 public:
-	// Aquires the next frame for which work can be submitted.
-	void aquire_next_frame();
-
-	// Records the command buffer at the given index with draw commands.
-	void record_command_buffer(std::function<void(VkCommandBuffer)> callback);
-
-	// Submits the command buffers to the vulkan device asynchronously.
-	void submit_command_buffers(uint32_t queue_index = 0);
-
-	// Renders the next available frame to the surface.
-	void render_next_frame(uint32_t queue_index = 0);
-
-public:
-	// Clears the screen by aquiring the next frame.
-	void clear();
-
-	// Enques the model for drawing to the current frame.
-	void draw(VulkanPipeline pipeline);
-
-	// Records the enqued commands to command buffers.
-	void record();
+	// Aquires the next frame from the swapchain.
+	void aquire();
 
 	// Submits all the draww commands to the device.
-	void submit();
+	void submit(uint32_t queue_index = 0);
+
+	// Enques the model for drawing to the current frame.
+	// TODO: replace pipeline with model and instance data
+	void draw(VulkanPipeline model);
+
+	// Records the enqueued models onto frame buffers.
+	void record();
 
 	// Renders the next available frame onto the screen.
-	void render();
+	void render(uint32_t queue_index = 0);
 };
 
 }

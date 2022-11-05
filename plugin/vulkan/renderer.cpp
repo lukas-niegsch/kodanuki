@@ -1,5 +1,6 @@
 #include "plugin/vulkan/renderer.h"
 #include "plugin/vulkan/debug.h"
+#include <unordered_set>
 
 namespace Kodanuki
 {
@@ -22,7 +23,7 @@ VkCommandPool create_command_pool(VkDevice device, uint32_t queue_index)
 	VkCommandPoolCreateInfo pool_info;
 	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	pool_info.pNext = nullptr;
-	pool_info.flags = 0;
+	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	pool_info.queueFamilyIndex = queue_index;
 
 	VkCommandPool command_pool;
@@ -30,159 +31,216 @@ VkCommandPool create_command_pool(VkDevice device, uint32_t queue_index)
 	return command_pool;
 }
 
-class RenderValues
+class SerialVulkanRenderer
 {
-public:
-	RenderValues(RendererBuilder builder)
-		: device(builder.device)
-		, swapchain(builder.swapchain)
-		, renderpass(builder.renderpass)
-	{
-		submit_frame = 0;
-		frame_count = builder.swapchain.frame_count();
-		clear_color = builder.clear_color;
-		stage_masks = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-		create_synchronization_objects();
-		command_pool = create_command_pool(device, device.queue_family_index());
-	}
-
-	void create_synchronization_objects()
-	{
-		image_available_semaphores.resize(frame_count);
-		render_finished_semaphores.resize(frame_count);
-		draw_frame_fences.resize(frame_count);
-
-		VkSemaphoreCreateInfo semaphore_info = {};
-		semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-		VkFenceCreateInfo fence_info = {};
-		fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-		for (uint32_t i = 0; i < frame_count; i++) {
-			CHECK_VULKAN(vkCreateSemaphore(device, &semaphore_info, nullptr, &image_available_semaphores[i]));
-			CHECK_VULKAN(vkCreateSemaphore(device, &semaphore_info, nullptr, &render_finished_semaphores[i]));
-			CHECK_VULKAN(vkCreateFence(device, &fence_info, nullptr, &draw_frame_fences[i]));
-		}
-	}
-
-	void destroy()
-	{
-		CHECK_VULKAN(vkDeviceWaitIdle(device));
-		for (VkSemaphore semaphore : image_available_semaphores) {
-			vkDestroySemaphore(device, semaphore, nullptr);
-		}
-		for (VkSemaphore semaphore : render_finished_semaphores) {
-			vkDestroySemaphore(device, semaphore, nullptr);
-		}
-		for (VkFence fence : draw_frame_fences) {
-			vkDestroyFence(device, fence, nullptr);
-		}
-		vkDestroyCommandPool(device, command_pool, nullptr);
-	}
+private:
+	inline static uint64_t AQUIRE_TIMEOUT = 10 /* seconds*/ * 1000000000ull;
 
 public:
+	SerialVulkanRenderer(RendererBuilder builder);
+	void create_synchronization_objects();
+	void destroy();
+
+public:
+	void aquire();
+	void submit(uint32_t queue_index);
+	void draw(VulkanPipeline pipeline);
+	void record();
+	void render(uint32_t queue_index);
+
+private:
 	VulkanDevice device;
 	VulkanSwapchain swapchain;
 	VulkanRenderpass renderpass;
 	uint32_t submit_frame;
-	uint32_t render_image;
-	uint32_t frame_count;
-	std::vector<VkCommandBuffer> command_buffers;
+	uint32_t render_frame;
+	uint32_t max_frame;
 	VkClearValue clear_color;
 	VkCommandPool command_pool;
+	std::vector<VkCommandBuffer> command_buffers;
 	std::vector<VkPipelineStageFlags> stage_masks;
 	std::vector<VkSemaphore> image_available_semaphores;
 	std::vector<VkSemaphore> render_finished_semaphores;
-	std::vector<VkFence> draw_frame_fences;
+	std::vector<VkFence> aquire_frame_fences;
+	std::vector<VulkanPipeline> models;
 };
 
-void VulkanRenderer::shared_destructor()
+SerialVulkanRenderer::SerialVulkanRenderer(RendererBuilder builder)
+	: device(builder.device)
+	, swapchain(builder.swapchain)
+	, renderpass(builder.renderpass)
 {
-	ECS::get<RenderValues>(impl).destroy();
+	submit_frame = 0;
+	max_frame = swapchain.frame_count();
+	clear_color = builder.clear_color;
+	stage_masks = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+	create_synchronization_objects();
+	command_pool = create_command_pool(device, device.queue_family_index());
+	command_buffers = create_command_buffers(device, command_pool, max_frame);
+}
+
+void SerialVulkanRenderer::create_synchronization_objects()
+{
+	image_available_semaphores.resize(max_frame);
+	render_finished_semaphores.resize(max_frame);
+	aquire_frame_fences.resize(max_frame);
+
+	VkSemaphoreCreateInfo semaphore_info = {};
+	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkFenceCreateInfo fence_info = {};
+	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for (uint32_t i = 0; i < max_frame; i++) {
+		CHECK_VULKAN(vkCreateSemaphore(device, &semaphore_info, nullptr, &image_available_semaphores[i]));
+		CHECK_VULKAN(vkCreateSemaphore(device, &semaphore_info, nullptr, &render_finished_semaphores[i]));
+		CHECK_VULKAN(vkCreateFence(device, &fence_info, nullptr, &aquire_frame_fences[i]));
+	}
+}
+
+void SerialVulkanRenderer::destroy()
+{
+	CHECK_VULKAN(vkDeviceWaitIdle(device));
+	for (VkSemaphore semaphore : image_available_semaphores) {
+		vkDestroySemaphore(device, semaphore, nullptr);
+	}
+	for (VkSemaphore semaphore : render_finished_semaphores) {
+		vkDestroySemaphore(device, semaphore, nullptr);
+	}
+	for (VkFence fence : aquire_frame_fences) {
+		vkDestroyFence(device, fence, nullptr);
+	}
+	vkDestroyCommandPool(device, command_pool, nullptr);
+}
+
+void SerialVulkanRenderer::aquire()
+{
+	CHECK_VULKAN(vkWaitForFences(device, 1, &aquire_frame_fences[submit_frame], VK_TRUE, AQUIRE_TIMEOUT));
+
+	auto result = vkAcquireNextImageKHR(device, swapchain, AQUIRE_TIMEOUT, image_available_semaphores[submit_frame],
+										VK_NULL_HANDLE, &render_frame);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+		swapchain.recreate_swapchain();
+		return;
+	} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+		throw std::runtime_error("failed to acquire swap chain image!");
+	}
+
+	CHECK_VULKAN(vkResetFences(device, 1, &aquire_frame_fences[submit_frame]));
+	CHECK_VULKAN(vkResetCommandBuffer(command_buffers[submit_frame], 0));
+}
+
+void SerialVulkanRenderer::submit(uint32_t queue_index)
+{
+	VkSubmitInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	info.waitSemaphoreCount = 1;
+	info.pWaitSemaphores = &image_available_semaphores[submit_frame];
+	info.pWaitDstStageMask = stage_masks.data();
+	info.commandBufferCount = 1;
+	info.pCommandBuffers = &command_buffers[submit_frame];
+	info.signalSemaphoreCount = 1;
+	info.pSignalSemaphores = &render_finished_semaphores[submit_frame];
+
+	VkQueue queue = device.queues()[queue_index];
+	CHECK_VULKAN(vkQueueSubmit(queue, 1, &info, aquire_frame_fences[submit_frame]));
+	submit_frame = (submit_frame + 1) % max_frame;
+}
+
+void SerialVulkanRenderer::draw(VulkanPipeline pipeline)
+{
+	models.push_back(pipeline);
+}
+
+void SerialVulkanRenderer::record()
+{
+	// We currently only write to one command buffer per frame!
+	VkCommandBuffer buffer = command_buffers[submit_frame];
+
+	VkCommandBufferBeginInfo buffer_info = {};
+	buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	CHECK_VULKAN(vkBeginCommandBuffer(buffer, &buffer_info));
+
+	VkRenderPassBeginInfo renderpass_info = {};
+	renderpass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderpass_info.renderPass = renderpass;
+	renderpass_info.framebuffer = swapchain.frame_buffers()[submit_frame];
+	renderpass_info.renderArea.offset = {0, 0};
+	renderpass_info.renderArea.extent = swapchain.surface_extent();
+	renderpass_info.clearValueCount = 1;
+	renderpass_info.pClearValues = &clear_color;
+
+	vkCmdBeginRenderPass(buffer, &renderpass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+	for (VulkanPipeline model : models)
+	{
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, model);
+
+		// TODO: replace hard coded values with actual data.
+		vkCmdDraw(buffer, 3, 1, 0, 0);
+	}
+
+	vkCmdEndRenderPass(buffer);
+	CHECK_VULKAN(vkEndCommandBuffer(buffer));
+}
+
+void SerialVulkanRenderer::render(uint32_t queue_index)
+{
+	std::vector<VkSwapchainKHR> swapchains = {swapchain};
+
+	VkPresentInfoKHR info = {};
+	info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	info.waitSemaphoreCount = 1;
+	info.pWaitSemaphores = &render_finished_semaphores[render_frame];
+	info.swapchainCount = swapchains.size();
+	info.pSwapchains = swapchains.data();
+	info.pImageIndices = &render_frame;
+
+	VkQueue queue = device.queues()[queue_index];
+	auto result = vkQueuePresentKHR(queue, &info);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		swapchain.recreate_swapchain();
+	} else if (result != VK_SUCCESS) {
+		throw std::runtime_error("failed to present swap chain image!");
+	}
 }
 
 VulkanRenderer::VulkanRenderer(RendererBuilder builder)
 {
-	ECS::update<RenderValues>(impl, {builder});
+	ECS::update<SerialVulkanRenderer>(impl, {builder});
 }
 
-void VulkanRenderer::aquire_next_frame()
+void VulkanRenderer::shared_destructor()
 {
-	RenderValues& values = ECS::get<RenderValues>(impl);
-	VkDevice device = values.device;
-	VkFence draw_fence = values.draw_frame_fences[values.submit_frame]; 
-	CHECK_VULKAN(vkWaitForFences(device, 1, &draw_fence, VK_TRUE, UINT64_MAX));
-	CHECK_VULKAN(vkResetFences(device, 1, &draw_fence));
-	VkSwapchainKHR swapchain = values.swapchain;
-	VkSemaphore image_semaphore = values.image_available_semaphores[values.submit_frame];
-	vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, image_semaphore, VK_NULL_HANDLE, &values.render_image);
-	values.command_buffers.clear();
+	ECS::get<SerialVulkanRenderer>(impl).destroy();
 }
 
-void VulkanRenderer::record_command_buffer(std::function<void(VkCommandBuffer)> callback)
+void VulkanRenderer::aquire()
 {
-	RenderValues& values = ECS::get<RenderValues>(impl);
-	VkDevice device = values.device;
-	VkCommandPool pool = values.command_pool;
-	VkCommandBuffer command_buffer = create_command_buffers(device, pool, 1)[0];
-
-	VkCommandBufferBeginInfo command_buffer_begin_info = {};
-	command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	CHECK_VULKAN(vkBeginCommandBuffer(command_buffer, &command_buffer_begin_info));
-
-	VkRenderPassBeginInfo renderpass_begin_info = {};
-	renderpass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderpass_begin_info.renderPass = values.renderpass;
-	renderpass_begin_info.framebuffer = values.swapchain.frame_buffers()[values.submit_frame];
-	renderpass_begin_info.renderArea.offset = {0, 0};
-	renderpass_begin_info.renderArea.extent = values.swapchain.surface_extent();
-	renderpass_begin_info.clearValueCount = 1;
-	renderpass_begin_info.pClearValues = &values.clear_color;
-	
-	vkCmdBeginRenderPass(command_buffer, &renderpass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-	callback(command_buffer);
-	vkCmdEndRenderPass(command_buffer);
-
-	CHECK_VULKAN(vkEndCommandBuffer(command_buffer));
-	values.command_buffers.push_back(command_buffer);
+	ECS::get<SerialVulkanRenderer>(impl).aquire();
 }
 
-void VulkanRenderer::submit_command_buffers(uint32_t queue_index)
+void VulkanRenderer::submit(uint32_t queue_index)
 {
-	RenderValues& values = ECS::get<RenderValues>(impl);
-	VkQueue queue = values.device.queues()[queue_index];
-
-	VkSubmitInfo submit_info = {};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.waitSemaphoreCount = 1;
-	submit_info.pWaitSemaphores = &values.image_available_semaphores[values.submit_frame];
-	submit_info.pWaitDstStageMask = values.stage_masks.data();
-	submit_info.commandBufferCount = values.command_buffers.size();
-	submit_info.pCommandBuffers = values.command_buffers.data();
-	submit_info.signalSemaphoreCount = 1;
-	submit_info.pSignalSemaphores = &values.render_finished_semaphores[values.submit_frame];
-
-	CHECK_VULKAN(vkQueueSubmit(queue, 1, &submit_info, values.draw_frame_fences[values.submit_frame]));
-	values.submit_frame = (values.submit_frame + 1) % values.frame_count;
+	ECS::get<SerialVulkanRenderer>(impl).submit(queue_index);
 }
 
-void VulkanRenderer::render_next_frame(uint32_t queue_index)
+void VulkanRenderer::draw(VulkanPipeline pipeline)
 {
-	RenderValues& values = ECS::get<RenderValues>(impl);
-	VkQueue queue = values.device.queues()[queue_index];
-	VkSwapchainKHR swapchain = values.swapchain;
+	ECS::get<SerialVulkanRenderer>(impl).draw(pipeline);
+}
 
-	VkPresentInfoKHR present_Info = {};
-	present_Info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	present_Info.waitSemaphoreCount = 1;
-	present_Info.pWaitSemaphores = &values.render_finished_semaphores[values.render_image];
-	present_Info.swapchainCount = 1;
-	present_Info.pSwapchains = &swapchain;
-	present_Info.pImageIndices = &values.render_image;
-	present_Info.pResults = nullptr;
+void VulkanRenderer::record()
+{
+	ECS::get<SerialVulkanRenderer>(impl).record();
+}
 
-	vkQueuePresentKHR(queue, &present_Info);
+void VulkanRenderer::render(uint32_t queue_index)
+{
+	ECS::get<SerialVulkanRenderer>(impl).render(queue_index);
 }
 
 }

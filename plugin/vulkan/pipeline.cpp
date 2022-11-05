@@ -108,4 +108,9 @@ VkPipeline VulkanPipeline::pipeline()
 	return ECS::get<VkPipeline>(impl);
 }
 
+VulkanPipeline::operator VkPipeline()
+{
+	return ECS::get<VkPipeline>(impl);
+}
+
 }
