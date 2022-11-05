@@ -6,7 +6,7 @@ class ExamplePipelineInfo
 {
 public:
 	VkSubpassDependency get_dependency();
-	VkAttachmentDescription get_color_attachment(VulkanSwapchain swapchain);
+	VkAttachmentDescription get_color_attachment();
 	VkSubpassDescription get_subpasses();
 	VkPipelineDynamicStateCreateInfo get_dynamic_state();
 	VkPipelineVertexInputStateCreateInfo get_vertex_input();
@@ -36,10 +36,10 @@ VkSubpassDependency ExamplePipelineInfo::get_dependency()
 	return dependency;
 }
 
-VkAttachmentDescription ExamplePipelineInfo::get_color_attachment(VulkanSwapchain swapchain)
+VkAttachmentDescription ExamplePipelineInfo::get_color_attachment()
 {
 	VkAttachmentDescription color_attachment = {};
-	color_attachment.format = swapchain.surface_format().format;
+	color_attachment.format = VK_FORMAT_B8G8R8A8_UNORM; // TODO: make this dynamic
 	color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -170,14 +170,14 @@ VkPipelineMultisampleStateCreateInfo ExamplePipelineInfo::get_multisample()
 	return multisample;
 }
 
-VulkanRenderpass get_example_triangle_renderpass(VulkanDevice device, VulkanSwapchain swapchain)
+VulkanRenderpass get_example_triangle_renderpass(VulkanDevice device)
 {
 	ExamplePipelineInfo example;
 
 	RenderpassBuilder builder = {
 		.device = device,
 		.dependencies = {example.get_dependency()},
-		.attachments = {example.get_color_attachment(swapchain)},
+		.attachments = {example.get_color_attachment()},
 		.subpasses = {example.get_subpasses()}
 	};
 

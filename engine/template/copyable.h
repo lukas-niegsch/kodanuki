@@ -27,6 +27,12 @@ public:
 		impl = *pimpl = ECS::create();
 	}
 
+public:
+	bool operator==(const Copyable& other)
+	{
+		return *pimpl == *other.pimpl;
+	}
+
 private:
 	void shared_destructor(Entity* pimpl)
 	{

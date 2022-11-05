@@ -79,7 +79,7 @@ VkPipeline create_pipeline(PipelineBuilder& builder)
 	pipeline_info.pColorBlendState = &builder.color_blend;
 	pipeline_info.pDynamicState = &builder.dynamic_state;
 	pipeline_info.layout = layout;
-	pipeline_info.renderPass = builder.renderpass.renderpass();
+	pipeline_info.renderPass = builder.renderpass;
 	pipeline_info.subpass = 0;
 	pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 	pipeline_info.basePipelineIndex = -1;

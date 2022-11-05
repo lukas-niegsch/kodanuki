@@ -1,88 +1,76 @@
 #pragma once
 #include "plugin/vulkan/device.h"
+#include "plugin/vulkan/renderpass.h"
 #include "engine/central/entity.h"
+#include "engine/template/copyable.h"
 #include <vulkan/vulkan.h>
 #include <memory>
 
 namespace Kodanuki
 {
 
-/**
- * Contains all the configurable information for creating a swapchain.
- *
- * These values will be considered as much as possible when creating
- * the swapchain. The caller has to make sure that the provided values make
- * sense.
- *
- * Example:
- * The required extensions must be enabled inside the device.
- * The gpu has at least the selected amount of queue families.
- * The present mode must be available.
- */
 struct SwapchainBuilder
 {
-	// The vulkan device for which the swapchain is created.
+	// The device that computes graphics.
 	VulkanDevice device;
 
-	// The window surface on which the frame should be rendered.
+	// The renderpass for the swapchain.
+	VulkanRenderpass renderpass;
+
+	// The surface on which is rendered.
 	VkSurfaceKHR surface;
 
-	// The surface format that the swapchain will use.
+	// The format of the surface.
 	VkSurfaceFormatKHR surface_format;
 
-	// The present mode in which the frames will be rendered.
+	// The mode for swapping frames.
 	VkPresentModeKHR present_mode;
 
-	// The number of frames that should be buffered.
+	// The number of frame buffers.
 	uint32_t frame_count;
 };
 
 /**
- * The vulkan swapchain is a wrapper around the frame buffering.
+ * The vulkan swapchain is a wrapper around frame buffering.
  *
- * Each vulkan swapchain creates a swapchain from the given builder
- * and handles the swapping of the buffered images. It handles the
- * output of some vulkan pipeline.
+ * This class creates a swapchain for the given surface parameters
+ * and creates images and frame buffers. It handles the swapping of
+ * the buffered images.
  *
- * Instances can be copied around freely and will release all
- * ressources once unused. The vulkan swapchain maintains the give
- * surface (including destroying it afterwards).
+ * Instances of this class can be copied around freely and will
+ * release all ressources automatically once all instances are no
+ * longer used.
  */
-class VulkanSwapchain
+class VulkanSwapchain : public Copyable<VulkanSwapchain>
 {
 public:
 	// Creates a new vulkan swapchain from the given builder.
 	VulkanSwapchain(SwapchainBuilder builder);
 
-	// Recreates the swapchain for the given renderpass.
-	// void recreate_swapchain(VulkanRenderpass renderpass);
+	// Called automatically once all instances are unused.
+	void shared_destructor();
+
+	// Converts this class to the native vulkan swapchain.
+	operator VkSwapchainKHR();
 
 public:
-	// Returns the handle to the surface.
-	VkSurfaceKHR surface();
-
-	// Returns the handles to the image views.
-	std::vector<VkImageView> image_views();
-
-	// Returns the used surface format.
-	VkSurfaceFormatKHR surface_format();
-
-	// Returns the handle to the actual swapchain.
-	VkSwapchainKHR swapchain();
+	// Recreates the swapchain once outdated.
+	void recreate_swapchain();
 
 	// Returns the current surface extent.
 	VkExtent2D surface_extent();
 
-	// Returns the number of frames that are used simultaneously.
+	// Returns the number of used frames.
 	uint32_t frame_count();
 
-private:
-	// Called once all device copies are unused.
-	void shared_destructor(Entity* pimpl);
+	// Returns the used frame buffers.
+	std::vector<VkFramebuffer> frame_buffers();
 
 private:
-	// Destroys unused swapchains automatically.
-	std::shared_ptr<Entity> pimpl;
+	void cleanup(VkDevice device);
+	VkSwapchainKHR create_swapchain(uint32_t frame_count);
+	std::vector<VkFramebuffer> create_frame_buffers();
+	std::vector<VkImageView> create_image_views();
 };
 
 }

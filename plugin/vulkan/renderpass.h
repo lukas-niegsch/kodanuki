@@ -45,9 +45,7 @@ public:
 	// Creates a new vulkan rendererpass from the given builder.
 	VulkanRenderpass(RenderpassBuilder builder);
 
-public:
-	// Returns the handle to the actual renderpass.
-	VkRenderPass renderpass();
+	operator VkRenderPass();
 
 private:
 	// Called once all renderpass copies are unused.

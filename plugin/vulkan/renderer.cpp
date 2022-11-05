@@ -4,31 +4,6 @@
 namespace Kodanuki
 {
 
-std::vector<VkFramebuffer> create_frame_buffers(RendererBuilder builder)
-{
-	std::vector<VkImageView> views = builder.swapchain.image_views();
-	std::vector<VkFramebuffer> framebuffers(views.size());
-	VkDevice logical_device = builder.device;
-	VkExtent2D size = builder.swapchain.surface_extent();
-
-	VkFramebufferCreateInfo framebuffer_info = {};
-	framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-	framebuffer_info.renderPass = builder.renderpass.renderpass();
-	framebuffer_info.layers = 1;
-	framebuffer_info.width = size.width;
-	framebuffer_info.height = size.height;
-
-	for (uint32_t i = 0; i < framebuffers.size(); i++) {
-		std::vector<VkImageView> attachments = {views[i]};
-		framebuffer_info.attachmentCount = attachments.size();
-		framebuffer_info.pAttachments = attachments.data();
-
-		CHECK_VULKAN(vkCreateFramebuffer(logical_device, &framebuffer_info, nullptr, &framebuffers[i]));
-	}
-
-	return framebuffers;
-}
-
 std::vector<VkCommandBuffer> create_command_buffers(VkDevice device, VkCommandPool pool, uint32_t count)
 {
 	VkCommandBufferAllocateInfo buffer_info = {};
@@ -65,7 +40,6 @@ public:
 	{
 		submit_frame = 0;
 		frame_count = builder.swapchain.frame_count();
-		frame_buffers = create_frame_buffers(builder);
 		clear_color = builder.clear_color;
 		stage_masks = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 		create_synchronization_objects();
@@ -104,9 +78,6 @@ public:
 		for (VkFence fence : draw_frame_fences) {
 			vkDestroyFence(device, fence, nullptr);
 		}
-		for (VkFramebuffer frame_buffer : frame_buffers) {
-			vkDestroyFramebuffer(device, frame_buffer, nullptr);
-		}
 		vkDestroyCommandPool(device, command_pool, nullptr);
 	}
 
@@ -117,7 +88,6 @@ public:
 	uint32_t submit_frame;
 	uint32_t render_image;
 	uint32_t frame_count;
-	std::vector<VkFramebuffer> frame_buffers;
 	std::vector<VkCommandBuffer> command_buffers;
 	VkClearValue clear_color;
 	VkCommandPool command_pool;
@@ -148,10 +118,11 @@ void VulkanRenderer::aquire_next_frame()
 	VkFence draw_fence = values.draw_frame_fences[values.submit_frame]; 
 	CHECK_VULKAN(vkWaitForFences(device, 1, &draw_fence, VK_TRUE, UINT64_MAX));
 	CHECK_VULKAN(vkResetFences(device, 1, &draw_fence));
-	VkSwapchainKHR swapchain = values.swapchain.swapchain();
+	values.command_buffers.clear();
+
+	VkSwapchainKHR swapchain = values.swapchain;
 	VkSemaphore image_semaphore = values.image_available_semaphores[values.submit_frame];
 	vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, image_semaphore, VK_NULL_HANDLE, &values.render_image);
-	values.command_buffers.clear();
 }
 
 void VulkanRenderer::record_command_buffer(std::function<void(VkCommandBuffer)> callback)
@@ -167,8 +138,8 @@ void VulkanRenderer::record_command_buffer(std::function<void(VkCommandBuffer)> 
 
 	VkRenderPassBeginInfo renderpass_begin_info = {};
 	renderpass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderpass_begin_info.renderPass = values.renderpass.renderpass();
-	renderpass_begin_info.framebuffer = values.frame_buffers[values.submit_frame];
+	renderpass_begin_info.renderPass = values.renderpass;
+	renderpass_begin_info.framebuffer = values.swapchain.frame_buffers()[values.submit_frame];
 	renderpass_begin_info.renderArea.offset = {0, 0};
 	renderpass_begin_info.renderArea.extent = values.swapchain.surface_extent();
 	renderpass_begin_info.clearValueCount = 1;
@@ -205,7 +176,7 @@ void VulkanRenderer::render_next_frame(uint32_t queue_index)
 {
 	RenderValues& values = ECS::get<RenderValues>(*pimpl);
 	VkQueue queue = values.device.queues()[queue_index];
-	VkSwapchainKHR swapchain = values.swapchain.swapchain();
+	VkSwapchainKHR swapchain = values.swapchain;
 
 	VkPresentInfoKHR present_Info = {};
 	present_Info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

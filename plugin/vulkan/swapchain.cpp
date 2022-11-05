@@ -4,130 +4,141 @@
 namespace Kodanuki
 {
 
-VkSwapchainKHR create_swapchain(SwapchainBuilder builder)
-{
-	VkSurfaceCapabilitiesKHR capabilities;
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(builder.device.physical_device(), builder.surface, &capabilities);
-
-	VkSwapchainCreateInfoKHR swapchain_info = {};
-	swapchain_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	swapchain_info.surface = builder.surface;
-	swapchain_info.minImageCount = builder.frame_count;
-	swapchain_info.imageFormat = builder.surface_format.format;
-	swapchain_info.imageColorSpace = builder.surface_format.colorSpace;
-	swapchain_info.imageExtent = capabilities.currentExtent;
-	swapchain_info.imageArrayLayers = 1;
-	swapchain_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	swapchain_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	swapchain_info.queueFamilyIndexCount = 0;
-	swapchain_info.pQueueFamilyIndices = nullptr;
-	swapchain_info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-	swapchain_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	swapchain_info.presentMode = builder.present_mode;
-	swapchain_info.clipped = true;
-	swapchain_info.oldSwapchain = VK_NULL_HANDLE;
-
-	VkSwapchainKHR result;
-	CHECK_VULKAN(vkCreateSwapchainKHR(builder.device, &swapchain_info, nullptr, &result));
-	return result;
-}
-
-std::vector<VkImageView> create_image_views(SwapchainBuilder builder, VkSwapchainKHR swapchain)
-{
-	VkDevice logical_device = builder.device;
-	std::vector<VkImage> images = vectorize<vkGetSwapchainImagesKHR>(logical_device, swapchain);
-	std::vector<VkImageView> views(images.size());
-
-	VkImageViewCreateInfo view_info = {};
-	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	view_info.format = builder.surface_format.format;
-	view_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-	view_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-	view_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-	view_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-	view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	view_info.subresourceRange.baseMipLevel = 0;
-	view_info.subresourceRange.levelCount = 1;
-	view_info.subresourceRange.baseArrayLayer = 0;
-	view_info.subresourceRange.layerCount = 1;
-
-	for (uint32_t i = 0; i < views.size(); i++)
-	{
-		view_info.image = images[i];
-		CHECK_VULKAN(vkCreateImageView(logical_device, &view_info, nullptr, &views[i]));
-	}
-
-	return views;
-}
-
-void remove_swapchain(Entity* swapchain)
-{
-	VulkanDevice device = ECS::get<VulkanDevice>(*swapchain);
-	VkSurfaceKHR surface = ECS::get<VkSurfaceKHR>(*swapchain);
-	VkSwapchainKHR actual_swapchain = ECS::get<VkSwapchainKHR>(*swapchain);
-	std::vector<VkImageView> views = ECS::get<std::vector<VkImageView>>(*swapchain);
-	
-	for (auto view : views) {
-		vkDestroyImageView(device, view, nullptr);
-	}
-	vkDestroySwapchainKHR(device, actual_swapchain, nullptr);
-	vkDestroySurfaceKHR(device.instance(), surface, nullptr);
-	ECS::remove<Entity>(*swapchain);
-	delete swapchain;
-}
-
 VulkanSwapchain::VulkanSwapchain(SwapchainBuilder builder)
 {
-	pimpl = std::shared_ptr<Entity>(new Entity, &remove_swapchain);
-	Entity swapchain = *pimpl = ECS::create();
-
-	VkSwapchainKHR actual_swapchain = create_swapchain(builder);
-	std::vector<VkImageView> views = create_image_views(builder, actual_swapchain);
-
-	ECS::update<VulkanDevice>(swapchain, builder.device);
-	ECS::update<VkSurfaceKHR>(swapchain, builder.surface);
-	ECS::update<VkSwapchainKHR>(swapchain, actual_swapchain);
-	ECS::update<std::vector<VkImageView>>(swapchain, views);
-	ECS::update<VkSurfaceFormatKHR>(swapchain, builder.surface_format);
+	ECS::update<VulkanDevice>(impl, builder.device);
+	ECS::update<VulkanRenderpass>(impl, builder.renderpass);
+	ECS::update<VkSurfaceKHR>(impl, builder.surface);
+	ECS::update<VkSurfaceFormatKHR>(impl, builder.surface_format);
+	ECS::update<VkPresentModeKHR>(impl, builder.present_mode);
+	ECS::update<VkSwapchainKHR>(impl, create_swapchain(builder.frame_count));
+	ECS::update<std::vector<VkImageView>>(impl, create_image_views());
+	ECS::update<std::vector<VkFramebuffer>>(impl, create_frame_buffers());
 }
 
-void VulkanSwapchain::shared_destructor(Entity* pimpl)
+void VulkanSwapchain::shared_destructor()
 {
-	(void) pimpl;
+	VulkanDevice device = ECS::get<VulkanDevice>(impl);
+	cleanup(device);
+	vkDestroySurfaceKHR(device.instance(), ECS::get<VkSurfaceKHR>(impl), nullptr);
 }
 
-VkSurfaceKHR VulkanSwapchain::surface()
+VulkanSwapchain::operator VkSwapchainKHR()
 {
-	return ECS::get<VkSurfaceKHR>(*pimpl);
+	return ECS::get<VkSwapchainKHR>(impl);
 }
 
-std::vector<VkImageView> VulkanSwapchain::image_views()
+void VulkanSwapchain::recreate_swapchain()
 {
-	return ECS::get<std::vector<VkImageView>>(*pimpl);
-}
-
-VkSurfaceFormatKHR VulkanSwapchain::surface_format()
-{
-	return ECS::get<VkSurfaceFormatKHR>(*pimpl);
-}
-
-VkSwapchainKHR VulkanSwapchain::swapchain()
-{
-	return ECS::get<VkSwapchainKHR>(*pimpl);
+	VkDevice device = ECS::get<VulkanDevice>(impl);
+	uint32_t count = frame_count();
+	vkDeviceWaitIdle(device);
+	cleanup(device);
+	ECS::update<VkSwapchainKHR>(impl, create_swapchain(count));
+	ECS::update<std::vector<VkImageView>>(impl, create_image_views());
+	ECS::update<std::vector<VkFramebuffer>>(impl, create_frame_buffers());
 }
 
 VkExtent2D VulkanSwapchain::surface_extent()
 {
-	VkPhysicalDevice device = ECS::get<VulkanDevice>(*pimpl).physical_device();
+	VkPhysicalDevice device = ECS::get<VulkanDevice>(impl).physical_device();
+	VkSurfaceKHR surface = ECS::get<VkSurfaceKHR>(impl);
 	VkSurfaceCapabilitiesKHR capabilities;
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface(), &capabilities);
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &capabilities);
 	return capabilities.currentExtent;
 }
 
 uint32_t VulkanSwapchain::frame_count()
 {
-	return image_views().size();
+	return ECS::get<std::vector<VkFramebuffer>>(impl).size();
+}
+
+std::vector<VkFramebuffer> VulkanSwapchain::frame_buffers()
+{
+	return ECS::get<std::vector<VkFramebuffer>>(impl);
+}
+
+void VulkanSwapchain::cleanup(VkDevice device)
+{
+	for (VkFramebuffer buffer : ECS::get<std::vector<VkFramebuffer>>(impl)) {
+		vkDestroyFramebuffer(device, buffer, nullptr);
+	}
+	for (VkImageView view : ECS::get<std::vector<VkImageView>>(impl)) {
+		vkDestroyImageView(device, view, nullptr);
+	}
+	vkDestroySwapchainKHR(device, ECS::get<VkSwapchainKHR>(impl), nullptr);
+}
+
+VkSwapchainKHR VulkanSwapchain::create_swapchain(uint32_t frame_count)
+{
+	VkSwapchainCreateInfoKHR info = {};
+	info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	info.surface = ECS::get<VkSurfaceKHR>(impl);
+	info.minImageCount = frame_count;
+	info.imageFormat = ECS::get<VkSurfaceFormatKHR>(impl).format;
+	info.imageColorSpace = ECS::get<VkSurfaceFormatKHR>(impl).colorSpace;
+	info.imageExtent = surface_extent();
+	info.imageArrayLayers = 1;
+	info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	info.queueFamilyIndexCount = 0;
+	info.pQueueFamilyIndices = nullptr;
+	info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+	info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	info.presentMode = ECS::get<VkPresentModeKHR>(impl);
+	info.clipped = true;
+	info.oldSwapchain = VK_NULL_HANDLE;
+
+	VkSwapchainKHR result;
+	CHECK_VULKAN(vkCreateSwapchainKHR(ECS::get<VulkanDevice>(impl), &info, nullptr, &result));
+	return result;
+}
+
+std::vector<VkImageView> VulkanSwapchain::create_image_views()
+{
+	VkImageViewCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	info.format = ECS::get<VkSurfaceFormatKHR>(impl).format;
+	info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+	info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+	info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+	info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+	info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	info.subresourceRange.baseMipLevel = 0;
+	info.subresourceRange.levelCount = 1;
+	info.subresourceRange.baseArrayLayer = 0;
+	info.subresourceRange.layerCount = 1;
+
+	VkDevice device = ECS::get<VulkanDevice>(impl);
+	std::vector<VkImage> images = vectorize<vkGetSwapchainImagesKHR>(device, *(this));
+	std::vector<VkImageView> views(images.size());
+	for (uint32_t i = 0; i < views.size(); i++) {
+		info.image = images[i];
+		CHECK_VULKAN(vkCreateImageView(device, &info, nullptr, &views[i]));
+	}
+	return views;
+}
+
+std::vector<VkFramebuffer> VulkanSwapchain::create_frame_buffers()
+{
+	VkFramebufferCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	info.renderPass = ECS::get<VulkanRenderpass>(impl);
+	info.layers = 1;
+	info.width = surface_extent().width;
+	info.height = surface_extent().height;
+
+	VkDevice device = ECS::get<VulkanDevice>(impl);
+	std::vector<VkImageView> views = ECS::get<std::vector<VkImageView>>(impl);
+	std::vector<VkFramebuffer> framebuffers(views.size());	
+	for (uint32_t i = 0; i < framebuffers.size(); i++) {
+		std::vector<VkImageView> attachments = {views[i]};
+		info.attachmentCount = attachments.size();
+		info.pAttachments = attachments.data();
+		CHECK_VULKAN(vkCreateFramebuffer(device, &info, nullptr, &framebuffers[i]));
+	}
+	return framebuffers;
 }
 
 }

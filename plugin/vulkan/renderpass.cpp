@@ -32,10 +32,10 @@ VulkanRenderpass::VulkanRenderpass(RenderpassBuilder builder)
 void VulkanRenderpass::shared_destructor()
 {
 	VkDevice device = ECS::get<VulkanDevice>(impl);
-	vkDestroyRenderPass(device, renderpass(), nullptr);
+	vkDestroyRenderPass(device, *this, nullptr);
 }
 
-VkRenderPass VulkanRenderpass::renderpass()
+VulkanRenderpass::operator VkRenderPass()
 {
 	return ECS::get<VkRenderPass>(impl);
 }

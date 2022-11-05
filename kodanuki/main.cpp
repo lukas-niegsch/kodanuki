@@ -27,15 +27,6 @@ constexpr float cube_strip[] = {
 	-1,  1, -1
 };
 
-WindowBuilder get_window_builder(std::string title, int width, int height)
-{
-	return {
-		.title = title,
-		.default_size = {(uint32_t) width, (uint32_t) height},
-		.resizeable = false
-	};
-}
-
 int score_physical_device(VkPhysicalDevice device)
 {
 	VkPhysicalDeviceProperties properties;
@@ -48,29 +39,6 @@ int score_queue_family(VkQueueFamilyProperties family)
 	int score = family.queueCount;
 	score *= family.queueFlags & VK_QUEUE_GRAPHICS_BIT;
 	return score;
-}
-
-DeviceBuilder get_device_builder(VulkanWindow window)
-{
-	return {
-		.instance_layers = {"VK_LAYER_KHRONOS_validation"},
-		.instance_extensions = window.required_instance_extensions(),
-		.device_extensions = {"VK_KHR_swapchain"},
-		.gpu_score = &score_physical_device,
-		.queue_score = &score_queue_family,
-		.queue_priorities = {1.0f}
-	};
-}
-
-SwapchainBuilder get_swapchain_builder(VulkanDevice device, VulkanWindow window)
-{
-	return {
-		.device = device,
-		.surface = window.create_surface(device),
-		.surface_format = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
-		.present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR,
-		.frame_count = 3
-	};
 }
 
 RendererBuilder get_renderer_builder(VulkanDevice device, VulkanSwapchain swapchain, VulkanRenderpass renderpass)
@@ -86,14 +54,36 @@ RendererBuilder get_renderer_builder(VulkanDevice device, VulkanSwapchain swapch
 
 int main()
 {
-	VulkanWindow window = {get_window_builder("Kodanuki", 1024, 768)};
-	VulkanDevice device = {get_device_builder(window)};
-	VulkanSwapchain swapchain = {get_swapchain_builder(device, window)};
-	VulkanRenderpass renderpass = get_example_triangle_renderpass(device, swapchain);
+	VulkanWindow window = {{
+		.title = "Kodanuki",
+		.default_size = {1024, 768},
+		.resizeable = false // TODO: renderer needs to recreate swapchain properly
+	}};
+
+	VulkanDevice device = {{
+		.instance_layers = {"VK_LAYER_KHRONOS_validation"},
+		.instance_extensions = window.required_instance_extensions(),
+		.device_extensions = {"VK_KHR_swapchain"},
+		.gpu_score = &score_physical_device,
+		.queue_score = &score_queue_family,
+		.queue_priorities = {1.0f}
+	}};
+
+	// TODO: make generic renderpass and include it inside the plugin
+	VulkanRenderpass renderpass = get_example_triangle_renderpass(device);
+
+	VulkanSwapchain swapchain = {{
+		.device = device,
+		.renderpass = renderpass,
+		.surface = window.create_surface(device),
+		.surface_format = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
+		.present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR,
+		.frame_count = 3
+	}};
+
 	VulkanPipeline pipeline = get_example_triangle_pipeline(device, swapchain, renderpass);
 	VulkanRenderer renderer = {get_renderer_builder(device, swapchain, renderpass)};
 
-	
 	auto record_pipeline = [&](VkCommandBuffer buffer) {
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline());
 		vkCmdDraw(buffer, 3, 1, 0, 0);
