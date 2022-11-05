@@ -118,6 +118,7 @@ int main()
 		renderer.draw(skybox, {...});
 		renderer.draw(sphere, {...});
 		renderer.draw(sphere, {...});
+		renderer.record();
 		renderer.draw(models, local_data);
 		renderer.submit();
 		renderer.render();

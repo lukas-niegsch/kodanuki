@@ -74,6 +74,9 @@ public:
 	// Enques the model for drawing to the current frame.
 	void draw(VulkanPipeline pipeline);
 
+	// Records the enqued commands to command buffers.
+	void record();
+
 	// Submits all the draww commands to the device.
 	void submit();
 
