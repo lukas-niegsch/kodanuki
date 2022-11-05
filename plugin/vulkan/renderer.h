@@ -3,10 +3,8 @@
 #include "plugin/vulkan/swapchain.h"
 #include "plugin/vulkan/pipeline.h"
 #include "plugin/vulkan/renderpass.h"
-#include "engine/central/entity.h"
 #include "engine/template/copyable.h"
 #include <vulkan/vulkan.h>
-#include <memory>
 
 namespace Kodanuki
 {
