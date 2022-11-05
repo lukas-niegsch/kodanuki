@@ -1,6 +1,7 @@
 #pragma once
 #include "plugin/vulkan/device.h"
 #include "engine/central/entity.h"
+#include "engine/template/copyable.h"
 #include <vulkan/vulkan.h>
 #include <memory>
 #include <string>
@@ -9,9 +10,6 @@
 namespace Kodanuki
 {
 
-/**
- * Contains all the configurable information for creating a window.
- */
 struct WindowBuilder
 {
 	// The title of the window.
@@ -33,11 +31,14 @@ struct WindowBuilder
  * Instances can be copied around freely and will release all
  * ressources once unused.
  */
-class VulkanWindow
+class VulkanWindow : public Copyable<VulkanWindow>
 {
 public:
 	// Creates a new vulkan window from the given builder.
 	VulkanWindow(WindowBuilder builder);
+
+	// Called automatically once all instances are unused.
+	void shared_destructor();
 
 public:
 	// Returns the handle to the surface.
@@ -48,10 +49,6 @@ public:
 
 	// Returns true iff the window should close.
 	bool should_close();
-
-private:
-	// Destroys unused windows automatically.
-	std::shared_ptr<Entity> pimpl;
 };
 
 }

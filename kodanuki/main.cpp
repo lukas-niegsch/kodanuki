@@ -48,7 +48,7 @@ RendererBuilder get_renderer_builder(VulkanDevice device, VulkanSwapchain swapch
 		.swapchain = swapchain,
 		.renderpass = renderpass,
 		.command_buffer_count = 1,
-		.clear_color = {{{0.0f, 0.0f, 0.0f, 1.0f}}}
+		.clear_color = {{{0.0f, 0.0f, 1.0f, 1.0f}}}
 	};
 }
 
@@ -77,8 +77,8 @@ int main()
 		.renderpass = renderpass,
 		.surface = window.create_surface(device),
 		.surface_format = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
-		.present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR,
-		.frame_count = 3
+		.present_mode = VK_PRESENT_MODE_FIFO_KHR,
+		.frame_count = 2
 	}};
 
 	VulkanPipeline pipeline = get_example_triangle_pipeline(device, swapchain, renderpass);

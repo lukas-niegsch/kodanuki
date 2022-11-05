@@ -118,11 +118,10 @@ void VulkanRenderer::aquire_next_frame()
 	VkFence draw_fence = values.draw_frame_fences[values.submit_frame]; 
 	CHECK_VULKAN(vkWaitForFences(device, 1, &draw_fence, VK_TRUE, UINT64_MAX));
 	CHECK_VULKAN(vkResetFences(device, 1, &draw_fence));
-	values.command_buffers.clear();
-
 	VkSwapchainKHR swapchain = values.swapchain;
 	VkSemaphore image_semaphore = values.image_available_semaphores[values.submit_frame];
 	vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, image_semaphore, VK_NULL_HANDLE, &values.render_image);
+	values.command_buffers.clear();
 }
 
 void VulkanRenderer::record_command_buffer(std::function<void(VkCommandBuffer)> callback)

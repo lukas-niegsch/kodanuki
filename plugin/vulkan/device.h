@@ -47,11 +47,14 @@ struct DeviceBuilder
  * some graphics card based on the provided builder. This class
  * handles the interaction with the graphics card.
  */
-class VulkanDevice : private Copyable<VulkanDevice>
+class VulkanDevice : public Copyable<VulkanDevice>
 {
 public:
 	// Creates a new vulkan device from the given builder.
 	VulkanDevice(DeviceBuilder builder);
+
+	// Called automatically once all instances are unused.
+	void shared_destructor();
 
 	// Returns the handle to the logical device.
 	operator VkDevice();
@@ -68,11 +71,6 @@ public:
 
 	// Returns the used queue family index.
 	uint32_t queue_family_index();
-
-private:
-	// Called once all device copies are unused.
-	void shared_destructor();
-	friend class Copyable<VulkanDevice>;
 };
 
 }

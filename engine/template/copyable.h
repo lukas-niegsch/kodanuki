@@ -41,7 +41,7 @@ private:
 		delete pimpl;
 	}
 
-public:
+protected:
 	Entity impl; // To avoid using *pimpl all the time.
 
 private:
