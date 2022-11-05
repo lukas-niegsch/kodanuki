@@ -97,23 +97,19 @@ public:
 	std::vector<VkFence> draw_frame_fences;
 };
 
-void remove_renderer(Entity* renderer)
+void VulkanRenderer::shared_destructor()
 {
-	ECS::get<RenderValues>(*renderer).destroy();
-	ECS::remove<Entity>(*renderer);
-	delete renderer;
+	ECS::get<RenderValues>(impl).destroy();
 }
 
 VulkanRenderer::VulkanRenderer(RendererBuilder builder)
 {
-	pimpl = std::shared_ptr<Entity>(new Entity, &remove_renderer);
-	Entity renderer = *pimpl = ECS::create();
-	ECS::update<RenderValues>(renderer, {builder});
+	ECS::update<RenderValues>(impl, {builder});
 }
 
 void VulkanRenderer::aquire_next_frame()
 {
-	RenderValues& values = ECS::get<RenderValues>(*pimpl);
+	RenderValues& values = ECS::get<RenderValues>(impl);
 	VkDevice device = values.device;
 	VkFence draw_fence = values.draw_frame_fences[values.submit_frame]; 
 	CHECK_VULKAN(vkWaitForFences(device, 1, &draw_fence, VK_TRUE, UINT64_MAX));
@@ -126,7 +122,7 @@ void VulkanRenderer::aquire_next_frame()
 
 void VulkanRenderer::record_command_buffer(std::function<void(VkCommandBuffer)> callback)
 {
-	RenderValues& values = ECS::get<RenderValues>(*pimpl);
+	RenderValues& values = ECS::get<RenderValues>(impl);
 	VkDevice device = values.device;
 	VkCommandPool pool = values.command_pool;
 	VkCommandBuffer command_buffer = create_command_buffers(device, pool, 1)[0];
@@ -154,7 +150,7 @@ void VulkanRenderer::record_command_buffer(std::function<void(VkCommandBuffer)> 
 
 void VulkanRenderer::submit_command_buffers(uint32_t queue_index)
 {
-	RenderValues& values = ECS::get<RenderValues>(*pimpl);
+	RenderValues& values = ECS::get<RenderValues>(impl);
 	VkQueue queue = values.device.queues()[queue_index];
 
 	VkSubmitInfo submit_info = {};
@@ -173,7 +169,7 @@ void VulkanRenderer::submit_command_buffers(uint32_t queue_index)
 
 void VulkanRenderer::render_next_frame(uint32_t queue_index)
 {
-	RenderValues& values = ECS::get<RenderValues>(*pimpl);
+	RenderValues& values = ECS::get<RenderValues>(impl);
 	VkQueue queue = values.device.queues()[queue_index];
 	VkSwapchainKHR swapchain = values.swapchain;
 

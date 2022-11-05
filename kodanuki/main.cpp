@@ -112,6 +112,16 @@ int main()
 		renderer.record_command_buffer(record_pipeline);
 		renderer.submit_command_buffers();
 		renderer.render_next_frame();
+
+		/* TODO: implement this interface
+		renderer.clear();
+		renderer.draw(skybox, {...});
+		renderer.draw(sphere, {...});
+		renderer.draw(sphere, {...});
+		renderer.draw(models, local_data);
+		renderer.submit();
+		renderer.render();
+		*/
 	}
 
 	return 0;

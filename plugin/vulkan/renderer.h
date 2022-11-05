@@ -4,6 +4,7 @@
 #include "plugin/vulkan/pipeline.h"
 #include "plugin/vulkan/renderpass.h"
 #include "engine/central/entity.h"
+#include "engine/template/copyable.h"
 #include <vulkan/vulkan.h>
 #include <memory>
 
@@ -44,11 +45,14 @@ struct RendererBuilder
  * Instances can be copied around freely and will release all
  * ressources once unused.
  */
-class VulkanRenderer
+class VulkanRenderer : public Copyable<VulkanRenderer>
 {
 public:
 	// Creates a new vulkan renderer from the given builder.
 	VulkanRenderer(RendererBuilder builder);
+
+	// Called automatically once all instances are unused.
+	void shared_destructor();
 
 public:
 	// Aquires the next frame for which work can be submitted.
@@ -63,9 +67,18 @@ public:
 	// Renders the next available frame to the surface.
 	void render_next_frame(uint32_t queue_index = 0);
 
-private:
-	// Destroys unused renderers automatically.
-	std::shared_ptr<Entity> pimpl;
+public:
+	// Clears the screen by aquiring the next frame.
+	void clear();
+
+	// Enques the model for drawing to the current frame.
+	void draw(VulkanPipeline pipeline);
+
+	// Submits all the draww commands to the device.
+	void submit();
+
+	// Renders the next available frame onto the screen.
+	void render();
 };
 
 }
