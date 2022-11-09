@@ -44,7 +44,7 @@ public:
 public:
 	void aquire();
 	void submit(uint32_t queue_index);
-	void draw(VulkanPipeline pipeline);
+	void draw(VulkanPipeline pipeline, VulkanBuffer instance);
 	void record();
 	void render(uint32_t queue_index);
 
@@ -63,6 +63,7 @@ private:
 	std::vector<VkSemaphore> render_finished_semaphores;
 	std::vector<VkFence> aquire_frame_fences;
 	std::vector<VulkanPipeline> models;
+	std::vector<VulkanBuffer> instances;
 };
 
 SerialVulkanRenderer::SerialVulkanRenderer(RendererBuilder builder)
@@ -149,9 +150,10 @@ void SerialVulkanRenderer::submit(uint32_t queue_index)
 	submit_frame = (submit_frame + 1) % max_frame;
 }
 
-void SerialVulkanRenderer::draw(VulkanPipeline pipeline)
+void SerialVulkanRenderer::draw(VulkanPipeline pipeline, VulkanBuffer instance)
 {
 	models.push_back(pipeline);
+	instances.push_back(instance);
 }
 
 void SerialVulkanRenderer::record()
@@ -174,12 +176,16 @@ void SerialVulkanRenderer::record()
 
 	vkCmdBeginRenderPass(buffer, &renderpass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-	for (VulkanPipeline model : models)
+	for (int i = 0; i < (int) models.size(); i++)
 	{
-		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, model);
+		VulkanPipeline model = models[i];
+		VulkanBuffer instance = instances[i];
 
-		// TODO: replace hard coded values with actual data.
-		vkCmdDraw(buffer, 3, 1, 0, 0);
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, model);
+		VkBuffer vertexBuffers[] = {instance};
+		VkDeviceSize offsets[] = {0};
+		vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
+		vkCmdDraw(buffer, instance.byte_size(), 1, 0, 0);
 	}
 
 	vkCmdEndRenderPass(buffer);
@@ -228,9 +234,9 @@ void VulkanRenderer::submit(uint32_t queue_index)
 	ECS::get<SerialVulkanRenderer>(impl).submit(queue_index);
 }
 
-void VulkanRenderer::draw(VulkanPipeline pipeline)
+void VulkanRenderer::draw(VulkanPipeline pipeline, VulkanBuffer instance)
 {
-	ECS::get<SerialVulkanRenderer>(impl).draw(pipeline);
+	ECS::get<SerialVulkanRenderer>(impl).draw(pipeline, instance);
 }
 
 void VulkanRenderer::record()

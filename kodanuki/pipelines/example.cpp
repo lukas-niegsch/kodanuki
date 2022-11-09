@@ -22,6 +22,8 @@ private:
 	VkAttachmentReference color_attachment_reference = {};
 	VkViewport viewport = {};
 	VkRect2D scissor = {};
+	VkVertexInputBindingDescription vertex_input_binding;
+	std::array<VkVertexInputAttributeDescription, 2> vertex_info_attributes;
 };
 
 VkSubpassDependency ExamplePipelineInfo::get_dependency()
@@ -78,12 +80,15 @@ VkPipelineDynamicStateCreateInfo ExamplePipelineInfo::get_dynamic_state()
 
 VkPipelineVertexInputStateCreateInfo ExamplePipelineInfo::get_vertex_input()
 {
+	vertex_input_binding = Vertex::binding_description();
+	vertex_info_attributes = Vertex::attribute_descriptions();
+
 	VkPipelineVertexInputStateCreateInfo vertex_input = {};
 	vertex_input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertex_input.vertexBindingDescriptionCount = 0;
-	vertex_input.pVertexBindingDescriptions = nullptr;
-	vertex_input.vertexAttributeDescriptionCount = 0;
-	vertex_input.pVertexAttributeDescriptions = nullptr;
+	vertex_input.vertexBindingDescriptionCount = 1;
+	vertex_input.pVertexBindingDescriptions = &vertex_input_binding;
+	vertex_input.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertex_info_attributes.size());;
+	vertex_input.pVertexAttributeDescriptions = vertex_info_attributes.data();
 	return vertex_input;
 }
 

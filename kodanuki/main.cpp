@@ -6,6 +6,7 @@
 #include "plugin/vulkan/shader.h"
 #include "plugin/vulkan/swapchain.h"
 #include "plugin/vulkan/window.h"
+#include "plugin/vulkan/buffer.h"
 #include <GLFW/glfw3.h>
 #include <iomanip>
 using namespace Kodanuki;
@@ -40,6 +41,12 @@ int score_queue_family(VkQueueFamilyProperties family)
 	score *= family.queueFlags & VK_QUEUE_GRAPHICS_BIT;
 	return score;
 }
+
+const std::vector<Vertex> vertices = {
+    {{1.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
+    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+};
 
 int main()
 {
@@ -79,6 +86,12 @@ int main()
 		.clear_color = {{{0.0f, 0.0f, 0.0f, 1.0f}}}
 	}};
 
+    VulkanBuffer triangle_vertex_buffer = {{
+        .device = device,
+        .byte_size = (uint32_t) sizeof(vertices[0]) * ((uint32_t) vertices.size()),
+        .data = (void*) vertices.data()
+    }};
+
 	std::cout << std::endl;
 	print_vulkan_info(device.physical_device());
 	
@@ -99,7 +112,7 @@ int main()
 		}
 
 		renderer.aquire();
-		renderer.draw(pipeline);
+		renderer.draw(pipeline, triangle_vertex_buffer);
 		renderer.record();
 		renderer.submit();
 		renderer.render();

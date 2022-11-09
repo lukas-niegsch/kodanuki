@@ -3,6 +3,7 @@
 #include "plugin/vulkan/swapchain.h"
 #include "plugin/vulkan/pipeline.h"
 #include "plugin/vulkan/renderpass.h"
+#include "plugin/vulkan/buffer.h"
 #include "engine/template/copyable.h"
 #include <vulkan/vulkan.h>
 
@@ -57,8 +58,9 @@ public:
 	void submit(uint32_t queue_index = 0);
 
 	// Enques the model for drawing to the current frame.
-	// TODO: replace pipeline with model and instance data
-	void draw(VulkanPipeline model);
+	// TODO: replace pipeline with model wrapper
+    // TODO: replace buffer with instance wrapper
+	void draw(VulkanPipeline model, VulkanBuffer instance);
 
 	// Records the enqueued models onto frame buffers.
 	void record();
