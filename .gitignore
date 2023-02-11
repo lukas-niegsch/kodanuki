@@ -1,0 +1,9 @@
+**/*.spv
+**/*.aux
+**/*.log
+**/*.nav
+**/*.out
+**/*.snm
+**/*.toc
+imgui.ini
+todo.txt

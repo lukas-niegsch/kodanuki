@@ -31,8 +31,10 @@ compile: ninja
 	ninja -C $(BIN_DIR) $(OUT_DIR)/$(RUNNABLE)
 
 shaders:
-	glslc shader/example.vert -o shader/example.vert.spv
-	glslc shader/example.frag -o shader/example.frag.spv
+	find assets/shaders/								\
+		-regextype posix-extended						\
+		-regex ".*\.(comp|frag|geom|tesc|tese|vert)" 	\
+		-exec glslc {} -o {}.spv \;
 
 stats:
 	pygount --format=summary
