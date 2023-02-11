@@ -1,3 +1,12 @@
 [submodule "extern/splash"]
 	path = extern/splash
 	url = git@gitlab.gwdg.de:lukas.niegsch/splash.git
+[submodule "extern/imgui"]
+	path = extern/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "extern/tinyobjloader"]
+	path = extern/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader.git
+[submodule "extern/doctest"]
+	path = extern/doctest
+	url = https://github.com/doctest/doctest.git
