@@ -3,7 +3,7 @@
 #include "engine/central/family.h"
 #include <cassert>
 
-namespace Kodanuki {
+namespace kodanuki {
 
 void ExitLocalFamily(Family& family, Entity oldParent)
 {

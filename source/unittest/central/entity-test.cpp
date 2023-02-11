@@ -3,7 +3,7 @@
 #include "engine/central/family.h"
 #include <doctest/doctest.h>
 #include <cmath>
-using namespace Kodanuki;
+using namespace kodanuki;
 
 struct Position
 {

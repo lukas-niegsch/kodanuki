@@ -4,7 +4,7 @@
 #include "tetromino.h"
 #include "engine/central/entity.h"
 #include "engine/central/archetype.h"
-using namespace Kodanuki;
+using namespace kodanuki;
 
 template <typename Flag, int count>
 void move_horizontal_system()

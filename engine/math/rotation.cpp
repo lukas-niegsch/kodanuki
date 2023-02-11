@@ -1,7 +1,7 @@
 #include "engine/math/rotation.h"
 #include <glm/trigonometric.hpp>
 
-namespace Kodanuki
+namespace kodanuki
 {
 
 std::tuple<glm::vec3, glm::vec3, glm::vec3> euler_rotate(glm::vec3 rotation)

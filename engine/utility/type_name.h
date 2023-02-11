@@ -1,7 +1,7 @@
 #pragma once
 #include <string_view>
 
-namespace Kodanuki
+namespace kodanuki
 {
 
 /**

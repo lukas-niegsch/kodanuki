@@ -4,7 +4,7 @@
 #include "tetromino.h"
 #include "wallkick.h"
 #include "engine/central/archetype.h"
-using namespace Kodanuki;
+using namespace kodanuki;
 
 TetrominoRotations calculate_tetromino_rotations()
 {

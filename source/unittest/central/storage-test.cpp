@@ -1,6 +1,6 @@
 #include "engine/central/storage.h"
 #include <doctest/doctest.h>
-using namespace Kodanuki;
+using namespace kodanuki;
 
 TEST_CASE("entity storage tests")
 {

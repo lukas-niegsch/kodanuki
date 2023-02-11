@@ -4,7 +4,7 @@
 #include <optional>
 #include <any>
 
-namespace Kodanuki
+namespace kodanuki
 {
 
 /**

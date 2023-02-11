@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cassert>
 
-namespace Kodanuki {
+namespace kodanuki {
 
 template <typename T>
 void EntityStorage::remove(int identifier)
@@ -156,4 +156,4 @@ void EntityStorage::update(int identifier, std::any value)
 	sparseCount[storageIdentifier] = 1;
 }
 
-} // namespace Kodanuki
+} // namespace kodanuki

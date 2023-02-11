@@ -2,7 +2,7 @@
 #include <doctest/doctest.h>
 #include <set>
 #include <thread>
-using namespace Kodanuki;
+using namespace kodanuki;
 
 static void insertIds(std::set<uint64_t>& ids, int counter)
 {

@@ -1,7 +1,7 @@
 #include "engine/utility/counter.h"
 #include <atomic>
 
-namespace Kodanuki
+namespace kodanuki
 {
 
 uint64_t count()

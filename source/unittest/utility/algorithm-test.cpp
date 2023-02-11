@@ -1,8 +1,8 @@
-#include "engine/utility/algorithm/sorted_intersection.h"
+#include "engine/utility/sorted_intersection.h"
 #include <doctest/doctest.h>
 #include <iterator>
 #include <set>
-using namespace Kodanuki;
+using namespace kodanuki;
 
 TEST_CASE("is any match")
 {

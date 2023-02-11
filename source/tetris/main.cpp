@@ -12,7 +12,7 @@
 #include <ctime>
 #include <sstream>
 #include <iomanip>
-using namespace Kodanuki;
+using namespace kodanuki;
 
 #define KEY_ESCAPE 27
 #define KEY_ROTATE_LEFT 'q'

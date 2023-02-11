@@ -3,7 +3,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 #include <array>
-using namespace Kodanuki;
+using namespace kodanuki;
 
 template <typename T, std::size_t width, std::size_t height>
 class Matrix

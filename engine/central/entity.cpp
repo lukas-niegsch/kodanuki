@@ -1,7 +1,7 @@
 #include "engine/central/entity.h"
 #include "engine/utility/counter.h"
 
-namespace Kodanuki
+namespace kodanuki
 {
 
 Entity ECS::create()

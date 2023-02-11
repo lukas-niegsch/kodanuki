@@ -7,7 +7,7 @@
 #include <typeindex>
 #include <memory>
 
-namespace Kodanuki {
+namespace kodanuki {
 
 /**
  * The entity storage class contains arbitrary amount of data.
@@ -78,4 +78,4 @@ static EntityStorage* getStorage(Mapping& mapping)
 	return mapping[type].get();
 }
 
-} // namespace Kodanuki
+} // namespace kodanuki

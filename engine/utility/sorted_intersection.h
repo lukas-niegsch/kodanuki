@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace Kodanuki
+namespace kodanuki
 {
 
 /**

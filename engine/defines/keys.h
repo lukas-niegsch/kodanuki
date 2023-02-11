@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Kodanuki
+namespace kodanuki
 {
 
 struct KEY_SPACE {}; 

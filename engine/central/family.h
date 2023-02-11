@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/central/entity.h"
 
-namespace Kodanuki
+namespace kodanuki
 {
 
 /**
@@ -37,4 +37,4 @@ struct Family
  */
 void update_family(Entity entity, Entity parent = std::nullopt);
 
-} // namespace Kodanuki
+} // namespace kodanuki

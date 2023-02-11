@@ -2,7 +2,7 @@
 #include "engine/central/entity.h"
 #include <memory>
 
-namespace Kodanuki
+namespace kodanuki
 {
 
 /**

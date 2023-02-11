@@ -2,7 +2,7 @@
 #include <glm/vec3.hpp>
 #include <vector>
 
-namespace Kodanuki
+namespace kodanuki
 {
 
 /**

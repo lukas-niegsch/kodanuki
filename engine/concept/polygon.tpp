@@ -1,6 +1,6 @@
 #include "engine/concept/polygon.h"
 
-namespace Kodanuki
+namespace kodanuki
 {
 
 constexpr Polygon GetUnitCube()

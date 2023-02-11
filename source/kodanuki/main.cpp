@@ -9,7 +9,7 @@
 #include "engine/vulkan/buffer.h"
 #include <GLFW/glfw3.h>
 #include <iomanip>
-using namespace Kodanuki;
+using namespace kodanuki;
 
 constexpr float cube_strip[] = {
 	 1,  1,  1,

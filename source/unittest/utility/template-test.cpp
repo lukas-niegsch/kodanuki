@@ -1,8 +1,8 @@
-#include "engine/utility/template/signature.h"
-#include "engine/utility/template/type_name.h"
-#include "engine/utility/template/type_union.h"
+#include "engine/utility/signature.h"
+#include "engine/utility/type_name.h"
+#include "engine/utility/type_union.h"
 #include <doctest/doctest.h>
-using namespace Kodanuki;
+using namespace kodanuki;
 
 struct Custom {};
 

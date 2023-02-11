@@ -4,7 +4,7 @@
 #include "engine/vulkan/renderpass.h"
 #include "engine/vulkan/pipeline.h"
 #include <glm/glm.hpp>
-using namespace Kodanuki;
+using namespace kodanuki;
 
 struct Vertex
 {
