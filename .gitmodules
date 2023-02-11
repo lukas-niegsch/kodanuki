@@ -1,0 +1,3 @@
+[submodule "extern/splash"]
+	path = extern/splash
+	url = git@gitlab.gwdg.de:lukas.niegsch/splash.git
