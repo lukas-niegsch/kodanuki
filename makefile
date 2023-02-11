@@ -6,8 +6,8 @@ FLAGS := -O2 -std=c++2b -Wall -Wextra -Werror -g
 SRC_DIR := $(CURDIR)
 OUT_DIR := /var/tmp/kodanuki
 BIN_DIR := $(OUT_DIR)/build
-RUNNABLE := unittest
-PROJECTS := unittest kodanuki tetris
+RUNNABLE := splash
+PROJECTS := unittest kodanuki tetris splash
 .EXPORT_ALL_VARIABLES:
 LIBRARY_PATH := $(OUT_DIR)
 LD_LIBRARY_PATH := $(OUT_DIR)
@@ -159,7 +159,7 @@ if __name__ == '__main__':
 	writer.variable('out', '$(OUT_DIR)')
 	writer.variable('flags', '$(FLAGS)')
 	writer.newline()
-	writer.rule('cc', 'g++ -I$$src -MD -MF $$out.d -fPIC $$flags -c $$in -o $$out',
+	writer.rule('cc', 'g++ -I$$src/extern/imgui -I$$src -MD -MF $$out.d -fPIC $$flags -c $$in -o $$out',
 	{
 		'description': 'compile $$out',
 		'depfile': '$$out.d',

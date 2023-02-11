@@ -12,7 +12,7 @@ VkInstance create_instance(std::vector<const char*> layers, std::vector<const ch
 	app_info.pNext = nullptr;
 	app_info.pApplicationName = nullptr;
 	app_info.applicationVersion = VK_MAKE_VERSION(0, 0, 0);
-	app_info.pEngineName = "splash";
+	app_info.pEngineName = "kodanuki";
 	app_info.engineVersion = VK_MAKE_VERSION(0, 0, 1);
 	app_info.apiVersion = VK_API_VERSION_1_3;
 
