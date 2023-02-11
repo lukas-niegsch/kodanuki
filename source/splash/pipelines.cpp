@@ -12,13 +12,13 @@ VulkanPipeline create_render_fluid_pipeline(VulkanDevice device, VulkanTarget ta
 {
 	ShaderBuilder fluid_vertex_builder = {
 		.device = device,
-		.code = read_file_into_buffer("shader/fluid.vert.spv"),
+		.code = read_file_into_buffer("assets/shaders/fluid.vert.spv"),
 		.entry_point = "main"
 	};
 
 	ShaderBuilder fluid_fragment_builder = {
 		.device = device,
-		.code = read_file_into_buffer("shader/fluid.frag.spv"),
+		.code = read_file_into_buffer("assets/shaders/fluid.frag.spv"),
 		.entry_point = "main"
 	};
 
@@ -199,7 +199,7 @@ VulkanPipeline create_update_fluid_pipeline_simulate(VulkanDevice device)
 {
 	ShaderBuilder fluid_compute_builder = {
 		.device = device,
-		.code = read_file_into_buffer("shader/simulate.comp.spv"),
+		.code = read_file_into_buffer("assets/shaders/simulate.comp.spv"),
 		.entry_point = "main"
 	};
 
@@ -226,7 +226,7 @@ VulkanPipeline create_update_fluid_pipeline_pressure(VulkanDevice device)
 {
 	ShaderBuilder fluid_compute_builder = {
 		.device = device,
-		.code = read_file_into_buffer("shader/pressure.comp.spv"),
+		.code = read_file_into_buffer("assets/shaders/pressure.comp.spv"),
 		.entry_point = "main"
 	};
 

@@ -195,13 +195,13 @@ VulkanPipeline get_example_triangle_pipeline(VulkanDevice device, VulkanSwapchai
 
 	ShaderBuilder example_vertex_builder = {
 		.device = device,
-		.code = read_file_into_buffer("shader/example.vert.spv"),
+		.code = read_file_into_buffer("assets/shaders/example.vert.spv"),
 		.entry_point = "main"
 	};
 
 	ShaderBuilder example_fragment_builder = {
 		.device = device,
-		.code = read_file_into_buffer("shader/example.frag.spv"),
+		.code = read_file_into_buffer("assets/shaders/example.frag.spv"),
 		.entry_point = "main"
 	};
 

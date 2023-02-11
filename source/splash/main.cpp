@@ -68,8 +68,8 @@ int main()
 	ShaderBridge bridge = {{
 		.device = device,
 		.frame_count = target.get_frame_count(),
-		.model = load_obj_model("models/sphere.obj"),
-		.scene = load_csv_scene("models/debug.csv"),
+		.model = load_obj_model("assets/models/sphere.obj"),
+		.scene = load_csv_scene("assets/models/debug.csv"),
 		.render_pipeline = render_fluid,
 		.update_pipeline_pressure = update_fluid_pressure,
 		.update_pipeline_simulate = update_fluid_simulate
