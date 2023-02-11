@@ -1,5 +1,5 @@
 #pragma once
-#include "plugin/vulkan/device.h"
+#include "engine/vulkan/device.h"
 #include "engine/central/entity.h"
 #include "engine/template/copyable.h"
 #include <vulkan/vulkan.h>

@@ -1,5 +1,5 @@
-#include "plugin/vulkan/renderer.h"
-#include "plugin/vulkan/debug.h"
+#include "engine/vulkan/renderer.h"
+#include "engine/vulkan/debug.h"
 #include <unordered_set>
 
 namespace Kodanuki

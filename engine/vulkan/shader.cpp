@@ -1,5 +1,5 @@
-#include "plugin/vulkan/shader.h"
-#include "plugin/vulkan/debug.h"
+#include "engine/vulkan/shader.h"
+#include "engine/vulkan/debug.h"
 
 namespace Kodanuki
 {

@@ -1,5 +1,5 @@
-#include "plugin/vulkan/device.h"
-#include "plugin/vulkan/debug.h"
+#include "engine/vulkan/device.h"
+#include "engine/vulkan/debug.h"
 #include <functional>
 #include <cassert>
 

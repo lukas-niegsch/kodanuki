@@ -1,5 +1,5 @@
-#include "plugin/vulkan/buffer.h"
-#include "plugin/vulkan/debug.h"
+#include "engine/vulkan/buffer.h"
+#include "engine/vulkan/debug.h"
 #include <cstring>
 
 namespace Kodanuki

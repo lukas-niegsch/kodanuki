@@ -18,7 +18,7 @@ private:
 	std::array<T, width * height> data;
 };
 
-#include "plugin/vulkan/device.h"
+#include "engine/vulkan/device.h"
 
 TEST_CASE("playground")
 {

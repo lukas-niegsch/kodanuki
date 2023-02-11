@@ -1,5 +1,5 @@
-#include "plugin/vulkan/pipeline.h"
-#include "plugin/vulkan/debug.h"
+#include "engine/vulkan/pipeline.h"
+#include "engine/vulkan/debug.h"
 
 namespace Kodanuki
 {

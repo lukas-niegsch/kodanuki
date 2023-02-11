@@ -1,5 +1,5 @@
 #include "example.h"
-#include "plugin/vulkan/debug.h"
+#include "engine/vulkan/debug.h"
 #include "engine/utility/file.h"
 
 class ExamplePipelineInfo

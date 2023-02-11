@@ -1,12 +1,12 @@
 #include "pipelines/example.h"
-#include "plugin/vulkan/debug.h"
-#include "plugin/vulkan/device.h"
-#include "plugin/vulkan/pipeline.h"
-#include "plugin/vulkan/renderer.h"
-#include "plugin/vulkan/shader.h"
-#include "plugin/vulkan/swapchain.h"
-#include "plugin/vulkan/window.h"
-#include "plugin/vulkan/buffer.h"
+#include "engine/vulkan/debug.h"
+#include "engine/vulkan/device.h"
+#include "engine/vulkan/pipeline.h"
+#include "engine/vulkan/renderer.h"
+#include "engine/vulkan/shader.h"
+#include "engine/vulkan/swapchain.h"
+#include "engine/vulkan/window.h"
+#include "engine/vulkan/buffer.h"
 #include <GLFW/glfw3.h>
 #include <iomanip>
 using namespace Kodanuki;

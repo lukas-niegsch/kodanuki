@@ -1,30 +1,23 @@
 [engine]
 description = "The kodanuki game engine."
 path        = "engine/"
-depends     = []
+depends     = ["vulkan", "glfw"]
 library     = true
 
 [kodanuki]
 description = "The upcoming kodanuki game."
-path        = "kodanuki/"
-depends     = ["kodanuki.engine", "kodanuki.vulkan", "vulkan", "glfw"]
+path        = "source/kodanuki/"
+depends     = ["kodanuki.engine", "vulkan", "glfw"]
 library     = false
 
 [unittest]
 description = "Unittests for the kodanuki engine."
-path        = "unittest/"
+path        = "source/unittest/"
 depends     = ["kodanuki.engine"]
 library     = false
 
-# Side projects and plugins that can be used inside the game!
 [tetris]
-description = "The game tetris with multiple boards simultaneously."
-path        = "plugin/tetris/"
+description = "The tetris side project."
+path        = "source/tetris/"
 depends     = ["kodanuki.engine", "ncurses"]
 library     = false
-
-[vulkan]
-description = "An renderer that uses vulkan and glfw."
-path		= "plugin/vulkan/"
-depends		= ["kodanuki.engine", "glfw", "vulkan"]
-library		= true

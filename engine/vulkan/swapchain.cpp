@@ -1,5 +1,5 @@
-#include "plugin/vulkan/swapchain.h"
-#include "plugin/vulkan/debug.h"
+#include "engine/vulkan/swapchain.h"
+#include "engine/vulkan/debug.h"
 
 namespace Kodanuki
 {

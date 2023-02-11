@@ -1,8 +1,8 @@
 #pragma once
-#include "plugin/vulkan/device.h"
-#include "plugin/vulkan/swapchain.h"
-#include "plugin/vulkan/renderpass.h"
-#include "plugin/vulkan/pipeline.h"
+#include "engine/vulkan/device.h"
+#include "engine/vulkan/swapchain.h"
+#include "engine/vulkan/renderpass.h"
+#include "engine/vulkan/pipeline.h"
 #include <glm/glm.hpp>
 using namespace Kodanuki;
 
