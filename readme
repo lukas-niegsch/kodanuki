@@ -4,17 +4,4 @@ Kodanuki
 This repository contains the kodanuki game engine and my upcoming game with
 the same name. It is simply a toy project to learn more about game engine's.
 Currently the kodanuki engine is primarily developed for GNU/Linux using C++.
-
-Dependencies
-------------
-
-- gcc
-- glfw
-- glm
-- make
-- ninja
-- python
-- vulkan
-- optional: doctest
-- optional: pygount
-- optional: valgrind
+Run 'make help' to view how to build this software and the documentation.
