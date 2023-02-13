@@ -7,10 +7,6 @@ import subprocess
 import os
 from ninja_writer import NinjaWriter
 
-FLAGS = "-O2 -std=c++2b -Wall -Wextra -Werror -g"
-PROJECTS = "unittest kodanuki tetris splash"
-
-
 def parse_arguments():
 	parser = argparse.ArgumentParser(description='The Kodanuki build script.')
 	parser.add_argument('src_dir', help = 'The projects source directory.')
@@ -92,6 +88,7 @@ def target_ninja(args):
 	writer.variable('src', args.src_dir)
 	writer.variable('bin', args.bin_dir)
 	writer.variable('out', args.out_dir)
+	FLAGS = "-O2 -std=c++2b -Wall -Wextra -Werror -g"
 	writer.variable('flags', FLAGS)
 	writer.newline()
 	writer.rule('cc', 'g++ -I$src/extern/imgui -I$src -MD -MF $out.d -fPIC $flags -c $in -o $out',
@@ -114,7 +111,7 @@ def target_ninja(args):
 					linker_result(module), linker_params(module))
 		writer.newline()
 
-	projects = ' '.join(program(project) for project in PROJECTS.split())
+	projects = ' '.join(program(project) for project in PROJECTS)
 	if projects:
 		writer.variable('default ', projects, use_equals = False)
 	writer.write(f'{args.bin_dir}/build.ninja')
@@ -150,15 +147,14 @@ def execute_target(args, target):
 		command = f'find {args.src_dir}/assets/shaders/ -regextype posix-extended -regex ".*\.(comp|frag|geom|tesc|tese|vert)" -exec glslc {{}} -o {{}}.spv \;'
 		subprocess.call(command, shell = True)
 	elif target == 'list':
-		for module in Module.discover(args.src_dir):
-			if module.library:
-				continue
-			print(module.name)
+		for project in PROJECTS:
+			print(project)
 	else:
 		print(f"Unknown target: {target}")
 
 if __name__ == '__main__':
 	args = parse_arguments()
+	PROJECTS = [module.name for module in Module.discover(args.src_dir) if not module.library]
 	os.environ['LIBRARY_PATH'] = args.out_dir
 	os.environ['LD_LIBRARY_PATH'] = args.out_dir
 	execute_target(args, args.target)
