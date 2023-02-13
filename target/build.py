@@ -7,7 +7,6 @@ import subprocess
 import os
 
 FLAGS = "-O2 -std=c++2b -Wall -Wextra -Werror -g"
-RUNNABLE = "unittest"
 PROJECTS = "unittest kodanuki tetris splash"
 
 
@@ -16,7 +15,8 @@ def parse_arguments():
 	parser.add_argument('src_dir', help = 'The projects source directory.')
 	parser.add_argument('out_dir', help = 'The projects output directory.')
 	parser.add_argument('bin_dir', help = 'The projects build directory.')
-	parser.add_argument('--target', help = 'The build target for this script.')
+	parser.add_argument('project', help = 'The current runnable project.')
+	parser.add_argument('target', help = 'The build target for this script.')
 	return parser.parse_args()
 
 
@@ -160,24 +160,29 @@ def execute_target(args, target):
 		subprocess.call(f'mkdir -p {args.bin_dir} {args.out_dir}', shell = True)
 	elif target == 'compile':
 		execute_target(args, 'ninja')
-		subprocess.call(f'ninja -C {args.bin_dir} {args.out_dir}/{RUNNABLE}', shell = True)
+		subprocess.call(f'ninja -C {args.bin_dir} {args.out_dir}/{args.project}', shell = True)
 	elif target == 'stats':
-		subprocess.call(f'pygount --format=summary', shell = True)
+		subprocess.call(f'pygount --format=summary engine source', shell = True)
 	elif target == 'valgrind':
 		execute_target(args, 'compile')
-		subprocess.call(f'valgrind --tool=massif {args.out_dir}/{RUNNABLE}', shell = True)
+		subprocess.call(f'valgrind --tool=massif {args.out_dir}/{args.project}', shell = True)
 		# valgrind --tool=callgrind $(OUT_DIR)/$(RUNNABLE)
 		# valgrind --tool=cachegrind $(OUT_DIR)/$(RUNNABLE)
 		# valgrind --leak-check=full --show-leak-kinds=all --log-file="valgrind.out" $(OUT_DIR)/$(RUNNABLE)
 	elif target == 'gdb':
 		execute_target(args, 'compile')
-		subprocess.call(f'gdb {args.out_dir}/{RUNNABLE}', shell = True)
+		subprocess.call(f'gdb {args.out_dir}/{args.project}', shell = True)
 	elif target == 'run':
 		execute_target(args, 'compile')
-		subprocess.call(f'{args.out_dir}/{RUNNABLE}', shell = True)
+		subprocess.call(f'{args.out_dir}/{args.project}', shell = True)
 	elif target == 'shaders':
 		command = f'find {args.src_dir}/assets/shaders/ -regextype posix-extended -regex ".*\.(comp|frag|geom|tesc|tese|vert)" -exec glslc {{}} -o {{}}.spv \;'
 		subprocess.call(command, shell = True)
+	elif target == 'list':
+		for module in Module.discover(args.src_dir):
+			if module.library:
+				continue
+			print(module.name)
 	else:
 		print(f"Unknown target: {target}")
 
