@@ -118,7 +118,18 @@ def target_ninja(args):
 
 def execute_target(args, target):
 	if target == 'help':
-		print(args)
+		print("Available targets:")
+		print("\thelp\t\t- display this help message")
+		print("\tninja\t\t- build with ninja")
+		print("\tclean\t\t- clean the build and output directories")
+		print("\tbuild\t\t- create the build and output directories")
+		print("\tcompile\t\t- compile using ninja")
+		print("\tstats\t\t- show statistics about the source code")
+		print("\tvalgrind\t- run the project with valgrind")
+		print("\tgdb\t\t- run the project with gdb")
+		print("\trun\t\t- run the project")
+		print("\tshaders\t\t- compile the shaders")
+		print("\tlist\t\t- list all available projects")
 	elif target == 'ninja':
 		execute_target(args, 'build')
 		target_ninja(args)
