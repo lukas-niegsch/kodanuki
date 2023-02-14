@@ -71,7 +71,7 @@ class NinjaTarget(Target):
 		writer.variable('src', args.src_dir)
 		writer.variable('bin', args.bin_dir)
 		writer.variable('out', args.out_dir)
-		writer.variable('flags', '-O2 -std=c++2b -Wall -Wextra -Werror -g')
+		writer.variable('flags', '-O2 -std=c++20 -Wall -Wextra -Werror -g')
 		writer.newline()
 		writer.rule('cc', 'g++ -I$src/extern/imgui -I$src -MD -MF $out.d -fPIC $flags -c $in -o $out',
 		{
