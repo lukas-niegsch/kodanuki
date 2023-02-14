@@ -14,6 +14,7 @@ class HelpTarget(Target):
 		super().validate(args)
 
 	def execute(self, args):
+		super().execute(args)
 		print(f'Available targets for the {args.project} project:')
 		for name, target in self.targets:
 			print(f'\t{name:<15}{target.__doc__}'.expandtabs(4))
@@ -26,6 +27,7 @@ class ListTarget(Target):
 		super().validate(args)
 
 	def execute(self, args):
+		super().execute(args)
 		print(f'Available projects:')
 		for module in Module.discover(args.src_dir):
 			if module.library:
@@ -40,6 +42,7 @@ class StatsTarget(Target):
 		super().validate(args)
 
 	def execute(self, args):
+		super().execute(args)
 		subprocess.call(f'pygount --format=summary engine source', shell = True)
 
 
@@ -50,6 +53,7 @@ class CleanTarget(Target):
 		super().validate(args)
 
 	def execute(self, args):
+		super().execute(args)
 		subprocess.call('git clean -qXdf', shell = True)
 		subprocess.call(f'rm -rf {args.bin_dir} {args.out_dir}', shell = True)
 
@@ -61,6 +65,7 @@ class NinjaTarget(Target):
 		super().validate(args)
 
 	def execute(self, args):
+		super().execute(args)
 		subprocess.call(f'mkdir -p {args.bin_dir} {args.out_dir}', shell = True)
 		writer = NinjaWriter()
 		writer.variable('src', args.src_dir)
@@ -102,6 +107,7 @@ class CompileTarget(NinjaTarget):
 		super().validate(args)
 
 	def execute(self, args):
+		super().execute(args)
 		os.environ['LIBRARY_PATH'] = args.out_dir
 		os.environ['LD_LIBRARY_PATH'] = args.out_dir
 		subprocess.call(f'ninja -C {args.bin_dir} {args.out_dir}/{args.project}', shell = True)
@@ -114,6 +120,7 @@ class ShadersTarget(Target):
 		super().validate(args)
 
 	def execute(self, args):
+		super().execute(args)
 		command = f'find {args.src_dir}/assets/shaders/ -regextype posix-extended -regex ".*\.(comp|frag|geom|tesc|tese|vert)" -exec glslc {{}} -o {{}}.spv \;'
 		subprocess.call(command, shell = True)
 
@@ -125,6 +132,7 @@ class RunTarget(CompileTarget):
 		super().validate(args)
 
 	def execute(self, args):
+		super().execute(args)
 		subprocess.call(f'{args.out_dir}/{args.project}', shell = True)
 
 
@@ -135,6 +143,7 @@ class GdbTarget(CompileTarget):
 		super().validate(args)
 
 	def execute(self, args):
+		super().execute(args)
 		subprocess.call(f'gdb {args.out_dir}/{args.project}', shell = True)
 
 
@@ -145,6 +154,7 @@ class ValgrindTarget(CompileTarget):
 		super().validate(args)
 	
 	def execute(self, args):
+		super().execute(args)
 		command = f'valgrind --tool=massif {args.out_dir}/{args.project}'
 		# command = f'valgrind --tool=callgrind {args.out_dir}/{args.project}'
 		# command = f'valgrind --tool=cachegrind {args.out_dir}/{args.project}'
