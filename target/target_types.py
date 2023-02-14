@@ -50,6 +50,7 @@ class CleanTarget(Target):
 		super().validate(args)
 
 	def execute(self, args):
+		subprocess.call('git clean -qXdf', shell = True)
 		subprocess.call(f'rm -rf {args.bin_dir} {args.out_dir}', shell = True)
 
 
