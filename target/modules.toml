@@ -13,7 +13,7 @@ library     = false
 [unittest]
 description = "Unittests for the kodanuki engine."
 path        = "source/unittest/"
-depends     = ["kodanuki.engine"]
+depends     = ["kodanuki.engine", "vulkan"]
 library     = false
 
 [tetris]
