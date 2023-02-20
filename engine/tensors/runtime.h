@@ -3,4 +3,9 @@
 namespace kodanuki
 {
 
+class TensorRuntime
+{
+
+};
+
 }
