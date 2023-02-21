@@ -63,6 +63,31 @@ TEST_CASE("test creating constant tensor")
 	CHECK(d[{1, 1}].as_float() == doctest::Approx(2.0f));
 }
 
+TEST_CASE("test creating diagonal tensor")
+{
+	TensorRuntime runtime = create_runtime();
+	
+	Tensor a = {{
+		.shape = {2, 2},
+		.dtype = Memory::FLOAT,
+		.runtime = runtime
+	}};
+
+	op::ifill(a, 0.0f);
+	op::idiag(a, 3.14f);
+	CHECK(a[{0, 0}].as_float() == doctest::Approx(3.14f));
+	CHECK(a[{0, 1}].as_float() == doctest::Approx(0));
+	CHECK(a[{1, 0}].as_float() == doctest::Approx(0));
+	CHECK(a[{1, 1}].as_float() == doctest::Approx(3.14f));
+
+	op::ifill(a, 1.0f);
+	Tensor b = op::diag(a, 3.14f);
+	CHECK(b[{0, 0}].as_float() == doctest::Approx(3.14f));
+	CHECK(b[{0, 1}].as_float() == doctest::Approx(1));
+	CHECK(b[{1, 0}].as_float() == doctest::Approx(1));
+	CHECK(b[{1, 1}].as_float() == doctest::Approx(3.14f));
+}
+
 TEST_CASE("test linear functions")
 {
 
