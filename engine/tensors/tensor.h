@@ -19,6 +19,8 @@ public:
 
 public:
 	bool operator==(const Tensor& other);
+
+	MemoryView operator[] (std::vector<std::size_t> index);
 };
 
 }
