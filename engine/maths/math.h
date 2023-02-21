@@ -11,6 +11,9 @@ void ifill(Tensor& tensor, float value);
 Tensor fill(const Tensor& tensor, int value);
 void ifill(Tensor& tensor, int value);
 
+Tensor diag(const Tensor& tensor, float value);
+void idiag(Tensor& tensor, float value);
+
 Tensor cos(const Tensor& a);
 void icos(const Tensor& a);
 

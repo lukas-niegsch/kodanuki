@@ -16,7 +16,11 @@ Tensor fill(const Tensor& tensor, float value)
 
 void ifill(Tensor& tensor, float value)
 {
-	tensor[{0}].as_float() = value;
+	Memory memory = tensor.get_memory();
+	for (std::size_t i = 0; i < memory.get_size(); i++) {
+		MemoryView view = memory.make_view(i);
+		view.as_float() = value;
+	}
 }
 
 Tensor fill(const Tensor& tensor, int value)
@@ -27,6 +31,26 @@ Tensor fill(const Tensor& tensor, int value)
 }
 
 void ifill(Tensor& tensor, int value)
+{
+	(void) tensor;
+	(void) value;
+}
+
+Tensor diag(const Tensor& tensor, float value)
+{
+	Tensor output = op::copy(tensor);
+	std::size_t dimensions = output.get_shape().size();
+
+	for (std::size_t i = 0; i < dimensions; i++)
+	{
+		std::vector<std::size_t> index(dimensions, i);
+		output[index].as_float() = value;
+	}
+	
+	return output;
+}
+
+void idiag(Tensor& tensor, float value)
 {
 	(void) tensor;
 	(void) value;

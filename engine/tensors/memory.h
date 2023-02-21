@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 
 namespace kodanuki
 {
@@ -23,10 +24,12 @@ public:
 		FLOAT
 	};
 
-	MemoryView make_view();
+	std::size_t get_size() const;
+	void resize(std::size_t size);
+	MemoryView make_view(std::size_t index);
 
 private:
-	float value;
+	std::vector<float> values;
 };
 
 }
