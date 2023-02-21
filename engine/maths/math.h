@@ -1,14 +1,23 @@
 #pragma once
-#include "engine/tensors/function.h"
+#include "engine/tensors/operator.h"
 #include "engine/tensors/tensor.h"
 
-namespace kodanuki::math
+namespace kodanuki::op
 {
 
-void make_zeros_inplace(Tensor& a);
-void add_inplace(Tensor& a, const Tensor& b);
+Tensor fill(const Tensor& tensor, float value);
+void ifill(Tensor& tensor, float value);
+
+Tensor fill(const Tensor& tensor, int value);
+void ifill(Tensor& tensor, int value);
+
 Tensor cos(const Tensor& a);
+void icos(const Tensor& a);
+
 Tensor add(const Tensor& a, const Tensor& b);
+void iadd(Tensor& a, const Tensor& b);
+
 Tensor copy(const Tensor& a);
+void icopy(Tensor& a);
 
 }

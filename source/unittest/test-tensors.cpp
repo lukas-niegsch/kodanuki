@@ -1,5 +1,5 @@
 #include "engine/tensors/memory.h"
-#include "engine/tensors/function.h"
+#include "engine/tensors/operator.h"
 #include "engine/tensors/runtime.h"
 #include "engine/tensors/scheduler.h"
 #include "engine/tensors/tensor.h"
@@ -25,12 +25,12 @@ TEST_CASE("Tensor API usage example")
 	}};
 
 	// Both loading data into the vector and performing calculations are done
-	// with functions. An function can be anything that has input tensors
-	// and produces output tensors. Inplace-functions are also possible.
-	math::make_zeros_inplace(a);
-	a = math::cos(a);
-	a = math::add(a, a);
-	math::add_inplace(a, a);
+	// with operators. An operator can be anything that has input tensors
+	// and produces output tensors. Inplace-Operators are also possible.
+	op::ifill(a, 0);
+	a = op::cos(a);
+	a = op::add(a, a);
+	op::iadd(a, a);
 
 	// All classes inside the tensor library handle their own memory and are
 	// deleted once no longer used. For this example all tensors are freed
