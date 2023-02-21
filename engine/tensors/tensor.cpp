@@ -3,4 +3,9 @@
 namespace kodanuki
 {
 
+Tensor::Tensor(TensorBuilder builder)
+{
+	(void) builder;
+}
+
 }
