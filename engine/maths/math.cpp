@@ -5,15 +5,18 @@ namespace kodanuki::op
 
 Tensor fill(const Tensor& tensor, float value)
 {
-	(void) tensor;
-	(void) value;
-	return tensor;
+	Tensor output = {{
+		.shape = tensor.get_shape(),
+		.dtype = tensor.get_dtype(),
+		.runtime = tensor.get_runtime()
+	}};
+	op::ifill(output, value);
+	return output;
 }
 
 void ifill(Tensor& tensor, float value)
 {
-	(void) tensor;
-	(void) value;
+	tensor[{0}].as_float() = value;
 }
 
 Tensor fill(const Tensor& tensor, int value)

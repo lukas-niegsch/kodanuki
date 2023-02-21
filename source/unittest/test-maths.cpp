@@ -26,7 +26,7 @@ TEST_CASE("test creating constant tensor")
 		.runtime = runtime
 	}};
 
-	op::ifill(a, 0);
+	op::ifill(a, 0.0f);
 	CHECK(a[{0, 0}].as_float() == doctest::Approx(0));
 	CHECK(a[{0, 1}].as_float() == doctest::Approx(0));
 	CHECK(a[{1, 0}].as_float() == doctest::Approx(0));
@@ -44,7 +44,7 @@ TEST_CASE("test creating constant tensor")
 	CHECK(a[{1, 0}].as_float() == doctest::Approx(2.0f));
 	CHECK(a[{1, 1}].as_float() == doctest::Approx(2.0f));
 
-	Tensor b = op::fill(a, 0);
+	Tensor b = op::fill(a, 0.0f);
 	CHECK(b[{0, 0}].as_float() == doctest::Approx(0));
 	CHECK(b[{0, 1}].as_float() == doctest::Approx(0));
 	CHECK(b[{1, 0}].as_float() == doctest::Approx(0));

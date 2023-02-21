@@ -3,10 +3,19 @@
 namespace kodanuki
 {
 
+MemoryView::MemoryView(float& value) : value(value)
+{
+
+}
+
 float& MemoryView::as_float()
 {
-	static float a = 0;
-	return a;
+	return value;
+}
+
+MemoryView Memory::make_view()
+{
+	return MemoryView(value);
 }
 
 }
