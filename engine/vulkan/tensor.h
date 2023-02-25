@@ -14,25 +14,12 @@ namespace kodanuki
  * All the operations for this tensor are implemented using CRTP pattern. This
  * class uses a shared pointer to store it variables. That means that it can
  * be copied freely and will be deleted once it is no longer used. This will
- * also free any allocated memory.
+ * also free any allocated memory. Currently all tensor operation will be
+ * executed synchronously and wait for completion, this will be changed later.
  */
-class VulkanTensor : public op<VulkanTensor>
+class VulkanTensor : public TensorOperator<VulkanTensor>
 {
 public:
-	/**
- 	 * An enum that specifies whether the memory of a tensor is stored on
-	 * the device (GPU RAM) or host (CPU RAM). Device memory is slower for
-	 * writing and reading, but much faster for processing.
-	 */
-	enum MemoryLocation
-	{
-		// The memory is located inside the device.
-		eDevice,
-
-		// The memory is located inside the host.
-		eHost
-	};
-
 	/**
 	 * An enum that specifies whether both device or host sees the memory
 	 * or just one of them. Unique memory is much faster for processing but
@@ -88,9 +75,6 @@ public:
 		// The data type for the tensor memory.
 		MemoryDataType dtype = eFloat;
 
-		// The location for the tensor memory.
-		MemoryLocation dside = eDevice;
-
 		// The sharing model for the tensor memory.
 		MemorySharing dshare = eUnique;
 	};
@@ -113,8 +97,7 @@ public:
 	 * @param indices The indices for the different dimensions.
 	 * @return The index of the element in the flattened tensor.
 	 */
-	template <typename ... Index>
-	std::size_t index(std::tuple<Index...> indices);
+	std::size_t index(std::vector<std::size_t> indices);
 
 	/**
 	 * Closure to let the user change the content of the tensor.
@@ -134,33 +117,32 @@ public:
 	void with_maps(std::function<void(std::vector<T>&)> callback);
 
 	/**
-	 * Executes the given operator for the input tensors.
+	 * Executes the given operator for the tensors.
 	 *
-	 * The output tensors might be the same as the import tensors and the
-	 * operation might be executed asynchronous. The only guarentee is that
-	 * the order of operation based on their call time will be kept. It is
-	 * also guarenteed the data stays consistent.
+	 * The operator contains information about which tensors are used as
+	 * input or output. The operation might be executed asynchronous. The
+	 * only guarantee is that the order of operations based on their call
+	 * time will be kept and the data stays consistent.
 	 *
 	 * @param ops The operator that should be executed.
-	 * @param tensors The input tensors of the operation.
-	 * @return The output tensors of the operation.
 	 */
-	static std::vector<VulkanTensor> execute(const Operator& ops, const std::vector<VulkanTensor> tensors);
+	template <typename T>
+	static void execute(const Operator<VulkanTensor, T>& ops);
 
 public:
-	/**
-	 * Returns the vulkan buffer that was allocated for this tensor.
-	 *
-	 * @return The vulkan buffer that contains the flattened values.
-	 */
-	VkBuffer get_buffer() const;
-
 	/**
 	 * Returns the size of the tensor in bytes.
 	 *
 	 * @return The number of bytes inside the buffer.
 	 */
 	std::size_t get_byte_size() const;
+
+	/**
+	 * Returns the parameters that are used to build this tensor.
+	 * 
+	 * @return The builder used to build this tensor.
+	 */
+	TensorBuilder get_builder() const;
 
 	/**
 	 * Returns the shape for this tensor.
@@ -177,13 +159,6 @@ public:
 	MemoryDataType get_dtype() const;
 
 	/**
-	 * Returns the location of the memory used by this tensor.
-	 *
-	 * @return The memory location.
-	 */
-	MemoryLocation get_dside() const;
-
-	/**
 	 * Returns the sharing mode of the memory used by this tensor.
 	 *
 	 * @return The memory sharing mode.
@@ -191,8 +166,73 @@ public:
 	MemorySharing get_dshare() const;
 
 private:
+	/**
+	 * Creates the command pool and the command buffer.
+	 *
+	 * This command buffer will be used to transfer from the staging
+	 * buffer to the primary buffer.
+	 */
+	void create_command_buffer();
+
+	/**
+	 * Creates the primary memory and primary buffer.
+	 *
+	 * The primary buffer will be used for all the operations. It will be
+	 * faster storage, but might require a staging buffer for transfer.
+	 */
+	void create_primary_buffer();
+
+	/**
+	 * Creates the staging memory and staging buffer.
+	 *
+	 * The staging buffer will be used as tempory storage before transfer. It
+	 * is host visible, but also significant slower than the primary buffer.
+	 */
+	void create_staging_buffer();
+
+	/**
+	 * Creates some memory and the corresponding buffer.
+	 *
+	 * The buffer will have the size defined by the get_byte_size() method.
+	 * This will allocate memory and will fail if the device is out of memory.
+	 *
+	 * @param buffer The output buffer that will be created.
+	 * @param memory The output memory that will be allocated.
+	 * @param usage The usage flags that this buffer has.
+	 * @param properties The property flags that this buffer has.
+	 */
+	void create_buffer(VkBuffer& buffer, VkDeviceMemory& memory, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+
+	/**
+	 * Copies the data from the source buffer to the target buffer.
+	 * 
+	 * @param source_buffer The buffer containing the source data.
+	 * @param target_buffer The buffer containing the target data.
+	 * @param config The configuration that will be used for copying. 
+	 */
+	void copy_buffer(VkBuffer source_buffer, VkBuffer target_buffer, VkBufferCopy config);
+
+	/**
+	 * Closure that executes the callback function with mapped memory.
+	 *
+	 * This might be the primary memory or the staging memory depending
+	 * on the memory sharing model. Also casts the resulting void pointer
+	 * to the given size.
+	 *
+	 * @param callback The callback function that will be executed.
+	 */
+	template <typename T>
+	void with_mapped_memory(std::function<void(T*)> callback);
+
+private:
 	// Shared state to automatically delete unused instances.
 	std::shared_ptr<struct TensorState> state;
 };
 
+// Shortcut for equations for a vulkan tensor.
+using vt = VulkanTensor;
+
 }
+
+#define INCLUDE_TENSOR_INLINE_HEADER
+#include "engine/vulkan/tensor.cpp"
