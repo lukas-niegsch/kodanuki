@@ -135,6 +135,11 @@ std::size_t VulkanTensor::get_byte_size() const
 	return size;
 }
 
+VkBuffer VulkanTensor::get_buffer() const
+{
+	return state->primary_buffer.value();
+}
+
 VulkanTensor::TensorBuilder VulkanTensor::get_builder() const
 {
 	VulkanTensor::TensorBuilder builder = {

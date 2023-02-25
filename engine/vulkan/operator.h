@@ -7,8 +7,8 @@ namespace kodanuki
 
 enum class OperatorType
 {
-	eFill,
 	eLinear,
+	eFill,
 	eCos,
 	eSin,
 };
@@ -39,7 +39,16 @@ struct TensorOperator
 	static Tensor add(Tensor& tensorA, Tensor& tensorB)
 	{
 		assert(tensorA.get_shape() == tensorB.get_shape());
-		return tensorA; // TODO: implement method
+		assert(tensorA.get_dtype() == tensorB.get_dtype());
+		Tensor output(tensorA.get_builder());
+		Operator<Tensor, float> ops = {{
+			.type = OperatorType::eLinear,
+			.constants = {1.0f, 1.0f},
+			.mutables = {Mutability::eConstant, Mutability::eConstant, Mutability::eMutable},
+			.tensors = {tensorA, tensorB, output}
+		}};
+		Tensor::execute(ops);
+		return output;
 	}
 
 	template <typename T>

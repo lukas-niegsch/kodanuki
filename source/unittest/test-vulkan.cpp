@@ -84,3 +84,36 @@ TEST_CASE("access and modification of tensor memory is possible")
 		}
 	});
 }
+
+TEST_CASE("adding two tensors works")
+{
+	VulkanDevice device = create_default_device();
+	VulkanTensor a = {{
+		.device = device,
+		.shape = {1, 2},
+		.dtype = VulkanTensor::eFloat,
+		.dshare = VulkanTensor::eUnique
+	}};
+	a.with_maps<float>([](std::vector<float>& values) {
+		values[0] = 1.2f;
+		values[1] = 3.1f;
+		values[2] = 0.0f;
+	});
+	VulkanTensor b = {{
+		.device = device,
+		.shape = {1, 2},
+		.dtype = VulkanTensor::eFloat,
+		.dshare = VulkanTensor::eUnique
+	}};
+	b.with_maps<float>([](std::vector<float>& values) {
+		values[0] = 1.7f;
+		values[1] = 2.1f;
+		values[2] = -1.0f;
+	});
+	VulkanTensor c = vt::add(a, b);
+	c.with_maps<float>([](std::vector<float>& values) {
+		CHECK(values[0] == doctest::Approx(2.9f));
+		CHECK(values[1] == doctest::Approx(5.2f));
+		CHECK(values[2] == doctest::Approx(-1.0f));
+	});
+}

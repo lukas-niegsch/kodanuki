@@ -131,6 +131,13 @@ public:
 
 public:
 	/**
+	 * Returns the primary buffer for this tensor.
+	 *
+	 * @return The primary buffer for this tensor.
+	 */
+	VkBuffer get_buffer() const;
+
+	/**
 	 * Returns the size of the tensor in bytes.
 	 *
 	 * @return The number of bytes inside the buffer.
