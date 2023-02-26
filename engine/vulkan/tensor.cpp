@@ -9,6 +9,7 @@ namespace kodanuki
 struct TensorState
 {
 	VulkanDevice device;
+	VulkanPipelineCache& cache;
 	std::vector<std::size_t> shape;
 	VulkanTensor::MemoryDataType dtype;
 	VulkanTensor::MemorySharing dshare;
@@ -62,7 +63,63 @@ void VulkanTensor::with_mapped_memory(std::function<void(T*)> callback)
 template <typename T>
 void VulkanTensor::execute(const Operator<VulkanTensor, T>& ops)
 {
-	(void) ops;
+	/*
+	The slow operations are really really slow, but they are much easier to
+	implement. Slow operations are executed on the CPU but use the GPU memory.
+	The faster way would be to implement them using vulkan compute shaders.
+	
+	We do this for now to have something working and start using it. This will
+	yield a big performance hit, but this can be changed later.
+	 */
+	switch (ops.get_tensor(0).get_dtype()) {
+	case eFloat:
+		switch (ops.get_type()) {
+		case OperatorType::eLinear:
+			slow_execute_float_linear(ops);
+			break;
+		case OperatorType::eFill:
+			slow_execute_float_fill(ops);
+			break;
+		default:
+			throw std::runtime_error("Operator not supported!");
+		}
+		break;
+	default:
+		throw std::runtime_error("Operator not supported!");
+	}
+}
+
+template <typename T>
+void VulkanTensor::slow_execute_float_linear(const Operator<VulkanTensor, T>& ops)
+{
+	VulkanTensor tensorA = ops.get_tensor(0);
+	VulkanTensor tensorB = ops.get_tensor(1);
+	VulkanTensor tensorC = ops.get_tensor(2);
+	T alpha = ops.get_constant(0);
+	T beta = ops.get_constant(1);
+
+	tensorA.with_maps<T>([&](std::vector<T>& valuesA) {
+		tensorB.with_maps<T>([&](std::vector<T>& valuesB) {
+			tensorC.with_maps<T>([&](std::vector<T>& valuesC) {
+				for (std::size_t i = 0; i < valuesA.size(); i++) {
+					valuesC[i] = alpha * valuesA[i] + beta * valuesB[i];
+				}
+			});
+		});
+	});
+}
+
+template <typename T>
+void VulkanTensor::slow_execute_float_fill(const Operator<VulkanTensor, T>& ops)
+{
+	VulkanTensor tensor = ops.get_tensor(0);
+	T fill_value = ops.get_constant(0);
+
+	tensor.with_maps<T>([&](std::vector<T>& values){
+		for (std::size_t i = 0; i < values.size(); i++) {
+			values[i] = fill_value;
+		}
+	});
 }
 
 }
@@ -95,7 +152,7 @@ TensorState::~TensorState()
 
 VulkanTensor::VulkanTensor(TensorBuilder builder)
 {
-	state = std::make_shared<TensorState>(builder.device);
+	state = std::make_shared<TensorState>(builder.device, builder.cache);
 	state->shape = builder.shape;
 	state->dtype = builder.dtype;
 	state->dshare = builder.dshare;
@@ -144,6 +201,7 @@ VulkanTensor::TensorBuilder VulkanTensor::get_builder() const
 {
 	VulkanTensor::TensorBuilder builder = {
 		.device = state->device,
+		.cache = state->cache,
 		.shape = state->shape,
 		.dtype = state->dtype,
 		.dshare = state->dshare
@@ -285,6 +343,28 @@ void VulkanTensor::copy_buffer(VkBuffer source_buffer, VkBuffer target_buffer, V
 	CHECK_VULKAN(vkQueueSubmit(state->device.queues()[0], 1, &submit_info, VK_NULL_HANDLE));
 	
 	CHECK_VULKAN(vkDeviceWaitIdle(state->device));
+}
+
+std::string VulkanTensor::get_shader_name(MemoryDataType dtype, OperatorType otype)
+{
+	std::stringstream ss;
+	ss << "vt_";
+	ss << [&](){
+		switch (dtype) {
+		case eFloat: return "float";
+		default: throw std::runtime_error("Shader not implemented yet!"); 
+		}
+		
+	}();
+	ss << "_";
+	ss << [&](){
+		switch (otype) {
+		case OperatorType::eLinear: return "linear";
+		default: throw std::runtime_error("Shader not implemented yet!");
+		}
+	}();
+	ss << ".comp";
+	return ss.str();
 }
 
 }

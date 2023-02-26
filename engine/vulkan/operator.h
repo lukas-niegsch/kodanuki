@@ -9,8 +9,6 @@ enum class OperatorType
 {
 	eLinear,
 	eFill,
-	eCos,
-	eSin,
 };
 
 enum class Mutability
@@ -30,7 +28,33 @@ public:
 		std::vector<Mutability> mutables;
 		std::vector<Tensor> tensors;
 	};
-	Operator(OperatorBuilder builder) { (void) builder; }
+	Operator(OperatorBuilder builder)
+	{ 
+		this->builder = builder;
+	}
+
+	OperatorType get_type() const
+	{
+		return builder.type;
+	}
+
+	T get_constant(std::size_t index) const
+	{
+		return builder.constants[index];
+	}
+
+	Mutability get_mutable(std::size_t index) const
+	{
+		return builder.mutables[index];
+	}
+
+	Tensor get_tensor(std::size_t index) const
+	{
+		return builder.tensors[index];
+	}
+
+private:
+	OperatorBuilder builder;
 };
 
 template <typename Tensor>
@@ -69,12 +93,6 @@ struct TensorOperator
 			.tensors = {tensor}
 		}};
 		Tensor::execute(ops);
-	}
-
-	static void icos(Tensor& tensor)
-	{
-		(void) tensor;
-		// TODO: implement method
 	}
 };
 

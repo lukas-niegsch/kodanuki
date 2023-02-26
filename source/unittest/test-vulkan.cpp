@@ -34,10 +34,12 @@ TEST_CASE("Tensor API usage example")
 {
 	// Each vulkan tensor requires a vulkan device for executing commands.
 	VulkanDevice device = create_default_device();
+	VulkanPipelineCache cache;
 	
 	// Heres how to create some tensors allocating memory on the device.
 	VulkanTensor a = {{
 		.device = device,
+		.cache = cache,
 		.shape = {3, 4, 5},
 		.dtype = VulkanTensor::eFloat,
 		.dshare = VulkanTensor::eUnique
@@ -46,6 +48,7 @@ TEST_CASE("Tensor API usage example")
 	// Some of the values can be omitted when using the default values.
 	VulkanTensor b = {{
 		.device = device,
+		.cache = cache,
 		.shape = {3, 4, 5},
 		.dshare = VulkanTensor::eShared
 	}};
@@ -57,7 +60,7 @@ TEST_CASE("Tensor API usage example")
 	vt::ifill(a, 0.0f);
 	vt::ifill(b, 1.0f);
 	VulkanTensor c = vt::add(a, b);
-	vt::icos(c);
+	(void) c;
 
 	// Inplace-Operators don't produce additional memory, but modify the
 	// tensor values directly. Tensors will deallocate their memory once
@@ -67,8 +70,11 @@ TEST_CASE("Tensor API usage example")
 TEST_CASE("access and modification of tensor memory is possible")
 {
 	VulkanDevice device = create_default_device();
+	VulkanPipelineCache cache;
+
 	VulkanTensor a = {{
 		.device = device,
+		.cache = cache,
 		.shape = {3, 4, 5}
 	}};
 
@@ -88,9 +94,11 @@ TEST_CASE("access and modification of tensor memory is possible")
 TEST_CASE("adding two tensors works")
 {
 	VulkanDevice device = create_default_device();
+	VulkanPipelineCache cache;
 	VulkanTensor a = {{
 		.device = device,
-		.shape = {1, 2},
+		.cache = cache,
+		.shape = {1, 3},
 		.dtype = VulkanTensor::eFloat,
 		.dshare = VulkanTensor::eUnique
 	}};
@@ -101,7 +109,8 @@ TEST_CASE("adding two tensors works")
 	});
 	VulkanTensor b = {{
 		.device = device,
-		.shape = {1, 2},
+		.cache = cache,
+		.shape = {1, 3},
 		.dtype = VulkanTensor::eFloat,
 		.dshare = VulkanTensor::eUnique
 	}};

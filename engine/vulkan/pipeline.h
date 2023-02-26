@@ -127,4 +127,7 @@ private:
 	std::shared_ptr<struct PipelineState> pimpl;
 };
 
+// Caching that allows the pipelines to be stored for reuse.
+using VulkanPipelineCache = std::unordered_map<std::string, VulkanPipeline>;
+
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/vulkan/device.h"
+#include "engine/vulkan/pipeline.h"
 #include "engine/vulkan/operator.h"
 #include <vector>
 #include <memory>
@@ -68,6 +69,9 @@ public:
 	{
 		// The vulkan device that holds the context.
 		VulkanDevice device;
+
+		// The vulkan pipeline cache for the compute pipelines.
+		VulkanPipelineCache& cache;
 
 		// The shape of the tensor (row-major format).
 		std::vector<std::size_t> shape;
@@ -230,6 +234,26 @@ private:
 	 */
 	template <typename T>
 	void with_mapped_memory(std::function<void(T*)> callback);
+
+	/**
+	 * Returns the name of the compute shader based on the given types.
+	 *
+	 * The name will have the form: "vt_dtype_otype.comp".
+	 *
+	 * @param dtype The data type that the shader uses.
+	 * @param otype The operator type that the shader uses.
+	 * @return The name of the compute shader.
+	 */
+	static std::string get_shader_name(MemoryDataType dtype, OperatorType otype);
+
+private:
+	// TODO: Implement compute shader version.
+	template <typename T>
+	static void slow_execute_float_linear(const Operator<VulkanTensor, T>& ops);
+
+	// TODO: Implement compute shader version.
+	template <typename T>
+	static void slow_execute_float_fill(const Operator<VulkanTensor, T>& ops);
 
 private:
 	// Shared state to automatically delete unused instances.
