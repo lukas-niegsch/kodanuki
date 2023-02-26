@@ -51,7 +51,7 @@ const std::vector<Vertex> vertices = {
 int main()
 {
 	VulkanWindow window = {{
-		.title = "Kodanuki",
+		.title = "kodanuki",
 		.default_size = {1024, 768},
 		.resizeable = false // TODO: renderer needs to recreate swapchain properly
 	}};

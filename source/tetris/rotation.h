@@ -28,7 +28,7 @@ struct Rotation
 struct TetrominoRotations
 {
 	// The array containing combinations of tetromino type and rotations.
-	std::array<Kodanuki::Entity, 28> rotations;
+	std::array<kodanuki::Entity, 28> rotations;
 };
 
 // Consumable component flag indicating one counter-clockwise rotation.

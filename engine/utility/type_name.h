@@ -13,15 +13,15 @@ constexpr auto type_name() {
 	std::string_view name, prefix, suffix;
 #ifdef __clang__
 	name = __PRETTY_FUNCTION__;
-	prefix = "auto Kodanuki::type_name() [T = ";
+	prefix = "auto kodanuki::type_name() [T = ";
 	suffix = "]";
 #elif defined(__GNUC__)
 	name = __PRETTY_FUNCTION__;
-	prefix = "constexpr auto Kodanuki::type_name() [with T = ";
+	prefix = "constexpr auto kodanuki::type_name() [with T = ";
 	suffix = "]";
 #elif defined(_MSC_VER)
 	name = __FUNCSIG__;
-	prefix = "auto __cdecl Kodanuki::type_name<";
+	prefix = "auto __cdecl kodanuki::type_name<";
 	suffix = ">(void)";
 #endif
 	name.remove_prefix(prefix.size());
