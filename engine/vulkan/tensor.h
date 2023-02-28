@@ -44,6 +44,9 @@ public:
 		// 8 bit boolean type.
 		eBool,
 
+		// 8 bit byte type for custom types.
+		eByte,
+
 		// 32 bit integer type (signed).
 		eInt32,
 

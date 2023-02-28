@@ -177,14 +177,16 @@ std::size_t VulkanTensor::index(std::vector<std::size_t> indices)
 std::size_t VulkanTensor::get_byte_size() const
 {
 	std::size_t size = [&](){
-		switch(state->dtype) {
+		switch (state->dtype) {
 		case eBool: return 1;
+		case eByte: return 1;
 		case eInt32: return 4;
 		case eInt64: return 8;
 		case eFloat: return 4;
 		case eDouble: return 8;
+		default:
+			throw std::runtime_error("MemoryDataType unsupported!");
 		}
-		throw std::runtime_error("MemoryDataType unsupported!");
 	}();
 	for (std::size_t dim : state->shape) {
 		size *= dim;

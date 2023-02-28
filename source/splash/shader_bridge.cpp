@@ -44,7 +44,18 @@ ShaderBridge::ShaderBridge(ShaderBridgeBuilder builder)
 , device(builder.device)
 , memory(allocate_memory(builder.model, builder.scene))
 , memory_buffer(memory)
+, cache({})
+, tensor_index({device, cache, {1, count_index}, vt::eInt32, vt::eUnique})
+, tensor_vertex({device, cache, {1, count_vertex * size_vertex}, vt::eByte, vt::eUnique})
+, tensor_mass({device, cache, {1, count_instance}, vt::eFloat, vt::eUnique})
+, tensor_mvp({device, cache, {count_frame, size_mvp}, vt::eByte, vt::eShared})
+, tensor_ud({device, cache, {count_frame, size_ud}, vt::eByte, vt::eShared})
+, tensor_position({device, cache, {count_frame, 4 * count_instance}, vt::eFloat, vt::eUnique})
+, tensor_velocity({device, cache, {count_frame, 4 * count_instance}, vt::eFloat, vt::eUnique})
+, tensor_pressure({device, cache, {count_frame, count_instance}, vt::eFloat, vt::eUnique})
+, tensor_density({device, cache, {count_frame, count_instance}, vt::eFloat, vt::eUnique})
 {
+	load_tensor_data(builder.model, builder.scene);
 	print_memory_layout();
 	create_render_descriptors();
 	create_update_pressure_descriptors();
@@ -55,6 +66,20 @@ ShaderBridge::~ShaderBridge()
 {
 	CHECK_VULKAN(vkDeviceWaitIdle(device));
 	vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
+}
+
+void ShaderBridge::update_mvp(const MVP& new_mvp, uint32_t frame)
+{
+	tensor_mvp.with_maps<MVP>([&](std::vector<MVP>& values) {
+		values[frame] = new_mvp;
+	});
+}
+
+void ShaderBridge::update_ud(const UD& new_ud, uint32_t frame)
+{
+	tensor_mvp.with_maps<UD>([&](std::vector<UD>& values) {
+		values[frame] = new_ud;
+	});
 }
 
 VulkanMemory::StagingBuffer<align<MVP, 256>> ShaderBridge::get_buffer_mvp(uint32_t frame)
@@ -75,6 +100,7 @@ VulkanMemory::StagingBuffer<align<UD, 256>> ShaderBridge::get_buffer_ud(uint32_t
 
 void ShaderBridge::print_memory_layout()
 {
+	return;
 	std::cout << "count_frame: " << count_frame << '\n';
 	std::cout << "count_index: " << count_index << '\n';
 	std::cout << "count_vertex: " << count_vertex << '\n';
@@ -100,6 +126,27 @@ void ShaderBridge::print_memory_layout()
 	std::cout << "offset_frame_velocity: " << offset_frame_velocity << '\n';
 	std::cout << "offset_frame_total: " << offset_frame_total << '\n';
 	std::cout << "total_memory_bytes: " << offset_total + count_frame * offset_frame_total << '\n';
+
+	std::size_t new_total = 0;
+	new_total += tensor_index.get_byte_size();
+	new_total += tensor_vertex.get_byte_size();
+	new_total += tensor_mass.get_byte_size();
+	new_total += tensor_mvp.get_byte_size();
+	new_total += tensor_ud.get_byte_size();
+	new_total += tensor_position.get_byte_size();
+	new_total += tensor_velocity.get_byte_size();
+	new_total += tensor_pressure.get_byte_size();
+	new_total += tensor_density.get_byte_size();
+	std::cout << "new_total: " << new_total << '\n';
+	std::cout << "size tensor_index: " << tensor_index.get_byte_size() << '\n';
+	std::cout << "size tensor_vertex: " << tensor_vertex.get_byte_size() << '\n';
+	std::cout << "size tensor_mass: " << tensor_mass.get_byte_size() << '\n';
+	std::cout << "size tensor_mvp: " << tensor_mvp.get_byte_size() << '\n';
+	std::cout << "size tensor_ud: " << tensor_ud.get_byte_size() << '\n';
+	std::cout << "size tensor_position: " << tensor_position.get_byte_size() << '\n';
+	std::cout << "size tensor_velocity: " << tensor_velocity.get_byte_size() << '\n';
+	std::cout << "size tensor_pressure: " << tensor_pressure.get_byte_size() << '\n';
+	std::cout << "size tensor_density: " << tensor_density.get_byte_size() << '\n';
 }
 
 uint32_t ShaderBridge::get_index_count()
@@ -119,7 +166,8 @@ void ShaderBridge::bind_render_resources(VkCommandBuffer buffer, uint32_t frame)
 	vkCmdBindVertexBuffers(buffer, 0, 1, &memory_buffer, &offset_vertex);
 	VkDeviceSize offset_instance = offset_total + frame * offset_frame_total + offset_frame_position;
 	vkCmdBindVertexBuffers(buffer, 1, 1, &memory_buffer, &offset_instance);
-	vkCmdBindIndexBuffer(buffer, memory_buffer, offset_indices, VK_INDEX_TYPE_UINT32);
+	VkBuffer buffer_index = tensor_index.get_buffer();
+	vkCmdBindIndexBuffer(buffer, buffer_index, 0, VK_INDEX_TYPE_UINT32);
 }
 
 void ShaderBridge::bind_update_pressure_resources(VkCommandBuffer buffer, uint32_t frame)
@@ -140,15 +188,6 @@ VulkanMemory ShaderBridge::allocate_memory(Model model, Scene scene)
 		.device = device,
 		.byte_size = offset_total + count_frame * offset_frame_total
 	}};
-
-	// Setting the memory for the indices:
-	{
-		auto buffer = memory.create_buffer<uint32_t>({.offset = offset_indices, .count = count_index});
-		for (uint32_t i = 0; i < count_index; i++) {
-			buffer[i] = model.indices[i];
-		}
-		buffer.slow_push();
-	}
 
 	// Setting the memory for the vertices:
 	{
@@ -283,6 +322,29 @@ void ShaderBridge::create_update_simulate_descriptors()
 		update_descriptor(update_simulate_descriptors[i], 7, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 			offset_total + i * offset_frame_total + offset_frame_velocity, size_velocity * count_instance);
 	}
+}
+
+
+
+
+void ShaderBridge::load_tensor_data(Model model, Scene scene)
+{
+	// Setting the memory for the indices:
+	tensor_index.with_maps<uint32_t>([&](std::vector<uint32_t>& values) {
+		for (uint32_t i = 0; i < count_index; i++) {
+			values[i] = model.indices[i];
+		}
+	});
+
+	// Setting the memory for the vertices:
+	tensor_vertex.with_maps<Vertex>([&](std::vector<Vertex>& values) {
+		for (uint32_t i = 0; i < count_vertex; i++) {
+			values[i] = model.vertices[i];
+			values[i].color = {0.0f, 0.0f, 0.8f};
+		}
+	});
+
+	(void) model; (void) scene;
 }
 
 }
