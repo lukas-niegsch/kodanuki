@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/utility/signature.h"
 #include "engine/utility/type_name.h"
+#include "extern/SPIRV-Reflect/spirv_reflect.h"
 #include <vulkan/vulkan.h>
 #include <iostream>
 #include <stdexcept>
@@ -24,6 +25,14 @@
 		if (return_type != VK_SUCCESS) {		\
 			ERROR(vulkan_debug(return_type));	\
 		}										\
+	} while (false)
+
+#define CHECK_SPIRV(result)									\
+	do {													\
+		auto return_type = result;							\
+		if (return_type != SPV_REFLECT_RESULT_SUCCESS) {	\
+			ERROR(vulkan_debug(return_type));				\
+		}													\
 	} while (false)
 
 namespace kodanuki
@@ -156,6 +165,9 @@ auto vectorize(Args ... args)
 ////////////////////////////////////////////////////////////////////////////////
 template <>
 std::string vulkan_debug(VkResult info);
+
+template <>
+std::string vulkan_debug(SpvReflectResult info);
 
 template <>
 std::string vulkan_debug(VkExtensionProperties info);

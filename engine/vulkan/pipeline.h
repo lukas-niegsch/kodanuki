@@ -112,6 +112,9 @@ public:
 	// Creates a new vulkan pipeline from the given builder.
 	VulkanPipeline(ComputePipelineBuilder builder);
 
+	// Automatically creates a vulkan pipeline from the SPIRV file.
+	static VulkanPipeline from_comp_file(VulkanDevice device, std::string filename);
+
 	// Returns the handle to the native vulkan pipeline.
 	operator VkPipeline();
 

@@ -1,5 +1,6 @@
 #include "engine/vulkan/pipeline.h"
 #include "engine/vulkan/debug.h"
+#include "engine/utility/file.h"
 
 namespace kodanuki
 {
@@ -93,7 +94,7 @@ VulkanPipeline::VulkanPipeline(GraphicsPipelineBuilder builder)
 VulkanPipeline::VulkanPipeline(ComputePipelineBuilder builder)
 {
 	pimpl = std::make_shared<PipelineState>(builder.device);
-
+	
 	VkDescriptorSetLayoutCreateInfo descriptor_layout_info = {};
 	descriptor_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	descriptor_layout_info.bindingCount = static_cast<uint32_t>(builder.bindings.size());
@@ -119,6 +120,41 @@ VulkanPipeline::VulkanPipeline(ComputePipelineBuilder builder)
 	info.basePipelineHandle = VK_NULL_HANDLE;
 	info.basePipelineIndex = -1;
 	CHECK_VULKAN(vkCreateComputePipelines(builder.device, VK_NULL_HANDLE, 1, &info, nullptr, &pimpl->pipeline));
+}
+
+VulkanPipeline VulkanPipeline::from_comp_file(VulkanDevice device, std::string filename)
+{
+	std::vector<char> code = read_file_into_buffer(filename);
+	
+	SpvReflectShaderModule reflect_module;
+	CHECK_SPIRV(spvReflectCreateShaderModule(code.size(), code.data(), &reflect_module));
+
+	auto reflect_bindings = vectorize<spvReflectEnumerateDescriptorBindings>(&reflect_module);
+	std::vector<VkDescriptorSetLayoutBinding> bindings(reflect_bindings.size());
+	for (uint32_t i = 0; i < bindings.size(); i++) {
+		const SpvReflectDescriptorBinding* spv_binding = reflect_bindings[i];
+		VkDescriptorSetLayoutBinding& binding = bindings[i];
+		binding.binding = spv_binding->binding;
+		binding.descriptorType = static_cast<VkDescriptorType>(spv_binding->descriptor_type);
+		binding.descriptorCount = spv_binding->count;
+		binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+		binding.pImmutableSamplers = nullptr;
+	}
+
+	ShaderBuilder fluid_compute_builder = {
+		.device = device,
+		.code = code,
+		.entry_point = "main"
+	};
+
+	ComputePipelineBuilder builder = {
+		.device = device,
+		.compute_shader = VulkanShader(fluid_compute_builder),
+		.bindings = bindings
+	};
+
+	spvReflectDestroyShaderModule(&reflect_module);
+	return VulkanPipeline(builder);
 }
 
 VulkanPipeline::operator VkPipeline()

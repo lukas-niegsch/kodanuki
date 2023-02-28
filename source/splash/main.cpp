@@ -62,8 +62,8 @@ int main()
 	}};
 
 	VulkanPipeline render_fluid = create_render_fluid_pipeline(device, target);
-	VulkanPipeline update_fluid_pressure = create_update_fluid_pipeline_pressure(device);
-	VulkanPipeline update_fluid_simulate = create_update_fluid_pipeline_simulate(device);
+	VulkanPipeline update_fluid_pressure = VulkanPipeline::from_comp_file(device, "assets/shaders/pressure.comp.spv");
+	VulkanPipeline update_fluid_simulate = VulkanPipeline::from_comp_file(device, "assets/shaders/simulate.comp.spv");
 
 	ShaderBridge bridge = {{
 		.device = device,
