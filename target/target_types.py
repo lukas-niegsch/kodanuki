@@ -170,7 +170,4 @@ class SplashdocTarget(Target):
 
 	def execute(self, args):
 		super().execute(args)
-		texfile = f'{args.src_dir}/assets/splashdoc/main.tex'
-		subprocess.call(f'mkdir -p {args.bin_dir} {args.out_dir}', shell = True)
-		subprocess.call(f'pdflatex --output-directory={args.bin_dir} {texfile}', shell = True)
-		subprocess.call(f'mv {args.bin_dir}/main.pdf {args.out_dir}/splash.pdf', shell = True)
+		subprocess.call(f'{args.src_dir}/target/splashdoc.sh', shell = True)
