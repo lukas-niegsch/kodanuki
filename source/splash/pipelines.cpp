@@ -62,7 +62,7 @@ VulkanPipeline create_render_fluid_pipeline(VulkanDevice device, VulkanTarget ta
 	// We want to use instanced rendering for the vertices.
 	std::vector<VkVertexInputBindingDescription> vertex_input_bindings;
 	vertex_input_bindings.push_back({0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX});
-	vertex_input_bindings.push_back({1, align<glm::vec3, 16>::size, VK_VERTEX_INPUT_RATE_INSTANCE});
+	vertex_input_bindings.push_back({1, sizeof(glm::vec3), VK_VERTEX_INPUT_RATE_INSTANCE});
 
 	std::vector<VkVertexInputAttributeDescription> vertex_input_descriptions;
 	vertex_input_descriptions.push_back({0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position)});

@@ -22,21 +22,19 @@ struct ShaderBridgeBuilder
 	VulkanPipeline update_pipeline_simulate;
 };
 
-/**
- * Memory layout:
- * once:
- * - indices
- * - vertices
- * - instance mass
- * - instance pressure
- * - instance density
- *
- * per frame:
- * - MPV
- * - UD
- * - instance position
- * - instance velocity
- */
+struct SimulateTensors
+{
+	VulkanTensor tensor_index;
+	VulkanTensor tensor_vertex;
+	VulkanTensor tensor_mass;
+	VulkanTensor tensor_mvp;
+	VulkanTensor tensor_ud;
+	VulkanTensor tensor_position;
+	VulkanTensor tensor_velocity;
+	VulkanTensor tensor_pressure;
+	VulkanTensor tensor_density;
+};
+
 class ShaderBridge
 {
 public:
@@ -58,6 +56,7 @@ private:
 	void update_descriptor(VkDescriptorSet descriptor, uint32_t binding, VkDescriptorType type, VulkanTensor tensor, uint32_t frame);
 
 	void load_tensor_data(Model model, Scene scene);
+	SimulateTensors create_simulation_tensors(ShaderBridgeBuilder builder);
 
 private:
 	uint32_t count_frame;
@@ -76,15 +75,7 @@ private:
 	std::vector<VkDescriptorSet> update_pressure_descriptors;
 	std::vector<VkDescriptorSet> update_simulate_descriptors;
 	VulkanPipelineCache cache;
-	VulkanTensor tensor_index;
-	VulkanTensor tensor_vertex;
-	VulkanTensor tensor_mass;
-	VulkanTensor tensor_mvp;
-	VulkanTensor tensor_ud;
-	VulkanTensor tensor_position;
-	VulkanTensor tensor_velocity;
-	VulkanTensor tensor_pressure;
-	VulkanTensor tensor_density;
+	SimulateTensors tensors;
 };
 
 }

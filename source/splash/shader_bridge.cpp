@@ -23,17 +23,8 @@ ShaderBridge::ShaderBridge(ShaderBridgeBuilder builder)
 , descriptor_pool(create_descriptor_pool(builder.device))
 , device(builder.device)
 , cache({})
-, tensor_index({device, cache, {1, align_modulo(count_index, 16)}, vt::eInt32, vt::eUnique})
-, tensor_vertex({device, cache, {1, count_vertex * align_modulo(sizeof(Vertex), 16)}, vt::eByte, vt::eUnique})
-, tensor_mass({device, cache, {1, align_modulo(count_instance, 16)}, vt::eFloat, vt::eUnique})
-, tensor_mvp({device, cache, {count_frame, align<MVP, 256>::size}, vt::eByte, vt::eShared})
-, tensor_ud({device, cache, {count_frame, align<UD, 256>::size}, vt::eByte, vt::eShared})
-, tensor_position({device, cache, {count_frame, align_modulo(3 * count_instance, 16)}, vt::eFloat, vt::eUnique})
-, tensor_velocity({device, cache, {count_frame, align_modulo(3 * count_instance, 16)}, vt::eFloat, vt::eUnique})
-, tensor_pressure({device, cache, {count_frame, align_modulo(count_instance, 16)}, vt::eFloat, vt::eUnique})
-, tensor_density({device, cache, {count_frame, align_modulo(count_instance, 16)}, vt::eFloat, vt::eUnique})
+, tensors(create_simulation_tensors(builder))
 {
-	load_tensor_data(builder.model, builder.scene);
 	create_render_descriptors();
 	create_update_pressure_descriptors();
 	create_update_simulate_descriptors();
@@ -60,19 +51,17 @@ void ShaderBridge::bind_render_resources(VkCommandBuffer buffer, uint32_t frame)
 	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_pipeline_layout, 0, 1, &render_descriptors[frame], 0, nullptr);
 	
 	std::vector<VkBuffer> buffers = {
-		tensor_position.get_buffer(),
-		tensor_vertex.get_buffer(),
+		tensors.tensor_vertex.get_buffer(),
+		tensors.tensor_position.get_buffer(),
 	};
 
 	std::vector<VkDeviceSize> offsets = {
-		frame * (tensor_position.get_byte_size() / count_frame),
-		0
+		0,
+		frame * tensors.tensor_position.get_byte_size(1),
 	};
 
-	vkCmdBindVertexBuffers(buffer, 0, 1, &buffers[0], &offsets[0]);
-	vkCmdBindVertexBuffers(buffer, 1, 1, &buffers[1], &offsets[1]);
-	VkBuffer buffer_index = tensor_index.get_buffer();
-	vkCmdBindIndexBuffer(buffer, buffer_index, 0, VK_INDEX_TYPE_UINT32);
+	vkCmdBindVertexBuffers(buffer, 0, 2, buffers.data(), offsets.data());
+	vkCmdBindIndexBuffer(buffer, tensors.tensor_index.get_buffer(), 0, VK_INDEX_TYPE_UINT32);
 }
 
 void ShaderBridge::bind_update_pressure_resources(VkCommandBuffer buffer, uint32_t frame)
@@ -115,7 +104,7 @@ void ShaderBridge::create_render_descriptors()
 	
 	for (uint32_t i = 0; i < count_frame; i++) {
 		update_descriptor(render_descriptors[i], 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			tensor_mvp, 0);
+			tensors.tensor_mvp, 0);
 	}
 }
 
@@ -125,19 +114,19 @@ void ShaderBridge::create_update_pressure_descriptors()
 
 	for (uint32_t i = 0; i < count_frame; i++) {
 		update_descriptor(update_pressure_descriptors[i], 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			tensor_ud, 0);
+			tensors.tensor_ud, 0);
 
 		update_descriptor(update_pressure_descriptors[i], 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			tensor_position, (i - 1) % count_frame);
+			tensors.tensor_position, (i - 1) % count_frame);
 
 		update_descriptor(update_pressure_descriptors[i], 2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			tensor_mass, 0);
+			tensors.tensor_mass, 0);
 
 		update_descriptor(update_pressure_descriptors[i], 3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			tensor_density, i);
+			tensors.tensor_density, i);
 
 		update_descriptor(update_pressure_descriptors[i], 4, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			tensor_pressure, i);
+			tensors.tensor_pressure, i);
 	}
 }
 
@@ -147,54 +136,132 @@ void ShaderBridge::create_update_simulate_descriptors()
 
 	for (uint32_t i = 0; i < count_frame; i++) {
 		update_descriptor(update_simulate_descriptors[i], 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			tensor_ud, 0);
+			tensors.tensor_ud, 0);
 
 		update_descriptor(update_simulate_descriptors[i], 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			tensor_position, (i - 1) % count_frame);
+			tensors.tensor_position, (i - 1) % count_frame);
 
 		update_descriptor(update_simulate_descriptors[i], 2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			tensor_velocity, (i - 1) % count_frame);
+			tensors.tensor_velocity, (i - 1) % count_frame);
 
 		update_descriptor(update_simulate_descriptors[i], 3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			tensor_mass, 0);
+			tensors.tensor_mass, 0);
 
 		update_descriptor(update_simulate_descriptors[i], 4, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			tensor_density, i);
+			tensors.tensor_density, i);
 
 		update_descriptor(update_simulate_descriptors[i], 5, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			tensor_pressure, i);
+			tensors.tensor_pressure, i);
 
 		update_descriptor(update_simulate_descriptors[i], 6, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			tensor_position, i);
+			tensors.tensor_position, i);
 
 		update_descriptor(update_simulate_descriptors[i], 7, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			tensor_velocity, i);
+			tensors.tensor_velocity, i);
 	}
+}
+
+SimulateTensors ShaderBridge::create_simulation_tensors(ShaderBridgeBuilder builder)
+{
+	SimulateTensors tensors = {
+		.tensor_index = {{
+			.device = device,
+			.cache = cache,
+			.shape = {1, align_modulo(count_index, 16)},
+			.dtype = vt::eInt32,
+			.dshare = vt::eUnique
+		}},
+		.tensor_vertex = {{
+			.device = device,
+			.cache = cache,
+			.shape = {1, align_modulo(count_vertex * sizeof(Vertex), 16)},
+			.dtype = vt::eByte,
+			.dshare = vt::eUnique
+		}},
+		.tensor_mass = {{
+			.device = device,
+			.cache = cache,
+			.shape = {1, align_modulo(count_instance, 16)},
+			.dtype = vt::eFloat,
+			.dshare = vt::eUnique
+		}},
+		.tensor_mvp = {{
+			.device = device,
+			.cache = cache,
+			.shape = {count_frame, align<MVP, 256>::size},
+			.dtype = vt::eByte,
+			.dshare = vt::eShared
+		}},
+		.tensor_ud = {{
+			.device = device,
+			.cache = cache,
+			.shape = {count_frame, align<UD, 256>::size},
+			.dtype = vt::eByte,
+			.dshare = vt::eShared
+		}},
+		.tensor_position = {{
+			.device = device,
+			.cache = cache,
+			.shape = {count_frame, align_modulo(3 * count_instance, 4)},
+			.dtype = vt::eFloat,
+			.dshare = vt::eUnique
+		}},
+		.tensor_velocity = {{
+			.device = device,
+			.cache = cache,
+			.shape = {count_frame, align_modulo(3 * count_instance, 16)},
+			.dtype = vt::eFloat,
+			.dshare = vt::eUnique
+		}},
+		.tensor_pressure = {{
+			.device = device,
+			.cache = cache,
+			.shape = {count_frame, align_modulo(count_instance, 16)},
+			.dtype = vt::eFloat,
+			.dshare = vt::eUnique
+		}},
+		.tensor_density = {{
+			.device = device,
+			.cache = cache,
+			.shape = {count_frame, align_modulo(count_instance, 16)},
+			.dtype = vt::eFloat,
+			.dshare = vt::eUnique
+		}}
+	};
+	load_tensor_data(builder.model, builder.scene);
+	return tensors;
 }
 
 void ShaderBridge::load_tensor_data(Model model, Scene scene)
 {
-	tensor_index.load_data(model.indices);
-	tensor_vertex.load_data(model.vertices);
-	tensor_mass.load_data(scene.masses);
+	tensors.tensor_index.load_data(model.indices);
+	tensors.tensor_vertex.load_data(model.vertices);
+	tensors.tensor_mass.load_data(scene.masses);
+
+	tensors.tensor_vertex.with_maps<Vertex>([](std::vector<Vertex>& values) {
+		for (uint32_t i = 0; i < values.size(); i++) {
+			values[i].color = {0.0f, 0.0f, 0.8f}; // color all spheres blue
+		}
+	});
 
 	for (uint32_t frame = 0; frame < count_frame; frame++) {
-		uint32_t offset = frame * count_instance;
-		tensor_position.load_data(scene.positions, offset);
-		tensor_velocity.load_data(scene.velocities, offset);
+		uint32_t offset_position = frame * tensors.tensor_position.get_byte_size(1);
+		tensors.tensor_position.load_data(scene.positions, offset_position);
+		uint32_t offset_velocity = frame * tensors.tensor_velocity.get_byte_size(1);
+		tensors.tensor_velocity.load_data(scene.velocities, offset_velocity);
 	}
 }
 
 void ShaderBridge::update_mvp(const MVP& new_mvp, uint32_t frame)
 {
-	tensor_mvp.with_maps<MVP>([&](std::vector<MVP>& values) {
+	tensors.tensor_mvp.with_maps<align<MVP, 256>>([&](std::vector<align<MVP, 256>>& values) {
 		values[frame] = new_mvp;
 	});
 }
 
 void ShaderBridge::update_ud(const UD& new_ud, uint32_t frame)
 {
-	tensor_mvp.with_maps<UD>([&](std::vector<UD>& values) {
+	tensors.tensor_ud.with_maps<align<UD, 256>>([&](std::vector<align<UD, 256>>& values) {
 		values[frame] = new_ud;
 	});
 }

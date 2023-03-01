@@ -23,7 +23,7 @@ struct TensorState
 };
 
 template <typename T>
-void VulkanTensor::with_maps(std::function<void(std::vector<T>&)> callback)
+void VulkanTensor::with_maps(std::function<void(std::vector<T>&)> callback, uint32_t offset)
 {
 	with_mapped_memory<T>([&](T* data){
 		if (state->dshare == eUnique) {
@@ -31,7 +31,7 @@ void VulkanTensor::with_maps(std::function<void(std::vector<T>&)> callback)
 			copy_buffer(state->primary_buffer.value(), state->staging_buffer.value(), config);
 		}
 
-		std::vector<T> values(data, data + get_byte_size() / sizeof(T));
+		std::vector<T> values(data, data + (get_byte_size() - offset) / sizeof(T));
 		callback(values);
 		std::copy(values.begin(), values.end(), data);
 
@@ -39,11 +39,11 @@ void VulkanTensor::with_maps(std::function<void(std::vector<T>&)> callback)
 			VkBufferCopy config = {0, 0, get_byte_size()};
 			copy_buffer(state->staging_buffer.value(), state->primary_buffer.value(), config);
 		}
-	});
+	}, offset);
 }
 
 template <typename T>
-void VulkanTensor::with_mapped_memory(std::function<void(T*)> callback)
+void VulkanTensor::with_mapped_memory(std::function<void(T*)> callback, uint32_t offset)
 {
 	VkDeviceMemory memory = [&](){
 		switch (state->dshare) {
@@ -54,7 +54,7 @@ void VulkanTensor::with_mapped_memory(std::function<void(T*)> callback)
 	}();
 
 	void* data;
-	CHECK_VULKAN(vkMapMemory(state->device, memory, 0, get_byte_size(), 0, &data));
+	CHECK_VULKAN(vkMapMemory(state->device, memory, offset, get_byte_size() - offset, 0, &data));
 	T* typed_data = static_cast<T*>(data);
 	callback(typed_data);
 	vkUnmapMemory(state->device, memory);
@@ -126,11 +126,10 @@ template <typename T>
 void VulkanTensor::load_data(const std::vector<T> values, uint32_t offset)
 {
 	with_maps<T>([&](std::vector<T>& buffer) {
-		uint32_t max_size = std::min(buffer.size() - offset, values.size());
-		for (uint32_t i = 0; i < max_size; i++) {
-			buffer[i + offset] = values[i];
+		for (uint32_t i = 0; i < buffer.size(); i++) {
+			buffer[i] = values[i];
 		}
-	});
+	}, offset);
 }
 
 }
@@ -185,7 +184,7 @@ std::size_t VulkanTensor::index(std::vector<std::size_t> indices)
 	return flat_idx;
 }
 
-std::size_t VulkanTensor::get_byte_size() const
+std::size_t VulkanTensor::get_byte_size(int32_t axis) const
 {
 	std::size_t size = [&](){
 		switch (state->dtype) {
@@ -199,6 +198,11 @@ std::size_t VulkanTensor::get_byte_size() const
 			throw std::runtime_error("MemoryDataType unsupported!");
 		}
 	}();
+
+	if (axis >= 0) {
+		return state->shape[axis] * size;
+	}
+
 	for (std::size_t dim : state->shape) {
 		size *= dim;
 	}

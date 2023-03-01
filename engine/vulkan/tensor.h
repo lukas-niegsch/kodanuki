@@ -118,10 +118,11 @@ public:
 	 * the data from and to the device. This makes this function inefficient
 	 * for these cases.
 	 *
-	 * @param callback The function that will be execute to modify values. 
+	 * @param callback The function that will be execute to modify values.
+	 * @param offset Skips the first bytes inside the flattended tensor.
 	 */
 	template <typename T>
-	void with_maps(std::function<void(std::vector<T>&)> callback);
+	void with_maps(std::function<void(std::vector<T>&)> callback, uint32_t offset = 0);
 
 	/**
 	 * Executes the given operator for the tensors.
@@ -163,9 +164,10 @@ public:
 	/**
 	 * Returns the size of the tensor in bytes.
 	 *
+	 * @param axis The dimension on which to count or -1 for all.
 	 * @return The number of bytes inside the buffer.
 	 */
-	std::size_t get_byte_size() const;
+	std::size_t get_byte_size(int32_t axis = -1) const;
 
 	/**
 	 * Returns the parameters that are used to build this tensor.
@@ -250,9 +252,10 @@ private:
 	 * to the given size.
 	 *
 	 * @param callback The callback function that will be executed.
+	 * @param offset Skips the first bytes inside the memory.
 	 */
 	template <typename T>
-	void with_mapped_memory(std::function<void(T*)> callback);
+	void with_mapped_memory(std::function<void(T*)> callback, uint32_t offset = 0);
 
 	/**
 	 * Returns the name of the compute shader based on the given types.
