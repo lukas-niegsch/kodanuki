@@ -76,7 +76,7 @@ void ShaderBridge::bind_update_simulate_resources(VkCommandBuffer buffer, uint32
 
 void ShaderBridge::update_descriptor(VkDescriptorSet descriptor, uint32_t binding, VkDescriptorType type, VulkanTensor tensor, uint32_t frame)
 {
-	uint32_t size = tensor.get_byte_size() / count_frame;
+	uint32_t size = tensor.get_byte_size(1);
 
 	VkDescriptorBufferInfo buffer_info = {};
 	buffer_info.buffer = tensor.get_buffer();
@@ -167,7 +167,7 @@ SimulateTensors ShaderBridge::create_simulation_tensors(ShaderBridgeBuilder buil
 		.tensor_index = {{
 			.device = device,
 			.cache = cache,
-			.shape = {1, align_modulo(count_index, 16)},
+			.shape = {1, align_modulo(count_index, 4)},
 			.dtype = vt::eInt32,
 			.dshare = vt::eUnique
 		}},
@@ -181,7 +181,7 @@ SimulateTensors ShaderBridge::create_simulation_tensors(ShaderBridgeBuilder buil
 		.tensor_mass = {{
 			.device = device,
 			.cache = cache,
-			.shape = {1, align_modulo(count_instance, 16)},
+			.shape = {1, align_modulo(count_instance, 4)},
 			.dtype = vt::eFloat,
 			.dshare = vt::eUnique
 		}},
@@ -209,21 +209,21 @@ SimulateTensors ShaderBridge::create_simulation_tensors(ShaderBridgeBuilder buil
 		.tensor_velocity = {{
 			.device = device,
 			.cache = cache,
-			.shape = {count_frame, align_modulo(3 * count_instance, 16)},
+			.shape = {count_frame, align_modulo(3 * count_instance, 4)},
 			.dtype = vt::eFloat,
 			.dshare = vt::eUnique
 		}},
 		.tensor_pressure = {{
 			.device = device,
 			.cache = cache,
-			.shape = {count_frame, align_modulo(count_instance, 16)},
+			.shape = {count_frame, align_modulo(count_instance, 4)},
 			.dtype = vt::eFloat,
 			.dshare = vt::eUnique
 		}},
 		.tensor_density = {{
 			.device = device,
 			.cache = cache,
-			.shape = {count_frame, align_modulo(count_instance, 16)},
+			.shape = {count_frame, align_modulo(count_instance, 4)},
 			.dtype = vt::eFloat,
 			.dshare = vt::eUnique
 		}}
