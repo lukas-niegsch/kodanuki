@@ -4,7 +4,6 @@
 #include "engine/vulkan/debug.h"
 #include "engine/vulkan/device.h"
 #include "engine/vulkan/window.h"
-#include "engine/vulkan/memory.h"
 #include "engine/vulkan/target.h"
 #include "engine/vulkan/renderer.h"
 #include "source/splash/model.h"
@@ -89,15 +88,15 @@ int main()
 		handle_user_inputs(config, dts, frame, window, target, bridge, player_position, player_rotation);
 		show_config(config, dts);
 
-		auto buffer = bridge.get_buffer_ud(frame);
-		buffer[0].delta_time = dts;
-		buffer[0].kernel_size = 1.2;
-		buffer[0].stiffness = 0.0;
-		buffer[0].rho_0 = 1.0;
-		buffer[0].gravity = 10;
-		buffer[0].viscosity = 0.2;
-		buffer[0].particle_count = instance_count;
-		buffer.slow_push();
+		UD new_ud;
+		new_ud.delta_time = dts;
+		new_ud.kernel_size = 1.2;
+		new_ud.stiffness = 0.0;
+		new_ud.rho_0 = 1.0;
+		new_ud.gravity = 10;
+		new_ud.viscosity = 0.2;
+		new_ud.particle_count = instance_count;
+		bridge.update_ud(new_ud, frame);
 
 		renderer.call_command([&](VkCommandBuffer buffer) {
 			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, update_fluid_pressure);

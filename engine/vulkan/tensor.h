@@ -138,6 +138,22 @@ public:
 
 public:
 	/**
+	 * Loads some values into the tensor.
+	 *
+	 * This is the same as replacing every entry inside the flattened tensor.
+	 * Too little or too many values will be ignored, only valid memory will
+	 * be loaded. This ignores the soft type checks and allows the used to
+	 * specify arbitrary data. However, ideally the template type matches the
+	 * dtype of the tensor.
+	 *
+	 * @param values The new values that this tensor should receive.
+	 * @param offset Skip the first values inside the tensor.
+	 */
+	template <typename T>
+	void load_data(const std::vector<T> values, uint32_t offset = 0);
+
+public:
+	/**
 	 * Returns the primary buffer for this tensor.
 	 *
 	 * @return The primary buffer for this tensor.

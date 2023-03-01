@@ -67,6 +67,7 @@ Model load_obj_model(std::string filename)
 	for (const auto& shape : shapes) {
 		for (const auto& index : shape.mesh.indices) {
 			Vertex vertex = {};
+			vertex.color = {0.0f, 0.0f, 0.8f}; // default
 
 			if (index.vertex_index >= 0) {
 				vertex.position = {

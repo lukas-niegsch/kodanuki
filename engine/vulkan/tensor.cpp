@@ -122,6 +122,17 @@ void VulkanTensor::slow_execute_float_fill(const Operator<VulkanTensor, T>& ops)
 	});
 }
 
+template <typename T>
+void VulkanTensor::load_data(const std::vector<T> values, uint32_t offset)
+{
+	with_maps<T>([&](std::vector<T>& buffer) {
+		uint32_t max_size = std::min(buffer.size() - offset, values.size());
+		for (uint32_t i = 0; i < max_size; i++) {
+			buffer[i + offset] = values[i];
+		}
+	});
+}
+
 }
 
 #else // INCLUDE_TENSOR_INLINE_HEADER

@@ -13,7 +13,7 @@ layout (binding = 0) uniform UD {
 	uint particle_count;
 } ud;
 
-layout (binding = 1) buffer pos1 { vec4 inPosition[]; };
+layout (binding = 1) buffer pos1 { vec3 inPosition[]; };
 layout (binding = 2) buffer mass { float inMass[]; };
 layout (binding = 3) buffer dens { float outDensity[]; };
 layout (binding = 4) buffer pres { float outPressure[]; };
@@ -81,7 +81,7 @@ float calculate_density(vec3 x, float m, float h)
 	float density = 0;
 
 	for (uint j = 0; j < ud.particle_count; j++) {
-		density += m * cubic_spline_kernel(x, inPosition[j].xyz, h);
+		density += m * cubic_spline_kernel(x, inPosition[j], h);
 	}
 
 	return density;
@@ -110,6 +110,6 @@ void main()
 		return;
 	}
 
-	outDensity[gID] = calculate_density(inPosition[gID].xyz, inMass[gID], ud.kernel_size);
+	outDensity[gID] = calculate_density(inPosition[gID], inMass[gID], ud.kernel_size);
 	outPressure[gID] = calculate_pressure(outDensity[gID], ud.rho_0, ud.stiffness);
 }

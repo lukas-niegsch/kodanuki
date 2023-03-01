@@ -199,12 +199,6 @@ void handle_user_inputs(Config& config, float dts, uint32_t frame, VulkanWindow 
 	new_mvp.view = glm::lookAt(player_position, player_position + forward, world_up);
 	new_mvp.projection = glm::perspective(glm::radians(45.0f), extent.width / (float) extent.height, 0.1f, config.render_distance);
 	bridge.update_mvp(new_mvp, frame);
-
-	auto buffer = bridge.get_buffer_mvp(frame);
-	buffer[0].model = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(1.0f, 0.0f, 1.0f));
-	buffer[0].view = glm::lookAt(player_position, player_position + forward, world_up);
-	buffer[0].projection = glm::perspective(glm::radians(45.0f), extent.width / (float) extent.height, 0.1f, config.render_distance);
-	buffer.slow_push();
 }
 
 }

@@ -20,13 +20,13 @@ layout (binding = 0) uniform UD {
 	uint particle_count;
 } ud;
 
-layout (binding = 1) buffer pos1 { vec4 inPosition[]; };
-layout (binding = 2) buffer vel1 { vec4 inVelocity[]; };
+layout (binding = 1) buffer pos1 { vec3 inPosition[]; };
+layout (binding = 2) buffer vel1 { vec3 inVelocity[]; };
 layout (binding = 3) buffer mass { float inMass[]; };
 layout (binding = 4) buffer dens { float inDensity[]; };
 layout (binding = 5) buffer pres { float inPressure[]; };
-layout (binding = 6) buffer pos2 { vec4 outPosition[]; };
-layout (binding = 7) buffer vel2 { vec4 outVelocity[]; };
+layout (binding = 6) buffer pos2 { vec3 outPosition[]; };
+layout (binding = 7) buffer vel2 { vec3 outVelocity[]; };
 
 void main()
 {
@@ -38,6 +38,6 @@ void main()
 	}
 
 	// Placeholder for some more complicated calculation.
-	outPosition[gID].xyz = inPosition[gID].xyz + ud.delta_time * inVelocity[gID].xyz;
-	outVelocity[gID].xyz = inVelocity[gID].xyz;
+	outPosition[gID] = inPosition[gID] + ud.delta_time * inVelocity[gID];
+	outVelocity[gID] = inVelocity[gID];
 }
