@@ -39,6 +39,13 @@ TEST_CASE("type_union")
 }
 
 void example(float a, int b, double c);
+void empty_example();
+
+struct ExampleStruct
+{
+	static int static_example(int, int);
+	int non_static_example(float);
+};
 
 TEST_CASE("signature")
 {
@@ -71,5 +78,30 @@ TEST_CASE("signature")
 		float,
 		reverse_signature_t<2, example>
 	>);
-}
 
+	CHECK(std::is_same_v<
+		void,
+		return_signature_t<example>
+	>);
+
+	CHECK(std::is_same_v<
+		std::tuple<float, int, double>,
+		params_signature_t<example>
+	>);
+
+	CHECK(std::is_same_v<
+		std::tuple<>,
+		params_signature_t<empty_example>
+	>);
+
+	CHECK(std::is_same_v<
+		int,
+		return_signature_t<ExampleStruct::static_example>
+	>);
+
+	// Does not work yet!
+	// CHECK(std::is_same_v<
+	// 	int,
+	// 	return_signature_t<ExampleStruct::non_static_example>
+	// >);
+}
