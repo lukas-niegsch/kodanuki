@@ -2,6 +2,7 @@
 #include "engine/vulkan/debug.h"
 #include <optional>
 #include <iostream>
+#include <cmath>
 
 namespace kodanuki
 {
@@ -166,7 +167,8 @@ VulkanTensor::VulkanTensor(TensorBuilder builder)
 	state->shape = builder.shape;
 	state->dtype = builder.dtype;
 	state->dshare = builder.dshare;
-	create_command_buffer();
+	state->command_pool = create_command_pool(state->device, state->device.queue_family_index());
+	state->transfer_buffer = create_command_buffers(state->device, state->command_pool, 1)[0];
 	create_primary_buffer();
 	create_staging_buffer();
 }
@@ -198,11 +200,15 @@ std::size_t VulkanTensor::get_byte_size(int32_t axis) const
 			throw std::runtime_error("MemoryDataType unsupported!");
 		}
 	}();
+	return size * numel(axis);
+}
 
+std::size_t VulkanTensor::numel(int32_t axis) const
+{
+	std::size_t size = 1;
 	if (axis >= 0) {
 		return state->shape[axis] * size;
 	}
-
 	for (std::size_t dim : state->shape) {
 		size *= dim;
 	}
@@ -239,24 +245,6 @@ VulkanTensor::MemoryDataType VulkanTensor::get_dtype() const
 VulkanTensor::MemorySharing VulkanTensor::get_dshare() const
 {
 	return state->dshare;
-}
-
-void VulkanTensor::create_command_buffer()
-{
-	VkCommandPoolCreateInfo pool_info;
-	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	pool_info.pNext = nullptr;
-	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	pool_info.queueFamilyIndex = state->device.queue_family_index();
-	CHECK_VULKAN(vkCreateCommandPool(state->device, &pool_info, nullptr, &state->command_pool));
-
-	VkCommandBufferAllocateInfo allocate_info = {};
-	allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocate_info.pNext = nullptr;
-	allocate_info.commandPool = state->command_pool;
-	allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocate_info.commandBufferCount = 1;
-	CHECK_VULKAN(vkAllocateCommandBuffers(state->device, &allocate_info, &state->transfer_buffer));
 }
 
 void VulkanTensor::create_primary_buffer()
@@ -382,6 +370,35 @@ std::string VulkanTensor::get_shader_name(MemoryDataType dtype, OperatorType oty
 	}();
 	ss << ".comp";
 	return ss.str();
+}
+
+VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)
+{
+	assert(tensorA.get_shape() == tensorB.get_shape());
+	assert(tensorA.get_dtype() == tensorB.get_dtype());
+	auto& cache = tensorA.state->cache;
+	auto& device = tensorA.state->device;
+
+	if (!cache.contains("op_linear")) {
+		cache.emplace("op_linear", VulkanPipeline::from_comp_file(device, "assets/shaders/vt_linear.comp.spv"));
+	}
+
+	// device.execute([&](VkCommandBuffer buffer) {
+	// 	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, cache["op_linear"]);
+	// 	bridge.bind_update_pressure_resources(buffer, frame);
+	//  std::size_t count = std::ceil(std::cbrt(tensorA.numel()));
+	// 	vkCmdDispatch(buffer, count, count, count);
+	// }, 2);
+
+	VulkanTensor output(tensorA.get_builder());
+	Operator<VulkanTensor, float> ops = {{
+		.type = OperatorType::eLinear,
+		.constants = {1.0f, 1.0f},
+		.mutables = {Mutability::eConstant, Mutability::eConstant, Mutability::eMutable},
+		.tensors = {tensorA, tensorB, output}
+	}};
+	VulkanTensor::execute(ops);
+	return output;
 }
 
 }

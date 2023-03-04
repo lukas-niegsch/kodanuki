@@ -69,6 +69,10 @@ public:
 	// Returns the used queue family index.
 	uint32_t queue_family_index();
 
+public:
+	// Executes the given command for the device.
+	void execute(std::function<void(VkCommandBuffer)> command);
+
 private:
 	// The abstract pointer to the implementation.
 	std::shared_ptr<struct DeviceState> pimpl;

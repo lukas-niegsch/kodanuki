@@ -2,6 +2,7 @@
 #include "engine/vulkan/device.h"
 #include "engine/vulkan/pipeline.h"
 #include "engine/vulkan/operator.h"
+#include "engine/utility/signature.h"
 #include <vector>
 #include <memory>
 #include <functional>
@@ -95,6 +96,16 @@ public:
 
 public:
 	/**
+	 * Creates a new tensor containing the sum of the input tensors.
+	 *
+	 * @param tensorA The first summand tensor.
+	 * @param tensorB The second summand tensor.
+	 * @return The tensor containing the result.
+	 */
+	static VulkanTensor add(VulkanTensor tensorA, VulkanTensor tensorB);
+
+public:
+	/**
 	 * Converts the given indices to the index of the flattened tensor.
 	 *
 	 * This will throw an exception if the number of indices does not match
@@ -182,6 +193,14 @@ public:
 	 * @return The size of each dimension.
 	 */
 	std::vector<std::size_t> get_shape() const;
+
+	/**
+	 * Returns the number of elements.
+	 *
+	 * @param axis The dimension on which to count or -1 for all.
+	 * @return The number of elements.
+	 */
+	std::size_t numel(int32_t axis = -1) const;
 
 	/**
 	 * Returns the data type of the elements in this tensor.

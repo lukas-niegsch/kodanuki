@@ -60,21 +60,6 @@ private:
 template <typename Tensor>
 struct TensorOperator
 {
-	static Tensor add(Tensor& tensorA, Tensor& tensorB)
-	{
-		assert(tensorA.get_shape() == tensorB.get_shape());
-		assert(tensorA.get_dtype() == tensorB.get_dtype());
-		Tensor output(tensorA.get_builder());
-		Operator<Tensor, float> ops = {{
-			.type = OperatorType::eLinear,
-			.constants = {1.0f, 1.0f},
-			.mutables = {Mutability::eConstant, Mutability::eConstant, Mutability::eMutable},
-			.tensors = {tensorA, tensorB, output}
-		}};
-		Tensor::execute(ops);
-		return output;
-	}
-
 	template <typename T>
 	static Tensor fill(Tensor& tensor, const T& value)
 	{

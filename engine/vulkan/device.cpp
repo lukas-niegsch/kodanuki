@@ -1,5 +1,6 @@
 #include "engine/vulkan/device.h"
 #include "engine/vulkan/debug.h"
+#include "engine/vulkan/utility.h"
 #include <cassert>
 
 namespace kodanuki
@@ -97,12 +98,16 @@ struct DeviceState
 	VkDevice logical_device;
 	uint32_t queue_index;
 	std::vector<VkQueue> queues;
+	VkCommandPool execute_pool;
+	VkCommandBuffer execute_buffer;
+	VkQueue execute_queue;
 	~DeviceState();
 };
 
 DeviceState::~DeviceState()
 {
 	CHECK_VULKAN(vkDeviceWaitIdle(logical_device));
+	vkDestroyCommandPool(logical_device, execute_pool, nullptr);
 	vkDestroyDevice(logical_device, nullptr);
 	vkDestroyInstance(instance, nullptr);
 }
@@ -116,6 +121,9 @@ VulkanDevice::VulkanDevice(DeviceBuilder builder)
 	auto logical_device = create_logical_device(physical_device, queue_family, builder.device_extensions);
 	auto queues = get_queue_handles(logical_device, queue_family);
 	pimpl = std::make_shared<DeviceState>(instance, physical_device, logical_device, queue_index, queues);
+	pimpl->execute_queue = queues.back();
+	pimpl->execute_pool = create_command_pool(logical_device, queue_index);
+	pimpl->execute_buffer = create_command_buffers(logical_device, pimpl->execute_pool, 1)[0];
 }
 
 VulkanDevice::operator VkDevice()
@@ -141,6 +149,31 @@ std::vector<VkQueue> VulkanDevice::queues()
 uint32_t VulkanDevice::queue_family_index()
 {
 	return pimpl->queue_index;
+}
+
+void VulkanDevice::execute(std::function<void(VkCommandBuffer)> command)
+{
+	VkCommandBuffer buffer = pimpl->execute_buffer;
+	CHECK_VULKAN(vkResetCommandBuffer(buffer, 0));
+	
+	VkCommandBufferBeginInfo buffer_info = {};
+	buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	CHECK_VULKAN(vkBeginCommandBuffer(buffer, &buffer_info));
+	command(buffer);
+	CHECK_VULKAN(vkEndCommandBuffer(buffer));
+
+	VkSubmitInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	info.waitSemaphoreCount = 0;
+	info.pWaitSemaphores = nullptr;
+	info.pWaitDstStageMask = nullptr;
+	info.commandBufferCount = 1;
+	info.pCommandBuffers = &buffer;
+	info.signalSemaphoreCount = 0;
+	info.pSignalSemaphores = nullptr;
+
+	CHECK_VULKAN(vkQueueSubmit(pimpl->execute_queue, 1, &info, nullptr));
+	CHECK_VULKAN(vkQueueWaitIdle(pimpl->execute_queue));
 }
 
 }

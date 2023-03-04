@@ -62,4 +62,30 @@ VkDescriptorPool create_descriptor_pool(VulkanDevice device)
 	return descriptor_pool;
 }
 
+VkCommandPool create_command_pool(VkDevice device, uint32_t queue_index)
+{
+	VkCommandPoolCreateInfo pool_info;
+	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	pool_info.pNext = nullptr;
+	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	pool_info.queueFamilyIndex = queue_index;
+
+	VkCommandPool command_pool;
+	CHECK_VULKAN(vkCreateCommandPool(device, &pool_info, nullptr, &command_pool));
+	return command_pool;
+}
+
+std::vector<VkCommandBuffer> create_command_buffers(VkDevice device, VkCommandPool pool, uint32_t count)
+{
+	VkCommandBufferAllocateInfo buffer_info = {};
+	buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	buffer_info.commandPool = pool;
+	buffer_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	buffer_info.commandBufferCount = count;
+
+	std::vector<VkCommandBuffer> result(count);
+	CHECK_VULKAN(vkAllocateCommandBuffers(device, &buffer_info, result.data()));
+	return result;
+}
+
 }
