@@ -56,9 +56,9 @@ TEST_CASE("Tensor API usage example")
 	// The tensors have allocated their memory, but are currently empty.
 	// We can load data and do other things with the tensor using operators.
 	// An operator can be anything that has input tensors and produces some
-	// output tensors. Inplace-Operators have an "i" before the name.
-	vt::ifill(a, 0.0f);
-	vt::ifill(b, 1.0f);
+	// output tensors.
+	vt::fill(a, 0.0f);
+	vt::fill(b, 1.0f);
 	VulkanTensor c = vt::add(a, b);
 	(void) c;
 

@@ -1,7 +1,6 @@
 #pragma once
 #include "engine/vulkan/device.h"
 #include "engine/vulkan/pipeline.h"
-#include "engine/vulkan/operator.h"
 #include "engine/utility/signature.h"
 #include <vector>
 #include <memory>
@@ -19,7 +18,7 @@ namespace kodanuki
  * also free any allocated memory. Currently all tensor operation will be
  * executed synchronously and wait for completion, this will be changed later.
  */
-class VulkanTensor : public TensorOperator<VulkanTensor>
+class VulkanTensor
 {
 public:
 	/**
@@ -104,6 +103,15 @@ public:
 	 */
 	static VulkanTensor add(VulkanTensor tensorA, VulkanTensor tensorB);
 
+	/**
+	 * Fills the given tensor with some value.
+	 *
+	 * @param tensor The tensor to fill.
+	 * @param value The value the tensor should contain afterwards.
+	 */
+	template <typename T>
+	static void fill(VulkanTensor& tensor, const T& value);
+
 public:
 	/**
 	 * Converts the given indices to the index of the flattened tensor.
@@ -134,19 +142,6 @@ public:
 	 */
 	template <typename T>
 	void with_maps(std::function<void(std::vector<T>&)> callback, uint32_t offset = 0);
-
-	/**
-	 * Executes the given operator for the tensors.
-	 *
-	 * The operator contains information about which tensors are used as
-	 * input or output. The operation might be executed asynchronous. The
-	 * only guarantee is that the order of operations based on their call
-	 * time will be kept and the data stays consistent.
-	 *
-	 * @param ops The operator that should be executed.
-	 */
-	template <typename T>
-	static void execute(const Operator<VulkanTensor, T>& ops);
 
 public:
 	/**
@@ -276,25 +271,14 @@ private:
 	template <typename T>
 	void with_mapped_memory(std::function<void(T*)> callback, uint32_t offset = 0);
 
-	/**
-	 * Returns the name of the compute shader based on the given types.
-	 *
-	 * The name will have the form: "vt_dtype_otype.comp".
-	 *
-	 * @param dtype The data type that the shader uses.
-	 * @param otype The operator type that the shader uses.
-	 * @return The name of the compute shader.
-	 */
-	static std::string get_shader_name(MemoryDataType dtype, OperatorType otype);
-
 private:
 	// TODO: Implement compute shader version.
 	template <typename T>
-	static void slow_execute_float_linear(const Operator<VulkanTensor, T>& ops);
+	static void slow_execute_linear(VulkanTensor tensorZ, T alpha, VulkanTensor tensorA, T beta, VulkanTensor tensorB);
 
 	// TODO: Implement compute shader version.
 	template <typename T>
-	static void slow_execute_float_fill(const Operator<VulkanTensor, T>& ops);
+	static void slow_execute_fill(VulkanTensor tensor, T value);
 
 private:
 	// Shared state to automatically delete unused instances.
