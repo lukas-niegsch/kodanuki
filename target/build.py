@@ -23,4 +23,5 @@ if __name__ == '__main__':
 	targets.add_target('run', RunTarget())
 	targets.add_target('gdb', GdbTarget())
 	targets.add_target('valgrind', ValgrindTarget())
+	targets.add_target('splashdoc', SplashdocTarget())
 	targets.run_target(parse_arguments())
