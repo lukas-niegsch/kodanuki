@@ -16,9 +16,18 @@ namespace kodanuki
  * can be copied freely and will be deleted once it is no longer used. This
  * will also free any allocated memory. Currently all tensor operation will be
  * executed synchronously and wait for completion.
+ *
+ * TODO: Implement vulkan operators using GPU shaders.
+ * Vulkan operations are currently executed very very inefficiently. I just
+ * want to do some fluid simulation but implementing GPU shaders for each of
+ * them will take some more time.
  */
 class VulkanTensor
 {
+private:
+	// Make each tensor a mutliple of this number of bits.
+	const std::size_t INTERNAL_MEMORY_ALIGNMENT_BITSIZE = 256;
+
 public:
 	/**
 	 * An enum that specifies whether both device or host sees the memory
@@ -266,6 +275,15 @@ private:
 	 */
 	template <typename T>
 	void with_mapped_memory(std::function<void(T*)> callback, uint32_t offset = 0);
+
+	/**
+	 * Updates the given descriptor with the memory inside the buffer.
+	 *
+	 * @param descriptor The descriptor that will be changed.
+	 * @param type The type of the layout binding.
+	 * @param type The number of the layout binding.
+	 */
+	void update_descriptor(VkDescriptorSet descriptor, VkDescriptorType type, uint32_t binding);
 
 public:
 	// TODO: Implement compute shader version.

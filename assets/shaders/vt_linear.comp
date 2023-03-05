@@ -20,7 +20,7 @@ void main()
 		gl_GlobalInvocationID.z * gl_NumWorkGroups.x * gl_NumWorkGroups.y *
 		gl_WorkGroupSize.x * gl_WorkGroupSize.y;
 
-	if (params.tensor_size >= index) {
+	if (index >= params.tensor_size) {
 		return;
 	}
 

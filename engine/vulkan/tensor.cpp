@@ -8,6 +8,11 @@
 namespace kodanuki
 {
 
+uint32_t align_modulo(uint32_t value, uint32_t mod)
+{
+	return (value / mod + (value % mod != 0)) * mod;
+}
+
 struct TensorState
 {
 	VulkanDevice device;
@@ -282,7 +287,7 @@ void VulkanTensor::create_buffer(VkBuffer& buffer, VkDeviceMemory& memory, VkBuf
 {
 	VkBufferCreateInfo buffer_info = {};
 	buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	buffer_info.size = get_byte_size();
+	buffer_info.size = align_modulo(get_byte_size(), INTERNAL_MEMORY_ALIGNMENT_BITSIZE);
 	buffer_info.usage = usage;
 	buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	CHECK_VULKAN(vkCreateBuffer(state->device, &buffer_info, nullptr, &buffer));
@@ -319,12 +324,80 @@ void VulkanTensor::copy_buffer(VkBuffer source_buffer, VkBuffer target_buffer, V
 	CHECK_VULKAN(vkDeviceWaitIdle(state->device));
 }
 
+void VulkanTensor::update_descriptor(VkDescriptorSet descriptor, VkDescriptorType type, uint32_t binding)
+{
+	VkDescriptorBufferInfo buffer_info = {};
+	buffer_info.buffer = get_buffer();
+	buffer_info.offset = 0;
+	buffer_info.range = VK_WHOLE_SIZE;
+
+	VkWriteDescriptorSet descriptor_write = {};
+	descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	descriptor_write.pNext = nullptr;
+	descriptor_write.dstSet = descriptor;
+	descriptor_write.dstBinding = binding;
+	descriptor_write.dstArrayElement = 0;
+	descriptor_write.descriptorCount = 1;
+	descriptor_write.descriptorType = type;
+	descriptor_write.pImageInfo = nullptr;
+	descriptor_write.pBufferInfo = &buffer_info;
+	descriptor_write.pTexelBufferView = nullptr;
+
+	vkUpdateDescriptorSets(state->device, 1, &descriptor_write, 0, nullptr);
+}
+
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)
 {
+	/*
+	TODO:
+	Most of the stuff inside this function does not have to be
+	specified here. For example each shader will have some uniform constants,
+	so we could use one tensor for that and not allocate it every operator.
+	Also all the stuff with the descriptor initialization.
+	*/
 	assert(tensorA.get_shape() == tensorB.get_shape());
 	assert(tensorA.get_dtype() == tensorB.get_dtype());
 	VulkanTensor output(tensorA.get_builder());
-	slow_execute_linear(output, 1.0f, tensorA, 1.0f, tensorB);
+	auto& device = tensorA.state->device;
+	auto& cache = tensorA.state->cache;
+
+	VulkanTensor constants = {{
+		.device = device,
+		.cache = cache,
+		.shape = {4 * 3},
+		.dtype = VulkanTensor::eByte,
+		.dshare = VulkanTensor::eShared
+	}};
+	constants.with_maps<uint32_t>([&](auto& values) {
+		values[0] = tensorA.numel();
+	});
+	constants.with_maps<float>([&](auto& values) {
+		values[1] = 1.0f;
+		values[2] = 1.0f;
+	});
+
+	if (!cache.contains("vt_linear")) {
+		cache.emplace("vt_linear", VulkanPipeline::from_comp_file(device, "assets/shaders/vt_linear.comp.spv"));
+	}
+	VulkanPipeline shader = cache.at("vt_linear");
+	VkPipelineLayout shader_layout = shader.get_pipeline_layout();
+	VkDescriptorPool descriptor_pool = create_descriptor_pool(device);
+	VkDescriptorSetLayout descriptor_layout = shader.get_descriptor_layout();
+	VkDescriptorSet descriptor = create_descriptor_sets(device, descriptor_pool, descriptor_layout, 1)[0];
+
+	device.execute([&](VkCommandBuffer buffer) {
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader);
+		constants.update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0);
+		tensorA.update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1);
+		tensorB.update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2);
+		output.update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3);
+		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader_layout, 0, 1, &descriptor, 0, nullptr);
+		std::size_t count = std::ceil(tensorA.numel() / 64.0f);
+		vkCmdDispatch(buffer, count, 8, 8);
+	});
+
+	CHECK_VULKAN(vkDeviceWaitIdle(device));
+	vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
 	return output;
 }
 
