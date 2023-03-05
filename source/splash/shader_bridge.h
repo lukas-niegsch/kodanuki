@@ -41,7 +41,6 @@ public:
 
 private:
 	void create_render_descriptors();
-	void update_descriptor(VkDescriptorSet descriptor, uint32_t binding, VkDescriptorType type, VulkanTensor tensor, uint32_t frame);
 	RenderTensors create_render_tensors(ShaderBridgeBuilder builder);
 	void load_tensor_data(Model model);
 

@@ -230,6 +230,16 @@ public:
 	 */
 	MemorySharing get_dshare() const;
 
+public:
+	/**
+	 * Updates the given descriptor with the memory inside the buffer.
+	 *
+	 * @param descriptor The descriptor that will be changed.
+	 * @param type The type of the layout binding.
+	 * @param type The number of the layout binding.
+	 */
+	void update_descriptor(VkDescriptorSet descriptor, VkDescriptorType type, uint32_t binding);
+
 private:
 	/**
 	 * Creates the command pool and the command buffer.
@@ -289,15 +299,6 @@ private:
 	 */
 	template <typename T>
 	void with_mapped_memory(std::function<void(T*)> callback, uint32_t offset = 0);
-
-	/**
-	 * Updates the given descriptor with the memory inside the buffer.
-	 *
-	 * @param descriptor The descriptor that will be changed.
-	 * @param type The type of the layout binding.
-	 * @param type The number of the layout binding.
-	 */
-	void update_descriptor(VkDescriptorSet descriptor, VkDescriptorType type, uint32_t binding);
 
 	/**
 	 * Executes the given shader for the tensor and constant inputs.

@@ -57,37 +57,12 @@ void ShaderBridge::bind_render_resources(VkCommandBuffer buffer, uint32_t frame)
 	vkCmdBindIndexBuffer(buffer, tensors.tensor_index.get_buffer(), 0, VK_INDEX_TYPE_UINT32);
 }
 
-void ShaderBridge::update_descriptor(VkDescriptorSet descriptor, uint32_t binding, VkDescriptorType type, VulkanTensor tensor, uint32_t frame)
-{
-	uint32_t size = tensor.get_byte_size(1);
-
-	VkDescriptorBufferInfo buffer_info = {};
-	buffer_info.buffer = tensor.get_buffer();
-	buffer_info.offset = frame * size;
-	buffer_info.range = size;
-
-	VkWriteDescriptorSet descriptor_write = {};
-	descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptor_write.pNext = nullptr;
-	descriptor_write.dstSet = descriptor;
-	descriptor_write.dstBinding = binding;
-	descriptor_write.dstArrayElement = 0;
-	descriptor_write.descriptorCount = 1;
-	descriptor_write.descriptorType = type;
-	descriptor_write.pImageInfo = nullptr;
-	descriptor_write.pBufferInfo = &buffer_info;
-	descriptor_write.pTexelBufferView = nullptr;
-
-	vkUpdateDescriptorSets(device, 1, &descriptor_write, 0, nullptr);
-}
-
 void ShaderBridge::create_render_descriptors()
 {
 	render_descriptors = create_descriptor_sets(device, descriptor_pool, render_descriptor_layout, count_frame);
 	
 	for (uint32_t i = 0; i < count_frame; i++) {
-		update_descriptor(render_descriptors[i], 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			tensors.tensor_mvp, 0);
+		tensors.tensor_mvp.update_descriptor(render_descriptors[i], VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0);
 	}
 }
 
