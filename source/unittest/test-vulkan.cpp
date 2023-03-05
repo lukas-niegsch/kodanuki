@@ -126,3 +126,53 @@ TEST_CASE("adding two tensors works")
 		CHECK(values[2] == doctest::Approx(-1.0f));
 	});
 }
+
+TEST_CASE("tensor operator overloading works")
+{
+	VulkanDevice device = create_default_device();
+	VulkanPipelineCache cache;
+	VulkanTensor a = {{
+		.device = device,
+		.cache = cache,
+		.shape = {1, 3},
+		.dtype = VulkanTensor::eFloat,
+		.dshare = VulkanTensor::eUnique
+	}};
+	a.with_maps<float>([](std::vector<float>& values) {
+		values[0] = 1.2f;
+		values[1] = 3.1f;
+		values[2] = 0.0f;
+	});
+	VulkanTensor b = {{
+		.device = device,
+		.cache = cache,
+		.shape = {1, 3},
+		.dtype = VulkanTensor::eFloat,
+		.dshare = VulkanTensor::eUnique
+	}};
+	b.with_maps<float>([](std::vector<float>& values) {
+		values[0] = 1.7f;
+		values[1] = 2.1f;
+		values[2] = -1.0f;
+	});
+	VulkanTensor c = {{
+		.device = device,
+		.cache = cache,
+		.shape = {1, 3},
+		.dtype = VulkanTensor::eFloat,
+		.dshare = VulkanTensor::eUnique
+	}};
+	c.with_maps<float>([](std::vector<float>& values) {
+		values[0] = 1.9f;
+		values[1] = 2.1f;
+		values[2] = -1.3f;
+	});
+
+	// elementwise operator overloading
+	VulkanTensor z = vt::pow(4.0f * a + 3.0f * b * c + 3.0f, 2);
+	z.with_maps<float>([](std::vector<float>& values) {
+		CHECK(values[0] == doctest::Approx(305.9f));
+		CHECK(values[1] == doctest::Approx(819.667f));
+		CHECK(values[2] == doctest::Approx(47.61f));
+	});
+}

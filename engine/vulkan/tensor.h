@@ -12,11 +12,10 @@ namespace kodanuki
 
 /**
  * The vulkan tensor is an tensor implementation that allows for GPU storage.
- * All the operations for this tensor are implemented using CRTP pattern. This
- * class uses a shared pointer to store it variables. That means that it can
- * be copied freely and will be deleted once it is no longer used. This will
- * also free any allocated memory. Currently all tensor operation will be
- * executed synchronously and wait for completion, this will be changed later.
+ * This class uses a shared pointer to store it variables. That means that it
+ * can be copied freely and will be deleted once it is no longer used. This
+ * will also free any allocated memory. Currently all tensor operation will be
+ * executed synchronously and wait for completion.
  */
 class VulkanTensor
 {
@@ -94,14 +93,11 @@ public:
 	VulkanTensor(TensorBuilder builder);
 
 public:
-	/**
-	 * Creates a new tensor containing the sum of the input tensors.
-	 *
-	 * @param tensorA The first summand tensor.
-	 * @param tensorB The second summand tensor.
-	 * @return The tensor containing the result.
-	 */
 	static VulkanTensor add(VulkanTensor tensorA, VulkanTensor tensorB);
+	static VulkanTensor add(VulkanTensor tensorA, float scalar);
+	static VulkanTensor mul(VulkanTensor tensorA, VulkanTensor tensorB);
+	static VulkanTensor mul(VulkanTensor tensorA, float scalar);
+	static VulkanTensor pow(VulkanTensor tensorA, uint32_t exponent);
 
 	/**
 	 * Fills the given tensor with some value.
@@ -271,7 +267,7 @@ private:
 	template <typename T>
 	void with_mapped_memory(std::function<void(T*)> callback, uint32_t offset = 0);
 
-private:
+public:
 	// TODO: Implement compute shader version.
 	template <typename T>
 	static void slow_execute_linear(VulkanTensor tensorZ, T alpha, VulkanTensor tensorA, T beta, VulkanTensor tensorB);
@@ -284,6 +280,13 @@ private:
 	// Shared state to automatically delete unused instances.
 	std::shared_ptr<struct TensorState> state;
 };
+
+VulkanTensor operator+(VulkanTensor tensorA, VulkanTensor tensorB);
+VulkanTensor operator+(VulkanTensor tensorA, float scalar);
+VulkanTensor operator+(float scalar, VulkanTensor tensorA);
+VulkanTensor operator*(VulkanTensor tensorA, VulkanTensor tensorB);
+VulkanTensor operator*(VulkanTensor tensorA, float scalar);
+VulkanTensor operator*(float scalar, VulkanTensor tensorA);
 
 // Shortcut for equations for a vulkan tensor.
 using vt = VulkanTensor;

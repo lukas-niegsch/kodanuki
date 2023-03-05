@@ -323,23 +323,83 @@ VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)
 {
 	assert(tensorA.get_shape() == tensorB.get_shape());
 	assert(tensorA.get_dtype() == tensorB.get_dtype());
-	auto& cache = tensorA.state->cache;
-	auto& device = tensorA.state->device;
-
-	if (!cache.contains("op_linear")) {
-		cache.emplace("op_linear", VulkanPipeline::from_comp_file(device, "assets/shaders/vt_linear.comp.spv"));
-	}
-
-	// device.execute([&](VkCommandBuffer buffer) {
-	// 	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, cache["op_linear"]);
-	// 	bridge.bind_update_pressure_resources(buffer, frame);
-	//  std::size_t count = std::ceil(std::cbrt(tensorA.numel()));
-	// 	vkCmdDispatch(buffer, count, count, count);
-	// }, 2);
-
 	VulkanTensor output(tensorA.get_builder());
 	slow_execute_linear(output, 1.0f, tensorA, 1.0f, tensorB);
 	return output;
+}
+
+VulkanTensor VulkanTensor::add(VulkanTensor tensorA, float scalar)
+{
+	VulkanTensor tensorB(tensorA.get_builder());
+	vt::fill(tensorB, scalar);
+	return add(tensorA, tensorB);
+}
+
+VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, VulkanTensor tensorB)
+{
+	assert(tensorA.get_shape() == tensorB.get_shape());
+	assert(tensorA.get_dtype() == tensorB.get_dtype());
+	VulkanTensor tensorZ(tensorA.get_builder());
+	tensorA.with_maps<float>([&](std::vector<float>& valuesA) {
+		tensorB.with_maps<float>([&](std::vector<float>& valuesB) {
+			tensorZ.with_maps<float>([&](std::vector<float>& valuesZ) {
+				for (std::size_t i = 0; i < valuesA.size(); i++) {
+					valuesZ[i] = valuesA[i] * valuesB[i];
+				}
+			});
+		});
+	});
+	return tensorZ;
+}
+
+VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, float scalar)
+{
+	VulkanTensor tensorB(tensorA.get_builder());
+	vt::fill(tensorB, scalar);
+	return mul(tensorA, tensorB);
+}
+
+VulkanTensor VulkanTensor::pow(VulkanTensor tensorA, uint32_t exponent)
+{
+	VulkanTensor tensorZ(tensorA.get_builder());
+	tensorA.with_maps<float>([&](std::vector<float>& valuesA) {
+		tensorZ.with_maps<float>([&](std::vector<float>& valuesZ) {
+			for (std::size_t i = 0; i < valuesA.size(); i++) {
+				valuesZ[i] = std::pow(valuesA[i], exponent);
+			}
+		});
+	});
+	return tensorZ;
+}
+
+VulkanTensor operator+(VulkanTensor tensorA, VulkanTensor tensorB)
+{
+	return VulkanTensor::add(tensorA, tensorB);
+}
+
+VulkanTensor operator+(VulkanTensor tensorA, float scalar)
+{
+	return VulkanTensor::add(tensorA, scalar);
+}
+
+VulkanTensor operator+(float scalar, VulkanTensor tensorA)
+{
+	return VulkanTensor::add(tensorA, scalar);
+}
+
+VulkanTensor operator*(VulkanTensor tensorA, VulkanTensor tensorB)
+{
+	return VulkanTensor::mul(tensorA, tensorB);
+}
+
+VulkanTensor operator*(VulkanTensor tensorA, float scalar)
+{
+	return VulkanTensor::mul(tensorA, scalar);
+}
+
+VulkanTensor operator*(float scalar, VulkanTensor tensorA)
+{
+	return VulkanTensor::mul(tensorA, scalar);
 }
 
 }
