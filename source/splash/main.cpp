@@ -61,17 +61,12 @@ int main()
 	}};
 
 	VulkanPipeline render_fluid = create_render_fluid_pipeline(device, target);
-	VulkanPipeline update_fluid_pressure = VulkanPipeline::from_comp_file(device, "assets/shaders/pressure.comp.spv");
-	VulkanPipeline update_fluid_simulate = VulkanPipeline::from_comp_file(device, "assets/shaders/simulate.comp.spv");
-
 	ShaderBridge bridge = {{
 		.device = device,
 		.frame_count = target.get_frame_count(),
 		.model = load_obj_model("assets/models/sphere.obj"),
 		.scene = load_csv_scene("assets/models/debug.csv"),
-		.render_pipeline = render_fluid,
-		.update_pipeline_pressure = update_fluid_pressure,
-		.update_pipeline_simulate = update_fluid_simulate
+		.render_pipeline = render_fluid
 	}};
 
 	uint32_t index_count = bridge.get_index_count();
@@ -87,28 +82,7 @@ int main()
 		uint32_t frame = renderer.aquire_frame();
 		handle_user_inputs(config, dts, frame, window, target, bridge, player_position, player_rotation);
 		show_config(config, dts);
-
-		UD new_ud;
-		new_ud.delta_time = dts;
-		new_ud.kernel_size = 1.2;
-		new_ud.stiffness = 0.0;
-		new_ud.rho_0 = 1.0;
-		new_ud.gravity = 10;
-		new_ud.viscosity = 0.2;
-		new_ud.particle_count = instance_count;
-		bridge.update_ud(new_ud, frame);
-
-		renderer.call_command([&](VkCommandBuffer buffer) {
-			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, update_fluid_pressure);
-			bridge.bind_update_pressure_resources(buffer, frame);
-			vkCmdDispatch(buffer, (instance_count / 128) + 1, 1, 1);
-		}, 2);
-
-		renderer.call_command([&](VkCommandBuffer buffer) {
-			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, update_fluid_simulate);
-			bridge.bind_update_simulate_resources(buffer, frame);
-			vkCmdDispatch(buffer, (instance_count / 128) + 1, 1, 1);
-		}, 2);
+		bridge.tick_simulation(frame, dts);
 
 		renderer.draw_command([&](VkCommandBuffer buffer) {
 			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_fluid);

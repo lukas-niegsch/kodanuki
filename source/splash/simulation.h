@@ -109,6 +109,13 @@ public:
 	 */
 	VulkanTensor get_density(uint32_t frame);
 
+	/**
+	 * Returns the number of particles in the current scene.
+	 *
+	 * @return The number of particels in the current scene.
+	 */
+	uint32_t get_particle_count();
+
 private:
 	/**
 	 * Deletes all the tensor data and sets the particle count to zero.

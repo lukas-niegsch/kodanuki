@@ -69,6 +69,11 @@ VulkanTensor Simulation::get_density(uint32_t frame)
 	return tensors_density[frame % count_frame];
 }
 
+uint32_t Simulation::get_particle_count()
+{
+	return count_particles;
+}
+
 void Simulation::reset_tensors()
 {
 	tensors_mass.clear();
