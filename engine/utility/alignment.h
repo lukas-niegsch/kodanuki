@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdint>
+#include <concepts>
 
 namespace kodanuki
 {
@@ -19,5 +21,14 @@ struct alignas(modulus) align : T
     using T::operator=;
 	static constexpr std::size_t size = sizeof(align<T, modulus>);
 };
+
+/**
+ * Returns the smallest integer bigger than the value with zero modulos.
+ *
+ * @param value The given lower bound for the result.
+ * @param mod The given modulos for the alignment.
+ * @return The next multiple of mode bigger than value.
+ */
+uint32_t align_modulo(uint32_t value, uint32_t mod);
 
 }

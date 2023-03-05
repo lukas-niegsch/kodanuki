@@ -1,13 +1,9 @@
 #include "source/splash/shader_bridge.h"
 #include "engine/vulkan/utility.h"
+#include "engine/utility/alignment.h"
 
 namespace kodanuki
 {
-
-uint32_t align_modulo(uint32_t value, uint32_t mod)
-{
-	return (value / mod + (value % mod != 0)) * mod;
-}
 
 ShaderBridge::ShaderBridge(ShaderBridgeBuilder builder)
 : count_frame(builder.frame_count)
