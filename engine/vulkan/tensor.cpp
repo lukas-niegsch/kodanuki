@@ -123,6 +123,17 @@ VulkanTensor::VulkanTensor(TensorBuilder builder)
 	create_staging_buffer();
 }
 
+VulkanTensor::VulkanTensor(const VulkanTensor& other)
+{
+	this->state = other.state;
+}
+
+VulkanTensor VulkanTensor::operator=(const VulkanTensor& other)
+{
+	this->state = other.state;
+	return *this;
+}
+
 std::size_t VulkanTensor::index(std::vector<std::size_t> indices)
 {
 	assert(indices.size() == state->shape.size());

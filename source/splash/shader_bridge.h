@@ -1,6 +1,7 @@
 #pragma once
 #include "source/splash/scene.h"
 #include "source/splash/model.h"
+#include "source/splash/simulation.h"
 #include "engine/utility/alignment.h"
 #include "engine/vulkan/device.h"
 #include "engine/vulkan/pipeline.h"

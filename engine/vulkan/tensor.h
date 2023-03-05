@@ -101,6 +101,20 @@ public:
 	 */
 	VulkanTensor(TensorBuilder builder);
 
+	/**
+	 * Creates a new VulkanTensor from the given other tensor.
+	 *
+	 * @param other The tensor from which to copy the state.
+	 */
+	VulkanTensor(const VulkanTensor& other);
+
+	/**
+	 * Creates a new VulkanTensor from the given other tensor.
+	 *
+	 * @param other The tensor from which to copy the state.
+	 */
+	VulkanTensor operator=(const VulkanTensor& other);
+
 public:
 	static VulkanTensor add(VulkanTensor tensorA, VulkanTensor tensorB);
 	static VulkanTensor add(VulkanTensor tensorA, float scalar);
