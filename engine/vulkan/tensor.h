@@ -285,14 +285,19 @@ private:
 	 */
 	void update_descriptor(VkDescriptorSet descriptor, VkDescriptorType type, uint32_t binding);
 
-public:
-	// TODO: Implement compute shader version.
-	template <typename T>
-	static void slow_execute_linear(VulkanTensor tensorZ, T alpha, VulkanTensor tensorA, T beta, VulkanTensor tensorB);
-
-	// TODO: Implement compute shader version.
-	template <typename T>
-	static void slow_execute_fill(VulkanTensor tensor, T value);
+	/**
+	 * Executes the given shader for the tensor and constant inputs.
+	 *
+	 * The order of the tensor must be the same as specified inside the shader.
+	 * Also, the number of tensors and constants must match exactly. Currently
+	 * only works for shaders where all tensors have the smae size. There must
+	 * be at least one tensor.
+	 *
+	 * @param name The name of the shader that will be executed.
+	 * @param tensors The arguments to the compute shader.
+	 * @param constants Some additional constants for the compute shader.
+	 */
+	static void execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants);
 
 private:
 	// Shared state to automatically delete unused instances.

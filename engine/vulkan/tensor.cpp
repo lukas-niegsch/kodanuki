@@ -63,30 +63,6 @@ void VulkanTensor::with_mapped_memory(std::function<void(T*)> callback, uint32_t
 }
 
 template <typename T>
-void VulkanTensor::slow_execute_linear(VulkanTensor tensorZ, T alpha, VulkanTensor tensorA, T beta, VulkanTensor tensorB)
-{
-	tensorA.with_maps<T>([&](std::vector<T>& valuesA) {
-		tensorB.with_maps<T>([&](std::vector<T>& valuesB) {
-			tensorZ.with_maps<T>([&](std::vector<T>& valuesC) {
-				for (std::size_t i = 0; i < valuesA.size(); i++) {
-					valuesC[i] = alpha * valuesA[i] + beta * valuesB[i];
-				}
-			});
-		});
-	});
-}
-
-template <typename T>
-void VulkanTensor::slow_execute_fill(VulkanTensor tensor, T value)
-{
-	tensor.with_maps<T>([&](std::vector<T>& values){
-		for (std::size_t i = 0; i < values.size(); i++) {
-			values[i] = value;
-		}
-	});
-}
-
-template <typename T>
 void VulkanTensor::load_data(const std::vector<T> values, uint32_t offset)
 {
 	with_maps<T>([&](std::vector<T>& buffer) {
@@ -99,7 +75,11 @@ void VulkanTensor::load_data(const std::vector<T> values, uint32_t offset)
 template <typename T>
 void VulkanTensor::fill(VulkanTensor& tensor, const T& value)
 {
-	slow_execute_fill(tensor, value);
+	tensor.with_maps<T>([&](std::vector<T>& values){
+		for (std::size_t i = 0; i < values.size(); i++) {
+			values[i] = value;
+		}
+	});
 }
 
 }
@@ -342,7 +322,7 @@ void VulkanTensor::update_descriptor(VkDescriptorSet descriptor, VkDescriptorTyp
 	vkUpdateDescriptorSets(state->device, 1, &descriptor_write, 0, nullptr);
 }
 
-VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)
+void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants)
 {
 	/*
 	TODO:
@@ -351,74 +331,78 @@ VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)
 	so we could use one tensor for that and not allocate it every operator.
 	Also all the stuff with the descriptor initialization.
 	*/
-	assert(tensorA.get_shape() == tensorB.get_shape());
-	assert(tensorA.get_dtype() == tensorB.get_dtype());
-	VulkanTensor output(tensorA.get_builder());
-	auto& device = tensorA.state->device;
-	auto& cache = tensorA.state->cache;
+	assert(!tensors.empty());
+	auto& device = tensors[0].state->device;
+	auto& cache = tensors[0].state->cache;
 
-	VulkanTensor constants = {{
+	if (!cache.contains(name)) {
+		std::string filename = std::string("assets/shaders/") + name + ".comp.spv";
+		cache.emplace(name, VulkanPipeline::from_comp_file(device, filename));
+	}
+	VulkanPipeline shader = cache.at(name);
+
+	VulkanTensor params = {{
 		.device = device,
 		.cache = cache,
-		.shape = {4 * 3},
-		.dtype = VulkanTensor::eByte,
+		.shape = {constants.size() + 1},
+		.dtype = VulkanTensor::eFloat,
 		.dshare = VulkanTensor::eShared
 	}};
-	constants.with_maps<uint32_t>([&](auto& values) {
-		values[0] = tensorA.numel();
-	});
-	constants.with_maps<float>([&](auto& values) {
-		values[1] = 1.0f;
-		values[2] = 1.0f;
+
+	params.with_maps<uint32_t>([&](auto& values) {
+		values[0] = tensors[0].numel();
 	});
 
-	if (!cache.contains("vt_linear")) {
-		cache.emplace("vt_linear", VulkanPipeline::from_comp_file(device, "assets/shaders/vt_linear.comp.spv"));
-	}
-	VulkanPipeline shader = cache.at("vt_linear");
+	params.with_maps<float>([&](auto& values) {
+		for (uint32_t i = 0; i < constants.size(); i++) {
+			values[i + 1] = constants[i];
+		}
+	});
+
 	VkPipelineLayout shader_layout = shader.get_pipeline_layout();
 	VkDescriptorPool descriptor_pool = create_descriptor_pool(device);
 	VkDescriptorSetLayout descriptor_layout = shader.get_descriptor_layout();
 	VkDescriptorSet descriptor = create_descriptor_sets(device, descriptor_pool, descriptor_layout, 1)[0];
 
+	params.update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0);
+	for (uint32_t i = 0; i < tensors.size(); i++) {
+		tensors[i].update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, i + 1);
+	}
+
 	device.execute([&](VkCommandBuffer buffer) {
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader);
-		constants.update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0);
-		tensorA.update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1);
-		tensorB.update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2);
-		output.update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3);
 		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader_layout, 0, 1, &descriptor, 0, nullptr);
-		std::size_t count = std::ceil(tensorA.numel() / 64.0f);
+		std::size_t count = std::ceil(tensors[1].numel() / 64.0f);
 		vkCmdDispatch(buffer, count, 8, 8);
 	});
 
 	CHECK_VULKAN(vkDeviceWaitIdle(device));
 	vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
+}
+
+VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)
+{
+	assert(tensorA.get_shape() == tensorB.get_shape());
+	assert(tensorA.get_dtype() == tensorB.get_dtype());
+	VulkanTensor output(tensorA.get_builder());
+	execute("vt_linear", {tensorA, tensorB, output}, {1.0f, 1.0f});
 	return output;
 }
 
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, float scalar)
 {
-	VulkanTensor tensorB(tensorA.get_builder());
-	vt::fill(tensorB, scalar);
-	return add(tensorA, tensorB);
+	VulkanTensor output(tensorA.get_builder());
+	execute("vt_add_const", {tensorA, output}, {scalar});
+	return output;
 }
 
 VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, VulkanTensor tensorB)
 {
 	assert(tensorA.get_shape() == tensorB.get_shape());
 	assert(tensorA.get_dtype() == tensorB.get_dtype());
-	VulkanTensor tensorZ(tensorA.get_builder());
-	tensorA.with_maps<float>([&](std::vector<float>& valuesA) {
-		tensorB.with_maps<float>([&](std::vector<float>& valuesB) {
-			tensorZ.with_maps<float>([&](std::vector<float>& valuesZ) {
-				for (std::size_t i = 0; i < valuesA.size(); i++) {
-					valuesZ[i] = valuesA[i] * valuesB[i];
-				}
-			});
-		});
-	});
-	return tensorZ;
+	VulkanTensor output(tensorA.get_builder());
+	execute("vt_mul", {tensorA, tensorB, output}, {});
+	return output;
 }
 
 VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, float scalar)
@@ -430,15 +414,9 @@ VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, float scalar)
 
 VulkanTensor VulkanTensor::pow(VulkanTensor tensorA, uint32_t exponent)
 {
-	VulkanTensor tensorZ(tensorA.get_builder());
-	tensorA.with_maps<float>([&](std::vector<float>& valuesA) {
-		tensorZ.with_maps<float>([&](std::vector<float>& valuesZ) {
-			for (std::size_t i = 0; i < valuesA.size(); i++) {
-				valuesZ[i] = std::pow(valuesA[i], exponent);
-			}
-		});
-	});
-	return tensorZ;
+	VulkanTensor output(tensorA.get_builder());
+	execute("vt_pow", {tensorA, output}, {static_cast<float>(exponent)});
+	return output;
 }
 
 VulkanTensor operator+(VulkanTensor tensorA, VulkanTensor tensorB)
