@@ -65,12 +65,14 @@ int main()
 		.device = device,
 		.frame_count = target.get_frame_count(),
 		.model = load_obj_model("assets/models/sphere.obj"),
-		.scene = load_csv_scene("assets/models/debug.csv"),
 		.render_pipeline = render_fluid
 	}};
 
+	Simulation simulation(device, target.get_frame_count());
+	simulation.load_scene(load_csv_scene("assets/models/debug.csv"));
+
 	uint32_t index_count = bridge.get_index_count();
-	uint32_t instance_count = bridge.get_instance_count();
+	uint32_t instance_count = simulation.get_particle_count();
 
 	Config config;
 	glm::vec3 player_position = {0.0f, 20.0f, 0.0f};
@@ -82,11 +84,12 @@ int main()
 		uint32_t frame = renderer.aquire_frame();
 		handle_user_inputs(config, dts, frame, window, target, bridge, player_position, player_rotation);
 		show_config(config, dts);
-		bridge.tick_simulation(frame, dts);
+		simulation.tick_fluids(frame, dts);
 
 		renderer.draw_command([&](VkCommandBuffer buffer) {
 			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_fluid);
-			bridge.bind_render_resources(buffer, frame);
+			VulkanTensor position = simulation.get_position(frame);
+			bridge.bind_render_resources(buffer, frame, position);
 			vkCmdDrawIndexed(buffer, index_count, instance_count, 0, 0, 0);
 			interface.draw(buffer);
 		});

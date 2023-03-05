@@ -17,7 +17,6 @@ struct ShaderBridgeBuilder
 	VulkanDevice device;
 	uint32_t frame_count;
 	Model model;
-	Scene scene;
 	VulkanPipeline render_pipeline;
 };
 
@@ -34,8 +33,7 @@ public:
 	ShaderBridge(ShaderBridgeBuilder builder);
 	~ShaderBridge();
 	uint32_t get_index_count();
-	uint32_t get_instance_count();
-	void bind_render_resources(VkCommandBuffer buffer, uint32_t frame);
+	void bind_render_resources(VkCommandBuffer buffer, uint32_t frame, VulkanTensor positions);
 	void update_mvp(const MVP& new_mvp, uint32_t frame);
 	void tick_simulation(uint32_t frame, float delta_time);
 
@@ -54,7 +52,6 @@ private:
 	VulkanDevice device;
 	std::vector<VkDescriptorSet> render_descriptors;
 	RenderTensors tensors;
-	Simulation simulation;
 	VulkanPipelineCache cache;
 };
 

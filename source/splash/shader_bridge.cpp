@@ -14,10 +14,8 @@ ShaderBridge::ShaderBridge(ShaderBridgeBuilder builder)
 , descriptor_pool(create_descriptor_pool(builder.device))
 , device(builder.device)
 , tensors(create_render_tensors(builder))
-, simulation(builder.device, count_frame)
 , cache({})
 {
-	simulation.load_scene(builder.scene);
 	create_render_descriptors();
 }
 
@@ -27,29 +25,18 @@ ShaderBridge::~ShaderBridge()
 	vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
 }
 
-void ShaderBridge::tick_simulation(uint32_t frame, float delta_time)
-{
-	simulation.tick_fluids(frame, delta_time);
-}
-
 uint32_t ShaderBridge::get_index_count()
 {
 	return count_index;
 }
 
-uint32_t ShaderBridge::get_instance_count()
-{
-	return simulation.get_particle_count();
-}
-
-void ShaderBridge::bind_render_resources(VkCommandBuffer buffer, uint32_t frame)
+void ShaderBridge::bind_render_resources(VkCommandBuffer buffer, uint32_t frame, VulkanTensor positions)
 {
 	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_pipeline_layout, 0, 1, &render_descriptors[frame], 0, nullptr);
-	VulkanTensor position = simulation.get_position(frame);
 
 	std::vector<VkBuffer> buffers = {
 		tensors.tensor_vertex.get_buffer(),
-		position.get_buffer(),
+		positions.get_buffer(),
 	};
 	std::vector<VkDeviceSize> offsets = {0, 0};
 
@@ -72,14 +59,14 @@ RenderTensors ShaderBridge::create_render_tensors(ShaderBridgeBuilder builder)
 		.tensor_index = {{
 			.device = device,
 			.cache = cache,
-			.shape = {1, align_modulo(count_index, 4)},
+			.shape = {1, count_index},
 			.dtype = vt::eInt32,
 			.dshare = vt::eUnique
 		}},
 		.tensor_vertex = {{
 			.device = device,
 			.cache = cache,
-			.shape = {1, align_modulo(count_vertex * sizeof(Vertex), 16)},
+			.shape = {1, count_vertex * sizeof(Vertex)},
 			.dtype = vt::eByte,
 			.dshare = vt::eUnique
 		}},
