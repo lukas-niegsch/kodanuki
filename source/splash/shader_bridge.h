@@ -31,7 +31,6 @@ class ShaderBridge
 {
 public:
 	ShaderBridge(ShaderBridgeBuilder builder);
-	~ShaderBridge();
 	uint32_t get_index_count();
 	void bind_render_resources(VkCommandBuffer buffer, uint32_t frame, VulkanTensor positions);
 	void update_mvp(const MVP& new_mvp, uint32_t frame);

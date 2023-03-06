@@ -11,18 +11,12 @@ ShaderBridge::ShaderBridge(ShaderBridgeBuilder builder)
 , count_vertex(builder.model.vertices.size())
 , render_pipeline_layout(builder.render_pipeline.get_pipeline_layout())
 , render_descriptor_layout(builder.render_pipeline.get_descriptor_layout())
-, descriptor_pool(create_descriptor_pool(builder.device))
+, descriptor_pool(builder.device.get_descriptor_pool())
 , device(builder.device)
 , tensors(create_render_tensors(builder))
 , cache({})
 {
 	create_render_descriptors();
-}
-
-ShaderBridge::~ShaderBridge()
-{
-	CHECK_VULKAN(vkDeviceWaitIdle(device));
-	vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
 }
 
 uint32_t ShaderBridge::get_index_count()
