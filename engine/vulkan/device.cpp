@@ -101,12 +101,14 @@ struct DeviceState
 	VkCommandPool execute_pool;
 	VkCommandBuffer execute_buffer;
 	VkQueue execute_queue;
+	VkDescriptorPool descriptor_pool;
 	~DeviceState();
 };
 
 DeviceState::~DeviceState()
 {
 	CHECK_VULKAN(vkDeviceWaitIdle(logical_device));
+	vkDestroyDescriptorPool(logical_device, descriptor_pool, nullptr);
 	vkDestroyCommandPool(logical_device, execute_pool, nullptr);
 	vkDestroyDevice(logical_device, nullptr);
 	vkDestroyInstance(instance, nullptr);
@@ -124,6 +126,7 @@ VulkanDevice::VulkanDevice(DeviceBuilder builder)
 	pimpl->execute_queue = queues.back();
 	pimpl->execute_pool = create_command_pool(logical_device, queue_index);
 	pimpl->execute_buffer = create_command_buffers(logical_device, pimpl->execute_pool, 1)[0];
+	pimpl->descriptor_pool = create_descriptor_pool(*this);
 }
 
 VulkanDevice::operator VkDevice()
@@ -149,6 +152,11 @@ std::vector<VkQueue> VulkanDevice::queues()
 uint32_t VulkanDevice::queue_family_index()
 {
 	return pimpl->queue_index;
+}
+
+VkDescriptorPool VulkanDevice::get_descriptor_pool()
+{
+	return pimpl->descriptor_pool;
 }
 
 void VulkanDevice::execute(std::function<void(VkCommandBuffer)> command)

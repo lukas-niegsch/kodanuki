@@ -357,7 +357,7 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 	constants.insert(constants.begin(), std::bit_cast<float>(count));
 
 	VkPipelineLayout shader_layout = shader.get_pipeline_layout();
-	VkDescriptorPool descriptor_pool = create_descriptor_pool(device);
+	VkDescriptorPool descriptor_pool = device.get_descriptor_pool();
 	VkDescriptorSetLayout descriptor_layout = shader.get_descriptor_layout();
 	VkDescriptorSet descriptor = create_descriptor_sets(device, descriptor_pool, descriptor_layout, 1)[0];
 
@@ -374,7 +374,7 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 	});
 
 	CHECK_VULKAN(vkDeviceWaitIdle(device));
-	vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
+	vkFreeDescriptorSets(device, descriptor_pool, 1, &descriptor);
 }
 
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)

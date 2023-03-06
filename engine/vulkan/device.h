@@ -69,6 +69,9 @@ public:
 	// Returns the used queue family index.
 	uint32_t queue_family_index();
 
+	// Returns the globally used descriptor pool.
+	VkDescriptorPool get_descriptor_pool();
+
 public:
 	// Executes the given command for the device.
 	void execute(std::function<void(VkCommandBuffer)> command);
