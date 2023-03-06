@@ -1,5 +1,5 @@
 #version 460
-layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 layout (push_constant) uniform Params {
 	uint tensor_size;
 	{% for i in range(num_constants) -%}
@@ -8,15 +8,12 @@ layout (push_constant) uniform Params {
 } params;
 layout (std430, binding = 0) buffer tensorZ { float Z[]; };
 {% for i in range(num_tensors) -%}
-layout (std430, binding = {{ i+1 }}) buffer tensor{{ letters[i] }} { float {{ letters[i] }}[]; };
+layout (std430, binding = {{ i+1 }}) readonly buffer tensor{{ letters[i] }} { float {{ letters[i] }}[]; };
 {%- endfor %}
 
 void main()
 {
-	uint index = gl_GlobalInvocationID.x +
-		gl_GlobalInvocationID.y * gl_NumWorkGroups.x * gl_WorkGroupSize.x +
-		gl_GlobalInvocationID.z * gl_NumWorkGroups.x * gl_NumWorkGroups.y *
-		gl_WorkGroupSize.x * gl_WorkGroupSize.y;
+	uint index = gl_GlobalInvocationID.x;
 
 	if (index >= params.tensor_size) {
 		return;

@@ -15,6 +15,7 @@ struct TensorState
 	std::vector<std::size_t> shape;
 	VulkanTensor::MemoryDataType dtype;
 	VulkanTensor::MemorySharing dshare;
+	std::optional<VkBufferUsageFlags> usage;
 	std::optional<VkBuffer> primary_buffer;
 	std::optional<VkBuffer> staging_buffer;
 	std::optional<VkDeviceMemory> primary_memory;
@@ -188,7 +189,8 @@ VulkanTensor::TensorBuilder VulkanTensor::get_builder() const
 		.cache = state->cache,
 		.shape = state->shape,
 		.dtype = state->dtype,
-		.dshare = state->dshare
+		.dshare = state->dshare,
+		.usage = state->usage
 	};
 	return builder;
 }
@@ -211,10 +213,15 @@ VulkanTensor::MemorySharing VulkanTensor::get_dshare() const
 void VulkanTensor::create_primary_buffer()
 {
 	VkBufferUsageFlags usage = 0;
-	usage |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	usage |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-	usage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-	usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+
+	if (state->usage) {
+		usage = state->usage.value();
+	} else {
+		usage |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		usage |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+		usage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	}
 
 	if (state->dshare == eUnique) {
 		usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -369,7 +376,7 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader);
 		vkCmdPushConstants(buffer, shader_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(float) * align_modulo(constants.size(), 4), constants.data());
 		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader_layout, 0, 1, &descriptor, 0, nullptr);
-		vkCmdDispatch(buffer, (tensors[1].numel() + 511) / 512, 1, 1);
+		vkCmdDispatch(buffer, (tensors[1].numel() + 31) / 32, 1, 1);
 		vkCmdPipelineBarrier(buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 0, nullptr);
 	});
 

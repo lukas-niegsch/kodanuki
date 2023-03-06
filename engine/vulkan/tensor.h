@@ -6,6 +6,8 @@
 #include <memory>
 #include <functional>
 #include <tuple>
+#include <optional>
+
 
 namespace kodanuki
 {
@@ -92,6 +94,9 @@ public:
 
 		// The sharing model for the tensor memory.
 		MemorySharing dshare = eUnique;
+
+		// Optional usage flags for the primary buffer.
+		std::optional<VkBufferUsageFlags> usage = {};
 	};
 
 	/**

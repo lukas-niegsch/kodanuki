@@ -91,7 +91,8 @@ VulkanTensor Simulation::create_tensor(std::vector<std::size_t> shape)
 		.cache = cache,
 		.shape = shape,
 		.dtype = vt::eFloat,
-		.dshare = vt::eUnique
+		.dshare = vt::eUnique,
+		.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
 	}};
 	return tensor;
 }
