@@ -68,6 +68,15 @@ int main()
 		.render_pipeline = render_fluid
 	}};
 
+	VkPhysicalDeviceSubgroupProperties subgroupProperties;
+	subgroupProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES;
+	subgroupProperties.pNext = NULL;
+	VkPhysicalDeviceProperties2 physicalDeviceProperties;
+	physicalDeviceProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+	physicalDeviceProperties.pNext = &subgroupProperties;
+	vkGetPhysicalDeviceProperties2(device.physical_device(), &physicalDeviceProperties);
+	print_vulkan_info(subgroupProperties);
+
 	Simulation simulation(device, target.get_frame_count());
 	simulation.load_scene(load_csv_scene("assets/models/debug.csv"));
 

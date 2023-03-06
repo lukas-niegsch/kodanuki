@@ -393,13 +393,13 @@ template <>
 std::string vulkan_debug(VkPhysicalDeviceMemoryProperties info)
 {
 	std::stringstream ss;
-    ss << "memoryTypeCount: " << info.memoryTypeCount << '\n';
-    std::vector<VkMemoryType> types(info.memoryTypes, info.memoryTypes + info.memoryTypeCount);
-    ss << vulkan_debug(types);
-    ss << std::string(LINE_LENGTH, '-') << '\n';
-    ss << "memoryHeapCount: " << info.memoryHeapCount << '\n';
-    std::vector<VkMemoryHeap> heaps(info.memoryHeaps, info.memoryHeaps + info.memoryHeapCount);
-    ss << vulkan_debug(heaps);
+	ss << "memoryTypeCount: " << info.memoryTypeCount << '\n';
+	std::vector<VkMemoryType> types(info.memoryTypes, info.memoryTypes + info.memoryTypeCount);
+	ss << vulkan_debug(types);
+	ss << std::string(LINE_LENGTH, '-') << '\n';
+	ss << "memoryHeapCount: " << info.memoryHeapCount << '\n';
+	std::vector<VkMemoryHeap> heaps(info.memoryHeaps, info.memoryHeaps + info.memoryHeapCount);
+	ss << vulkan_debug(heaps);
 	return ss.str();
 }
 
@@ -407,10 +407,10 @@ template <>
 std::string vulkan_debug(VkMemoryHeap info)
 {
 	std::stringstream ss;
-    ss << "size: " << info.size / (1024 * 1024) << " MiB" << '\n';
-    ss << "flags: " << info.flags << '\n';
-    if (info.flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) ss << "VK_MEMORY_HEAP_DEVICE_LOCAL_BIT" << '\n';
-    if (info.flags & VK_MEMORY_HEAP_MULTI_INSTANCE_BIT) ss << "VK_MEMORY_HEAP_MULTI_INSTANCE_BIT" << '\n';
+	ss << "size: " << info.size / (1024 * 1024) << " MiB" << '\n';
+	ss << "flags: " << info.flags << '\n';
+	if (info.flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) ss << "VK_MEMORY_HEAP_DEVICE_LOCAL_BIT" << '\n';
+	if (info.flags & VK_MEMORY_HEAP_MULTI_INSTANCE_BIT) ss << "VK_MEMORY_HEAP_MULTI_INSTANCE_BIT" << '\n';
 	return ss.str();
 }
 
@@ -418,14 +418,14 @@ template <>
 std::string vulkan_debug(VkMemoryType info)
 {
 	std::stringstream ss;
-    ss << "heapIndex: " << info.heapIndex << '\n';
-    ss << "propertyFlags: " << info.propertyFlags << '\n';
-    if (info.propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) ss << "VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT" << '\n';
-    if (info.propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) ss << "VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT" << '\n';
-    if (info.propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) ss << "VK_MEMORY_PROPERTY_HOST_COHERENT_BIT" << '\n';
-    if (info.propertyFlags & VK_MEMORY_PROPERTY_HOST_CACHED_BIT) ss << "VK_MEMORY_PROPERTY_HOST_CACHED_BIT" << '\n';
-    if (info.propertyFlags & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT) ss << "VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT" << '\n';
-    if (info.propertyFlags & VK_MEMORY_PROPERTY_PROTECTED_BIT) ss << "VK_MEMORY_PROPERTY_PROTECTED_BIT" << '\n';
+	ss << "heapIndex: " << info.heapIndex << '\n';
+	ss << "propertyFlags: " << info.propertyFlags << '\n';
+	if (info.propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) ss << "VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT" << '\n';
+	if (info.propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) ss << "VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT" << '\n';
+	if (info.propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) ss << "VK_MEMORY_PROPERTY_HOST_COHERENT_BIT" << '\n';
+	if (info.propertyFlags & VK_MEMORY_PROPERTY_HOST_CACHED_BIT) ss << "VK_MEMORY_PROPERTY_HOST_CACHED_BIT" << '\n';
+	if (info.propertyFlags & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT) ss << "VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT" << '\n';
+	if (info.propertyFlags & VK_MEMORY_PROPERTY_PROTECTED_BIT) ss << "VK_MEMORY_PROPERTY_PROTECTED_BIT" << '\n';
 	return ss.str();
 }
 
@@ -1007,6 +1007,45 @@ std::string vulkan_debug(VkVertexInputAttributeDescription info)
 	ss << "binding: " << info.binding << '\n';
 	ss << "format: " << vulkan_debug(info.format);
 	ss << "offset: " << info.offset << '\n';
+	return ss.str();
+}
+
+template <>
+std::string vulkan_debug(VkPhysicalDeviceSubgroupProperties info)
+{
+	std::stringstream ss;
+	ss << "subgroupSize: " << info.subgroupSize << '\n';
+	
+	#define PRINT_ENUM_FLAG(name) \
+		ss << #name << ": " << (info.supportedStages & name ? "true" : "false") << '\n'
+
+	ss << "supportedStages: " << '\n';
+	PRINT_ENUM_FLAG(VK_SHADER_STAGE_VERTEX_BIT);
+	PRINT_ENUM_FLAG(VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
+	PRINT_ENUM_FLAG(VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
+	PRINT_ENUM_FLAG(VK_SHADER_STAGE_GEOMETRY_BIT);
+	PRINT_ENUM_FLAG(VK_SHADER_STAGE_FRAGMENT_BIT);
+	PRINT_ENUM_FLAG(VK_SHADER_STAGE_COMPUTE_BIT);
+	PRINT_ENUM_FLAG(VK_SHADER_STAGE_ALL_GRAPHICS);
+
+	#undef PRINT_ENUM_FLAG
+
+	#define PRINT_ENUM_FLAG(name) \
+		ss << #name << ": " << (info.supportedOperations & name ? "true" : "false") << '\n'
+
+	ss << "supportedOperations: " << '\n';
+	PRINT_ENUM_FLAG(VK_SUBGROUP_FEATURE_BASIC_BIT);
+	PRINT_ENUM_FLAG(VK_SUBGROUP_FEATURE_VOTE_BIT);
+	PRINT_ENUM_FLAG(VK_SUBGROUP_FEATURE_ARITHMETIC_BIT);
+	PRINT_ENUM_FLAG(VK_SUBGROUP_FEATURE_BALLOT_BIT);
+	PRINT_ENUM_FLAG(VK_SUBGROUP_FEATURE_SHUFFLE_BIT);
+	PRINT_ENUM_FLAG(VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT);
+	PRINT_ENUM_FLAG(VK_SUBGROUP_FEATURE_CLUSTERED_BIT);
+	PRINT_ENUM_FLAG(VK_SUBGROUP_FEATURE_QUAD_BIT);
+
+	#undef PRINT_ENUM_FLAG
+
+	ss << "quadOperationsInAllStages: " << (info.quadOperationsInAllStages ? "true" : "false") << '\n';
 	return ss.str();
 }
 

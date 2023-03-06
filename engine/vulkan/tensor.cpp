@@ -369,11 +369,10 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader);
 		vkCmdPushConstants(buffer, shader_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(float) * align_modulo(constants.size(), 4), constants.data());
 		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader_layout, 0, 1, &descriptor, 0, nullptr);
-		std::size_t count = std::ceil(tensors[1].numel() / 64.0f);
-		vkCmdDispatch(buffer, count, 8, 8);
+		vkCmdDispatch(buffer, (tensors[1].numel() + 511) / 512, 1, 1);
+		vkCmdPipelineBarrier(buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 0, nullptr);
 	});
 
-	CHECK_VULKAN(vkDeviceWaitIdle(device));
 	vkFreeDescriptorSets(device, descriptor_pool, 1, &descriptor);
 }
 
@@ -389,7 +388,7 @@ VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, float scalar)
 {
 	VulkanTensor output(tensorA.get_builder());
-	execute("vt_add_const", {output, tensorA}, {scalar});
+	execute("vt_add_c", {output, tensorA}, {scalar});
 	return output;
 }
 
@@ -405,7 +404,7 @@ VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, VulkanTensor tensorB)
 VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, float scalar)
 {
 	VulkanTensor output(tensorA.get_builder());
-	execute("vt_mul_const", {output, tensorA}, {scalar});
+	execute("vt_mul_c", {output, tensorA}, {scalar});
 	return output;
 }
 

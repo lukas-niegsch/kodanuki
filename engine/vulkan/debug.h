@@ -208,4 +208,10 @@ std::string vulkan_debug(VkFormat info);
 template <>
 std::string vulkan_debug(VkVertexInputAttributeDescription info);
 
+template <>
+std::string vulkan_debug(VkPhysicalDeviceSubgroupProperties info);
+
+template <>
+std::string vulkan_debug(VkFlags info);
+
 }
