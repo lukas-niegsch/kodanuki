@@ -342,13 +342,6 @@ void VulkanTensor::update_descriptor(VkDescriptorSet descriptor, VkDescriptorTyp
 
 void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants)
 {
-	/*
-	TODO:
-	Most of the stuff inside this function does not have to be
-	specified here. For example each shader will have some uniform constants,
-	so we could use one tensor for that and not allocate it every operator.
-	Also all the stuff with the descriptor initialization.
-	*/
 	assert(!tensors.empty());
 	auto& device = tensors[0].state->device;
 	auto& cache = tensors[0].state->cache;
@@ -364,9 +357,7 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 	constants.insert(constants.begin(), std::bit_cast<float>(count));
 
 	VkPipelineLayout shader_layout = shader.get_pipeline_layout();
-	VkDescriptorPool descriptor_pool = device.get_descriptor_pool();
-	VkDescriptorSetLayout descriptor_layout = shader.get_descriptor_layout();
-	VkDescriptorSet descriptor = create_descriptor_sets(device, descriptor_pool, descriptor_layout, 1)[0];
+	VkDescriptorSet descriptor = shader.get_primary_descriptor();
 
 	for (uint32_t i = 0; i < tensors.size(); i++) {
 		tensors[i].update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, i);
@@ -379,8 +370,6 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 		vkCmdDispatch(buffer, (tensors[1].numel() + 31) / 32, 1, 1);
 		vkCmdPipelineBarrier(buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 0, nullptr);
 	});
-
-	vkFreeDescriptorSets(device, descriptor_pool, 1, &descriptor);
 }
 
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)

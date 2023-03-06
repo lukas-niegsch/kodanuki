@@ -1,5 +1,6 @@
 #include "engine/vulkan/pipeline.h"
 #include "engine/vulkan/debug.h"
+#include "engine/vulkan/utility.h"
 #include "engine/utility/file.h"
 #include <cassert>
 
@@ -72,12 +73,14 @@ struct PipelineState
 	VkPipeline pipeline;
 	VkPipelineLayout layout;
 	VkDescriptorSetLayout descriptor;
+	VkDescriptorSet descriptor_set;
 	~PipelineState();
 };
 
 PipelineState::~PipelineState()
 {
 	CHECK_VULKAN(vkDeviceWaitIdle(device));
+	vkFreeDescriptorSets(device, device.get_descriptor_pool(), 1, &descriptor_set);
 	vkDestroyPipeline(device, pipeline, nullptr);
 	vkDestroyPipelineLayout(device, layout, nullptr);
 	vkDestroyDescriptorSetLayout(device, descriptor, nullptr);
@@ -90,6 +93,9 @@ VulkanPipeline::VulkanPipeline(GraphicsPipelineBuilder builder)
 	pimpl->descriptor = builder.descriptor_sets[0];
 	pimpl->pipeline = pipeline;
 	pimpl->layout = layout;
+	pimpl->descriptor_set = create_descriptor_sets(pimpl->device,
+		pimpl->device.get_descriptor_pool(),
+		pimpl->descriptor, 1)[0];
 }
 
 VulkanPipeline::VulkanPipeline(ComputePipelineBuilder builder)
@@ -126,6 +132,10 @@ VulkanPipeline::VulkanPipeline(ComputePipelineBuilder builder)
 	info.basePipelineHandle = VK_NULL_HANDLE;
 	info.basePipelineIndex = -1;
 	CHECK_VULKAN(vkCreateComputePipelines(builder.device, VK_NULL_HANDLE, 1, &info, nullptr, &pimpl->pipeline));
+	
+	pimpl->descriptor_set = create_descriptor_sets(pimpl->device,
+		pimpl->device.get_descriptor_pool(),
+		pimpl->descriptor, 1)[0];
 }
 
 VulkanPipeline VulkanPipeline::from_comp_file(VulkanDevice device, std::string filename)
@@ -180,6 +190,11 @@ VkDescriptorSetLayout VulkanPipeline::get_descriptor_layout()
 VkPipelineLayout VulkanPipeline::get_pipeline_layout()
 {
 	return pimpl->layout;
+}
+
+VkDescriptorSet VulkanPipeline::get_primary_descriptor()
+{
+	return pimpl->descriptor_set;
 }
 
 }

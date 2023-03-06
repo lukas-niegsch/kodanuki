@@ -128,6 +128,9 @@ public:
 	// Returns the owned pipeline layout.
 	VkPipelineLayout get_pipeline_layout();
 
+	// Returns the descriptor for this pipeline.
+	VkDescriptorSet get_primary_descriptor();
+
 private:
 	// The abstract pointer to the implementation.
 	std::shared_ptr<struct PipelineState> pimpl;
