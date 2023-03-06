@@ -122,10 +122,19 @@ public:
 
 public:
 	static VulkanTensor add(VulkanTensor tensorA, VulkanTensor tensorB);
+	static void add_i(VulkanTensor tensorZ, VulkanTensor tensorA);
 	static VulkanTensor add(VulkanTensor tensorA, float scalar);
+	static void add_i(VulkanTensor tensorZ, float scalar);
 	static VulkanTensor mul(VulkanTensor tensorA, VulkanTensor tensorB);
+	static void mul_i(VulkanTensor tensorZ, VulkanTensor tensorA);
 	static VulkanTensor mul(VulkanTensor tensorA, float scalar);
-	static VulkanTensor pow(VulkanTensor tensorA, uint32_t exponent);
+	static void mul_i(VulkanTensor tensorZ, float scalar);
+	static VulkanTensor pow(VulkanTensor tensorA, float exponent);
+	static void pow_i(VulkanTensor tensorZ, float exponent);
+	static VulkanTensor copy(VulkanTensor tensorA);
+	static void copy_i(VulkanTensor tensorZ, VulkanTensor tensorA);
+	static VulkanTensor linear(float alpha, VulkanTensor tensorA, float beta, VulkanTensor tensorB);
+	static void linear_i(float alpha, VulkanTensor tensorZ, float beta, VulkanTensor tensorA);
 
 	/**
 	 * Fills the given tensor with some value.

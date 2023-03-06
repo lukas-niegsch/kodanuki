@@ -4,7 +4,7 @@ layout (push_constant) uniform Params {
 	uint tensor_size;
 	{% for i in range(num_constants) -%}
 	{{ constants[i] }};
-	{%- endfor %}
+	{% endfor -%}
 } params;
 layout (std430, binding = 0) buffer tensorZ { float Z[]; };
 {% for i in range(num_tensors) -%}

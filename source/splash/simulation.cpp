@@ -41,7 +41,8 @@ void Simulation::set_params(UD parameters)
 void Simulation::tick_fluids(uint32_t frame, float delta_time)
 {
 	// TODO: implement this method properly
-	tensors_position[frame] = get_position(frame - 1) + delta_time * get_velocity(frame - 1);
+	vt::copy_i(get_position(frame), get_position(frame - 1));
+	vt::linear_i(1.0f, get_position(frame), delta_time, get_velocity(frame - 1));
 }
 
 VulkanTensor Simulation::get_mass(uint32_t frame)

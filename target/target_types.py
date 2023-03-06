@@ -127,14 +127,14 @@ class ShadersTarget(Target):
 			f.write(template.render(**kwargs))
 
 	def make_compute_shader(self, args, name, operation):
-		params = set(re.findall(r'params\.(\w+)', operation))
-		tensors = set(re.findall(r'(\w{1})\[\w*\]', operation))
-		if 'Z' in tensors:
-			tensors.remove('Z')
+		params = list(re.findall(r'params\.(\w+)', operation))
+		params = ['float ' + x for x in dict.fromkeys(params)]
+		tensors = list(re.findall(r'(\w{1})\[\w*\]', operation))
+		tensors = [x for x in dict.fromkeys(tensors) if not x == 'Z']
 		operation = operation.replace('[]', '[index]')
-		constants = list(map(lambda item: 'float ' + item, params))
+
 		self.write_compute_shader(args, name,
-			num_constants = len(constants), constants = list(constants),
+			num_constants = len(params), constants = list(params),
 			num_tensors = len(tensors), letters = list(tensors),
 			operation = operation)
 
@@ -145,7 +145,7 @@ class ShadersTarget(Target):
 		super().execute(args)
 
 		self.make_compute_shader(args, 'pow', 'pow(A[], params.exponent)')
-		self.make_compute_shader(args, 'ipow', 'pow(Z[], params.exponent)')
+		self.make_compute_shader(args, 'pow_i', 'pow(Z[], params.exponent)')
 		self.make_compute_shader(args, 'mul', 'A[] * B[]')
 		self.make_compute_shader(args, 'mul_i', 'Z[] * B[]')
 		self.make_compute_shader(args, 'mul_c', 'A[] * params.alpha')

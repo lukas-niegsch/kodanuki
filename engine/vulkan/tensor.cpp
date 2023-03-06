@@ -374,41 +374,86 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)
 {
-	assert(tensorA.get_shape() == tensorB.get_shape());
-	assert(tensorA.get_dtype() == tensorB.get_dtype());
-	VulkanTensor output(tensorA.get_builder());
-	execute("vt_linear", {output, tensorA, tensorB}, {1.0f, 1.0f});
-	return output;
+	VulkanTensor tensorZ(tensorA.get_builder());
+	execute("vt_add", {tensorZ, tensorA, tensorB}, {});
+	return tensorZ;
+}
+
+void VulkanTensor::add_i(VulkanTensor tensorZ, VulkanTensor tensorA)
+{
+	execute("vt_add_i", {tensorZ, tensorA}, {});
 }
 
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, float scalar)
 {
-	VulkanTensor output(tensorA.get_builder());
-	execute("vt_add_c", {output, tensorA}, {scalar});
-	return output;
+	VulkanTensor tensorZ(tensorA.get_builder());
+	execute("vt_add_c", {tensorZ, tensorA}, {scalar});
+	return tensorZ;
+}
+
+void VulkanTensor::add_i(VulkanTensor tensorZ, float scalar)
+{
+	execute("vt_add_ic", {tensorZ}, {scalar});
 }
 
 VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, VulkanTensor tensorB)
 {
-	assert(tensorA.get_shape() == tensorB.get_shape());
-	assert(tensorA.get_dtype() == tensorB.get_dtype());
-	VulkanTensor output(tensorA.get_builder());
-	execute("vt_mul", {output, tensorA, tensorB}, {});
-	return output;
+	VulkanTensor tensorZ(tensorA.get_builder());
+	execute("vt_mul", {tensorZ, tensorA, tensorB}, {});
+	return tensorZ;
+}
+
+void VulkanTensor::mul_i(VulkanTensor tensorZ, VulkanTensor tensorA)
+{
+	execute("vt_mul_i", {tensorZ, tensorA}, {});
 }
 
 VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, float scalar)
 {
-	VulkanTensor output(tensorA.get_builder());
-	execute("vt_mul_c", {output, tensorA}, {scalar});
-	return output;
+	VulkanTensor tensorZ(tensorA.get_builder());
+	execute("vt_mul_c", {tensorZ, tensorA}, {scalar});
+	return tensorZ;
 }
 
-VulkanTensor VulkanTensor::pow(VulkanTensor tensorA, uint32_t exponent)
+void VulkanTensor::mul_i(VulkanTensor tensorZ, float scalar)
 {
-	VulkanTensor output(tensorA.get_builder());
-	execute("vt_pow", {output, tensorA}, {static_cast<float>(exponent)});
-	return output;
+	execute("vt_mul_ic", {tensorZ}, {scalar});
+}
+
+VulkanTensor VulkanTensor::pow(VulkanTensor tensorA, float exponent)
+{
+	VulkanTensor tensorZ(tensorA.get_builder());
+	execute("vt_pow", {tensorZ, tensorA}, {exponent});
+	return tensorZ;
+}
+
+void VulkanTensor::pow_i(VulkanTensor tensorZ, float exponent)
+{
+	execute("vt_pow_i", {tensorZ}, {exponent});
+}
+
+VulkanTensor VulkanTensor::copy(VulkanTensor tensorA)
+{
+	VulkanTensor tensorZ(tensorA.get_builder());
+	execute("vt_copy", {tensorZ, tensorA}, {});
+	return tensorZ;
+}
+
+void VulkanTensor::copy_i(VulkanTensor tensorZ, VulkanTensor tensorA)
+{
+	execute("vt_copy", {tensorZ, tensorA}, {});
+}
+
+VulkanTensor VulkanTensor::linear(float alpha, VulkanTensor tensorA, float beta, VulkanTensor tensorB)
+{
+	VulkanTensor tensorZ(tensorA.get_builder());
+	execute("vt_linear", {tensorZ, tensorA, tensorB}, {alpha, beta});
+	return tensorZ;
+}
+
+void VulkanTensor::linear_i(float alpha, VulkanTensor tensorZ, float beta, VulkanTensor tensorA)
+{
+	execute("vt_linear_i", {tensorZ, tensorA}, {alpha, beta});
 }
 
 VulkanTensor operator+(VulkanTensor tensorA, VulkanTensor tensorB)
