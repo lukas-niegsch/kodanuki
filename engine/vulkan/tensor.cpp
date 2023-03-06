@@ -404,9 +404,9 @@ VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, VulkanTensor tensorB)
 
 VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, float scalar)
 {
-	VulkanTensor tensorB(tensorA.get_builder());
-	vt::fill(tensorB, scalar);
-	return mul(tensorA, tensorB);
+	VulkanTensor output(tensorA.get_builder());
+	execute("vt_mul_const", {output, tensorA}, {scalar});
+	return output;
 }
 
 VulkanTensor VulkanTensor::pow(VulkanTensor tensorA, uint32_t exponent)
