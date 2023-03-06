@@ -11,6 +11,8 @@
 **/*.ind
 **/*.snm
 **/*.nav
+assets/shaders/vt_*
+!assets/shaders/vt_op.comp.j2
 assets/splashdoc/_minted-*
 imgui.ini
 todo.txt

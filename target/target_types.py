@@ -1,8 +1,11 @@
 import os
+import re
 import subprocess
 from module_parser import *
 from ninja_writer import NinjaWriter
 from target_graph import Target
+from jinja2 import Template
+
 
 class HelpTarget(Target):
 	''' Display this help message. '''
@@ -116,11 +119,46 @@ class CompileTarget(NinjaTarget):
 class ShadersTarget(Target):
 	''' Compile all available shaders. '''
 
+	def write_compute_shader(self, args, name, **kwargs):
+		with open(f'{args.src_dir}/assets/shaders/vt_op.comp.j2', 'r') as f:
+			template = Template(f.read())
+
+		with open(f'{args.src_dir}/assets/shaders/vt_{name}.comp', 'w') as f:
+			f.write(template.render(**kwargs))
+
+	def make_compute_shader(self, args, name, operation):
+		params = set(re.findall(r'params\.(\w+)', operation))
+		tensors = set(re.findall(r'(\w{1})\[\w*\]', operation))
+		if 'Z' in tensors:
+			tensors.remove('Z')
+		operation = operation.replace('[]', '[index]')
+		constants = list(map(lambda item: 'float ' + item, params))
+		self.write_compute_shader(args, name,
+			num_constants = len(constants), constants = list(constants),
+			num_tensors = len(tensors), letters = list(tensors),
+			operation = operation)
+
 	def validate(self, args):
 		super().validate(args)
 
 	def execute(self, args):
 		super().execute(args)
+
+		self.make_compute_shader(args, 'pow', 'pow(A[], params.exponent)')
+		self.make_compute_shader(args, 'ipow', 'pow(Z[], params.exponent)')
+		self.make_compute_shader(args, 'mul', 'A[] * B[]')
+		self.make_compute_shader(args, 'mul_i', 'Z[] * B[]')
+		self.make_compute_shader(args, 'mul_c', 'A[] * params.alpha')
+		self.make_compute_shader(args, 'mul_ic', 'Z[] * params.alpha')
+		self.make_compute_shader(args, 'add', 'A[] + B[]')
+		self.make_compute_shader(args, 'add_i', 'Z[] + B[]')
+		self.make_compute_shader(args, 'add_c', 'A[] + params.alpha')
+		self.make_compute_shader(args, 'add_ic', 'Z[] + params.alpha')
+		self.make_compute_shader(args, 'fill', 'params.alpha')
+		self.make_compute_shader(args, 'copy', 'A[]')
+		self.make_compute_shader(args, 'linear', 'params.alpha * A[] + params.beta * B[]')
+		self.make_compute_shader(args, 'linear_i', 'params.alpha * Z[] + params.beta * A[]')
+
 		command = f'find {args.src_dir}/assets/shaders/ -regextype posix-extended -regex ".*\.(comp|frag|geom|tesc|tese|vert)" -exec glslc {{}} -o {{}}.spv \;'
 		subprocess.call(command, shell = True)
 
@@ -155,8 +193,8 @@ class ValgrindTarget(CompileTarget):
 	
 	def execute(self, args):
 		super().execute(args)
-		command = f'valgrind --tool=massif {args.out_dir}/{args.project}'
-		# command = f'valgrind --tool=callgrind {args.out_dir}/{args.project}'
+		# command = f'valgrind --tool=massif {args.out_dir}/{args.project}'
+		command = f'valgrind --tool=callgrind {args.out_dir}/{args.project}'
 		# command = f'valgrind --tool=cachegrind {args.out_dir}/{args.project}'
 		# command = f'valgrind ---leak-check=full --show-leak-kinds=all --log-file="valgrind.out" {args.out_dir}/{args.project}'
 		subprocess.call(command, shell = True)
