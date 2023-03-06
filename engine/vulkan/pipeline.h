@@ -83,11 +83,14 @@ struct GraphicsPipelineBuilder
  */
 struct ComputePipelineBuilder
 {
-    // The vulkan device for which the pipeline is created.
-    VulkanDevice device;
+	// The vulkan device for which the pipeline is created.
+	VulkanDevice device;
 
-    // The handle to the compute shader module.
-    VulkanShader compute_shader;
+	// The handle to the compute shader module.
+	VulkanShader compute_shader;
+
+	// The number of bytes inside the push_constant field.
+	uint32_t push_constant_byte_size;
 
 	// The bindings that the pipeline has.
 	std::vector<VkDescriptorSetLayoutBinding> bindings;

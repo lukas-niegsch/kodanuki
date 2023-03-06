@@ -1,6 +1,7 @@
 #include "engine/vulkan/pipeline.h"
 #include "engine/vulkan/debug.h"
 #include "engine/utility/file.h"
+#include <cassert>
 
 namespace kodanuki
 {
@@ -101,14 +102,19 @@ VulkanPipeline::VulkanPipeline(ComputePipelineBuilder builder)
 	descriptor_layout_info.pBindings = builder.bindings.data();
 	CHECK_VULKAN(vkCreateDescriptorSetLayout(builder.device, &descriptor_layout_info, nullptr, &pimpl->descriptor));
 
+	VkPushConstantRange push_constant_range = {};
+	push_constant_range.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+	push_constant_range.offset = 0;
+	push_constant_range.size = builder.push_constant_byte_size;
+
 	VkPipelineLayoutCreateInfo layout_info = {};
     layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layout_info.pNext = nullptr;
     layout_info.flags = 0;
     layout_info.setLayoutCount = 1;
     layout_info.pSetLayouts = &pimpl->descriptor;
-    layout_info.pushConstantRangeCount = 0;
-    layout_info.pPushConstantRanges = nullptr;
+    layout_info.pushConstantRangeCount = 1;
+    layout_info.pPushConstantRanges = &push_constant_range;
 	CHECK_VULKAN(vkCreatePipelineLayout(builder.device, &layout_info, nullptr, &pimpl->layout));
 
 	VkComputePipelineCreateInfo info = {};
@@ -141,6 +147,9 @@ VulkanPipeline VulkanPipeline::from_comp_file(VulkanDevice device, std::string f
 		binding.pImmutableSamplers = nullptr;
 	}
 
+	auto push_constants = vectorize<spvReflectEnumeratePushConstantBlocks>(&reflect_module);
+	assert(push_constants.size() == 1); // Only one push constant block allowed!
+
 	ShaderBuilder fluid_compute_builder = {
 		.device = device,
 		.code = code,
@@ -150,6 +159,7 @@ VulkanPipeline VulkanPipeline::from_comp_file(VulkanDevice device, std::string f
 	ComputePipelineBuilder builder = {
 		.device = device,
 		.compute_shader = VulkanShader(fluid_compute_builder),
+		.push_constant_byte_size = push_constants[0]->size,
 		.bindings = bindings
 	};
 

@@ -352,36 +352,22 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 	}
 	VulkanPipeline shader = cache.at(name);
 
-	VulkanTensor params = {{
-		.device = device,
-		.cache = cache,
-		.shape = {constants.size() + 1},
-		.dtype = VulkanTensor::eFloat,
-		.dshare = VulkanTensor::eShared
-	}};
-
-	params.with_maps<uint32_t>([&](auto& values) {
-		values[0] = tensors[0].numel();
-	});
-
-	params.with_maps<float>([&](auto& values) {
-		for (uint32_t i = 0; i < constants.size(); i++) {
-			values[i + 1] = constants[i];
-		}
-	});
+	// The first element of each push_constant block will be the tensor size.
+	uint32_t count = tensors[0].numel();
+	constants.insert(constants.begin(), std::bit_cast<float>(count));
 
 	VkPipelineLayout shader_layout = shader.get_pipeline_layout();
 	VkDescriptorPool descriptor_pool = create_descriptor_pool(device);
 	VkDescriptorSetLayout descriptor_layout = shader.get_descriptor_layout();
 	VkDescriptorSet descriptor = create_descriptor_sets(device, descriptor_pool, descriptor_layout, 1)[0];
 
-	params.update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0);
 	for (uint32_t i = 0; i < tensors.size(); i++) {
-		tensors[i].update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, i + 1);
+		tensors[i].update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, i);
 	}
 
 	device.execute([&](VkCommandBuffer buffer) {
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader);
+		vkCmdPushConstants(buffer, shader_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(float) * align_modulo(constants.size(), 4), constants.data());
 		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader_layout, 0, 1, &descriptor, 0, nullptr);
 		std::size_t count = std::ceil(tensors[1].numel() / 64.0f);
 		vkCmdDispatch(buffer, count, 8, 8);
@@ -396,14 +382,14 @@ VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)
 	assert(tensorA.get_shape() == tensorB.get_shape());
 	assert(tensorA.get_dtype() == tensorB.get_dtype());
 	VulkanTensor output(tensorA.get_builder());
-	execute("vt_linear", {tensorA, tensorB, output}, {1.0f, 1.0f});
+	execute("vt_linear", {output, tensorA, tensorB}, {1.0f, 1.0f});
 	return output;
 }
 
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, float scalar)
 {
 	VulkanTensor output(tensorA.get_builder());
-	execute("vt_add_const", {tensorA, output}, {scalar});
+	execute("vt_add_const", {output, tensorA}, {scalar});
 	return output;
 }
 
@@ -412,7 +398,7 @@ VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, VulkanTensor tensorB)
 	assert(tensorA.get_shape() == tensorB.get_shape());
 	assert(tensorA.get_dtype() == tensorB.get_dtype());
 	VulkanTensor output(tensorA.get_builder());
-	execute("vt_mul", {tensorA, tensorB, output}, {});
+	execute("vt_mul", {output, tensorA, tensorB}, {});
 	return output;
 }
 
@@ -426,7 +412,7 @@ VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, float scalar)
 VulkanTensor VulkanTensor::pow(VulkanTensor tensorA, uint32_t exponent)
 {
 	VulkanTensor output(tensorA.get_builder());
-	execute("vt_pow", {tensorA, output}, {static_cast<float>(exponent)});
+	execute("vt_pow", {output, tensorA}, {static_cast<float>(exponent)});
 	return output;
 }
 

@@ -4,14 +4,14 @@
  */
 #version 460
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
-layout (binding = 0) uniform Params {
+layout (push_constant) uniform Params {
 	uint tensor_size;
 	float alpha;
 	float beta;
 } params;
+layout (std430, binding = 0) buffer tensorZ { float Z[]; };
 layout (std430, binding = 1) buffer tensorA { float A[]; };
 layout (std430, binding = 2) buffer tensorB { float B[]; };
-layout (std430, binding = 3) buffer tensorT { float Z[]; };
 
 void main()
 {
