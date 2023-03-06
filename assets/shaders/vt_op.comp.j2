@@ -1,14 +1,15 @@
-/**
- * Calculates the following operation:
- * tensorZ = alpha
- */
 #version 460
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 layout (push_constant) uniform Params {
 	uint tensor_size;
-	float alpha;
+	{% for i in range(num_constants) -%}
+	{{ constants[i] }};
+	{%- endfor %}
 } params;
 layout (std430, binding = 0) buffer tensorZ { float Z[]; };
+{% for i in range(num_tensors) -%}
+layout (std430, binding = {{ i+1 }}) buffer tensor{{ letters[i] }} { float {{ letters[i] }}[]; };
+{%- endfor %}
 
 void main()
 {
@@ -21,5 +22,5 @@ void main()
 		return;
 	}
 
-	Z[index] = params.alpha;
+	Z[index] = {{ operation }};
 }
