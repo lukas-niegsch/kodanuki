@@ -102,12 +102,14 @@ struct DeviceState
 	VkCommandBuffer execute_buffer;
 	VkQueue execute_queue;
 	VkDescriptorPool descriptor_pool;
+	VkQueryPool query_pool;
 	~DeviceState();
 };
 
 DeviceState::~DeviceState()
 {
 	CHECK_VULKAN(vkDeviceWaitIdle(logical_device));
+	vkDestroyQueryPool(logical_device, query_pool, nullptr);
 	vkDestroyDescriptorPool(logical_device, descriptor_pool, nullptr);
 	vkDestroyCommandPool(logical_device, execute_pool, nullptr);
 	vkDestroyDevice(logical_device, nullptr);
@@ -127,6 +129,15 @@ VulkanDevice::VulkanDevice(DeviceBuilder builder)
 	pimpl->execute_pool = create_command_pool(logical_device, queue_index);
 	pimpl->execute_buffer = create_command_buffers(logical_device, pimpl->execute_pool, 1)[0];
 	pimpl->descriptor_pool = create_descriptor_pool(*this);
+
+	VkQueryPoolCreateInfo query_info;
+	query_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+	query_info.pNext = nullptr;
+	query_info.flags = 0;
+	query_info.queryType = VK_QUERY_TYPE_TIMESTAMP;
+	query_info.queryCount = 2;
+	query_info.pipelineStatistics = 0;
+	CHECK_VULKAN(vkCreateQueryPool(logical_device, &query_info, nullptr, &pimpl->query_pool));
 }
 
 VulkanDevice::operator VkDevice()
@@ -159,15 +170,25 @@ VkDescriptorPool VulkanDevice::get_descriptor_pool()
 	return pimpl->descriptor_pool;
 }
 
-void VulkanDevice::execute(std::function<void(VkCommandBuffer)> command)
+float VulkanDevice::execute(std::function<void(VkCommandBuffer)> command, bool debug)
 {
 	VkCommandBuffer buffer = pimpl->execute_buffer;
 	CHECK_VULKAN(vkResetCommandBuffer(buffer, 0));
-	
 	VkCommandBufferBeginInfo buffer_info = {};
 	buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	CHECK_VULKAN(vkBeginCommandBuffer(buffer, &buffer_info));
+
+	if (debug) {
+		vkCmdResetQueryPool(buffer, pimpl->query_pool, 0, 2);
+		vkCmdWriteTimestamp(buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, pimpl->query_pool, 0);
+	}
+	
 	command(buffer);
+
+	if (debug) {
+		vkCmdWriteTimestamp(buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, pimpl->query_pool, 1);
+	}
+
 	CHECK_VULKAN(vkEndCommandBuffer(buffer));
 
 	VkSubmitInfo info = {};
@@ -182,6 +203,15 @@ void VulkanDevice::execute(std::function<void(VkCommandBuffer)> command)
 
 	CHECK_VULKAN(vkQueueSubmit(pimpl->execute_queue, 1, &info, nullptr));
 	CHECK_VULKAN(vkQueueWaitIdle(pimpl->execute_queue));
+
+	if (debug) {
+		uint64_t ts[2];
+		CHECK_VULKAN(vkGetQueryPoolResults(pimpl->logical_device, pimpl->query_pool, 0, 2, sizeof(uint64_t) * 2, ts, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT));
+
+		return (ts[1] - ts[0]);
+	}
+
+	return 0.0f;
 }
 
 }

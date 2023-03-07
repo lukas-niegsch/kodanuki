@@ -74,7 +74,7 @@ public:
 
 public:
 	// Executes the given command for the device.
-	void execute(std::function<void(VkCommandBuffer)> command);
+	float execute(std::function<void(VkCommandBuffer)> command, bool debug = false);
 
 private:
 	// The abstract pointer to the implementation.

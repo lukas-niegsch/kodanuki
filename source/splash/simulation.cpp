@@ -1,5 +1,4 @@
 #include "source/splash/simulation.h"
-#include <chrono>
 
 namespace kodanuki
 {
@@ -43,13 +42,8 @@ void Simulation::set_params(UD parameters)
 void Simulation::tick_fluids(float delta_time)
 {
 	// TODO: implement this method properly
-	auto start = std::chrono::high_resolution_clock::now();
 	vt::linear_i(1.0f, tensor_position, delta_time, tensor_velocity, update_descriptors);
 	update_descriptors = false;
-
-	auto end = std::chrono::high_resolution_clock::now();
-	auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-	std::cout << "Elapsed time tick_fluids(): " << elapsed_ms.count() << " ms" << std::endl;
 }
 
 VulkanTensor Simulation::get_mass()

@@ -33,7 +33,7 @@ int main()
 		.device_extensions = {"VK_KHR_swapchain"},
 		.gpu_score = &score_physical_device,
 		.queue_score = &score_queue_family,
-		.queue_priorities = {1.0f, 0.5f, 1.0f}
+		.queue_priorities = {0.2f, 0.2f, 1.0f}
 	}};
 
 	VulkanTarget target = {{
@@ -64,7 +64,7 @@ int main()
 	ShaderBridge bridge = {{
 		.device = device,
 		.frame_count = target.get_frame_count(),
-		.model = load_obj_model("assets/models/sphere.obj"),
+		.model = load_obj_model("assets/models/icosahedron.obj"),
 		.render_pipeline = render_fluid
 	}};
 

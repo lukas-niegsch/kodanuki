@@ -365,13 +365,15 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 		}
 	}
 
-	device.execute([&](VkCommandBuffer buffer) {
+	float elapsed_nanoseconds = device.execute([&](VkCommandBuffer buffer) {
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader);
 		vkCmdPushConstants(buffer, shader_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(float) * align_modulo(constants.size(), 4), constants.data());
 		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader_layout, 0, 1, &descriptor, 0, nullptr);
 		vkCmdDispatch(buffer, (tensors[0].numel() + 63) / 64, 1, 1);
 		vkCmdPipelineBarrier(buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 0, nullptr);
-	});
+	}, true);
+
+	std::cout << "VT " << name << " elapsed time: " << elapsed_nanoseconds << "ns" << '\n';
 }
 
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB, bool update_descriptor)
