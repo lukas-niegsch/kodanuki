@@ -1,11 +1,17 @@
 #include "source/splash/simulation.h"
+#include <chrono>
 
 namespace kodanuki
 {
 
-Simulation::Simulation(VulkanDevice device, uint32_t frame_count) : device(device)
+Simulation::Simulation(VulkanDevice device)
+: device(device)
+, tensor_mass(create_tensor({1}))
+, tensor_position(create_tensor({1}))
+, tensor_velocity(create_tensor({1}))
+, tensor_pressure(create_tensor({1}))
+, tensor_density(create_tensor({1}))
 {
-	this->count_frame = frame_count;
 	parameters.delta_time = 0.0f;
 	parameters.kernel_size = 1.2;
 	parameters.stiffness = 0.0;
@@ -13,24 +19,20 @@ Simulation::Simulation(VulkanDevice device, uint32_t frame_count) : device(devic
 	parameters.gravity = 10;
 	parameters.viscosity = 0.2;
 	parameters.particle_count = 0;
-	reset_tensors();
 }
 
 void Simulation::load_scene(Scene scene)
 {
-	reset_tensors();
 	count_particles = scene.instance_count;
-
-	for (uint32_t frame = 0; frame < count_frame; frame++) {
-		tensors_mass.push_back(create_tensor({1, count_particles}));
-		tensors_position.push_back(create_tensor({3, count_particles}));
-		tensors_velocity.push_back(create_tensor({3, count_particles}));
-		tensors_pressure.push_back(create_tensor({1, count_particles}));
-		tensors_density.push_back(create_tensor({1, count_particles}));
-		tensors_mass[frame].load_data(scene.masses);
-		tensors_position[frame].load_data(scene.positions);
-		tensors_velocity[frame].load_data(scene.velocities);
-	}
+	tensor_mass = create_tensor({1, count_particles});
+	tensor_position = create_tensor({3, count_particles});
+	tensor_velocity = create_tensor({3, count_particles});
+	tensor_pressure = create_tensor({1, count_particles});
+	tensor_density = create_tensor({1, count_particles});
+	tensor_mass.load_data(scene.masses);
+	tensor_position.load_data(scene.positions);
+	tensor_velocity.load_data(scene.velocities);
+	update_descriptors = true;
 }
 
 void Simulation::set_params(UD parameters)
@@ -38,51 +40,46 @@ void Simulation::set_params(UD parameters)
 	this->parameters = parameters;
 }
 
-void Simulation::tick_fluids(uint32_t frame, float delta_time)
+void Simulation::tick_fluids(float delta_time)
 {
 	// TODO: implement this method properly
-	vt::copy_i(get_position(frame), get_position(frame - 1));
-	vt::linear_i(1.0f, get_position(frame), delta_time, get_velocity(frame - 1));
+	auto start = std::chrono::high_resolution_clock::now();
+	vt::linear_i(1.0f, tensor_position, delta_time, tensor_velocity, update_descriptors);
+	update_descriptors = false;
+
+	auto end = std::chrono::high_resolution_clock::now();
+	auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+	std::cout << "Elapsed time tick_fluids(): " << elapsed_ms.count() << " ms" << std::endl;
 }
 
-VulkanTensor Simulation::get_mass(uint32_t frame)
+VulkanTensor Simulation::get_mass()
 {
-	return tensors_mass[frame % count_frame];
+	return tensor_mass;
 }
 
-VulkanTensor Simulation::get_position(uint32_t frame)
+VulkanTensor Simulation::get_position()
 {
-	return tensors_position[frame % count_frame];
+	return tensor_position;
 }
 
-VulkanTensor Simulation::get_velocity(uint32_t frame)
+VulkanTensor Simulation::get_velocity()
 {
-	return tensors_velocity[frame % count_frame];
+	return tensor_velocity;
 }
 
-VulkanTensor Simulation::get_pressure(uint32_t frame)
+VulkanTensor Simulation::get_pressure()
 {
-	return tensors_pressure[frame % count_frame];
+	return tensor_pressure;
 }
 
-VulkanTensor Simulation::get_density(uint32_t frame)
+VulkanTensor Simulation::get_density()
 {
-	return tensors_density[frame % count_frame];
+	return tensor_density;
 }
 
 uint32_t Simulation::get_particle_count()
 {
 	return count_particles;
-}
-
-void Simulation::reset_tensors()
-{
-	tensors_mass.clear();
-	tensors_position.clear();
-	tensors_velocity.clear();
-	tensors_pressure.clear();
-	tensors_density.clear();
-	count_particles = 0;
 }
 
 VulkanTensor Simulation::create_tensor(std::vector<std::size_t> shape)

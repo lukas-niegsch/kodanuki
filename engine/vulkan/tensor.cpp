@@ -340,7 +340,7 @@ void VulkanTensor::update_descriptor(VkDescriptorSet descriptor, VkDescriptorTyp
 	vkUpdateDescriptorSets(state->device, 1, &descriptor_write, 0, nullptr);
 }
 
-void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants)
+void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants, bool update_descriptor)
 {
 	assert(!tensors.empty());
 	auto& device = tensors[0].state->device;
@@ -359,131 +359,103 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 	VkPipelineLayout shader_layout = shader.get_pipeline_layout();
 	VkDescriptorSet descriptor = shader.get_primary_descriptor();
 
-	for (uint32_t i = 0; i < tensors.size(); i++) {
-		tensors[i].update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, i);
+	if (update_descriptor) {
+		for (uint32_t i = 0; i < tensors.size(); i++) {
+			tensors[i].update_descriptor(descriptor, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, i);
+		}
 	}
 
 	device.execute([&](VkCommandBuffer buffer) {
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader);
 		vkCmdPushConstants(buffer, shader_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(float) * align_modulo(constants.size(), 4), constants.data());
 		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, shader_layout, 0, 1, &descriptor, 0, nullptr);
-		vkCmdDispatch(buffer, (tensors[1].numel() + 31) / 32, 1, 1);
+		vkCmdDispatch(buffer, (tensors[0].numel() + 63) / 64, 1, 1);
 		vkCmdPipelineBarrier(buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 0, nullptr);
 	});
 }
 
-VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB)
+VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_add", {tensorZ, tensorA, tensorB}, {});
+	execute("vt_add", {tensorZ, tensorA, tensorB}, {}, update_descriptor);
 	return tensorZ;
 }
 
-void VulkanTensor::add_i(VulkanTensor tensorZ, VulkanTensor tensorA)
+void VulkanTensor::add_i(VulkanTensor tensorZ, VulkanTensor tensorA, bool update_descriptor)
 {
-	execute("vt_add_i", {tensorZ, tensorA}, {});
+	execute("vt_add_i", {tensorZ, tensorA}, {}, update_descriptor);
 }
 
-VulkanTensor VulkanTensor::add(VulkanTensor tensorA, float scalar)
+VulkanTensor VulkanTensor::add(VulkanTensor tensorA, float scalar, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_add_c", {tensorZ, tensorA}, {scalar});
+	execute("vt_add_c", {tensorZ, tensorA}, {scalar}, update_descriptor);
 	return tensorZ;
 }
 
-void VulkanTensor::add_i(VulkanTensor tensorZ, float scalar)
+void VulkanTensor::add_i(VulkanTensor tensorZ, float scalar, bool update_descriptor)
 {
-	execute("vt_add_ic", {tensorZ}, {scalar});
+	execute("vt_add_ic", {tensorZ}, {scalar}, update_descriptor);
 }
 
-VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, VulkanTensor tensorB)
+VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, VulkanTensor tensorB, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_mul", {tensorZ, tensorA, tensorB}, {});
+	execute("vt_mul", {tensorZ, tensorA, tensorB}, {}, update_descriptor);
 	return tensorZ;
 }
 
-void VulkanTensor::mul_i(VulkanTensor tensorZ, VulkanTensor tensorA)
+void VulkanTensor::mul_i(VulkanTensor tensorZ, VulkanTensor tensorA, bool update_descriptor)
 {
-	execute("vt_mul_i", {tensorZ, tensorA}, {});
+	execute("vt_mul_i", {tensorZ, tensorA}, {}, update_descriptor);
 }
 
-VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, float scalar)
+VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, float scalar, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_mul_c", {tensorZ, tensorA}, {scalar});
+	execute("vt_mul_c", {tensorZ, tensorA}, {scalar}, update_descriptor);
 	return tensorZ;
 }
 
-void VulkanTensor::mul_i(VulkanTensor tensorZ, float scalar)
+void VulkanTensor::mul_i(VulkanTensor tensorZ, float scalar, bool update_descriptor)
 {
-	execute("vt_mul_ic", {tensorZ}, {scalar});
+	execute("vt_mul_ic", {tensorZ}, {scalar}, update_descriptor);
 }
 
-VulkanTensor VulkanTensor::pow(VulkanTensor tensorA, float exponent)
+VulkanTensor VulkanTensor::pow(VulkanTensor tensorA, float exponent, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_pow", {tensorZ, tensorA}, {exponent});
+	execute("vt_pow", {tensorZ, tensorA}, {exponent}, update_descriptor);
 	return tensorZ;
 }
 
-void VulkanTensor::pow_i(VulkanTensor tensorZ, float exponent)
+void VulkanTensor::pow_i(VulkanTensor tensorZ, float exponent, bool update_descriptor)
 {
-	execute("vt_pow_i", {tensorZ}, {exponent});
+	execute("vt_pow_i", {tensorZ}, {exponent}, update_descriptor);
 }
 
-VulkanTensor VulkanTensor::copy(VulkanTensor tensorA)
+VulkanTensor VulkanTensor::copy(VulkanTensor tensorA, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_copy", {tensorZ, tensorA}, {});
+	execute("vt_copy", {tensorZ, tensorA}, {}, update_descriptor);
 	return tensorZ;
 }
 
-void VulkanTensor::copy_i(VulkanTensor tensorZ, VulkanTensor tensorA)
+void VulkanTensor::copy_i(VulkanTensor tensorZ, VulkanTensor tensorA, bool update_descriptor)
 {
-	execute("vt_copy", {tensorZ, tensorA}, {});
+	execute("vt_copy", {tensorZ, tensorA}, {}, update_descriptor);
 }
 
-VulkanTensor VulkanTensor::linear(float alpha, VulkanTensor tensorA, float beta, VulkanTensor tensorB)
+VulkanTensor VulkanTensor::linear(float alpha, VulkanTensor tensorA, float beta, VulkanTensor tensorB, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_linear", {tensorZ, tensorA, tensorB}, {alpha, beta});
+	execute("vt_linear", {tensorZ, tensorA, tensorB}, {alpha, beta}, update_descriptor);
 	return tensorZ;
 }
 
-void VulkanTensor::linear_i(float alpha, VulkanTensor tensorZ, float beta, VulkanTensor tensorA)
+void VulkanTensor::linear_i(float alpha, VulkanTensor tensorZ, float beta, VulkanTensor tensorA, bool update_descriptor)
 {
-	execute("vt_linear_i", {tensorZ, tensorA}, {alpha, beta});
-}
-
-VulkanTensor operator+(VulkanTensor tensorA, VulkanTensor tensorB)
-{
-	return VulkanTensor::add(tensorA, tensorB);
-}
-
-VulkanTensor operator+(VulkanTensor tensorA, float scalar)
-{
-	return VulkanTensor::add(tensorA, scalar);
-}
-
-VulkanTensor operator+(float scalar, VulkanTensor tensorA)
-{
-	return VulkanTensor::add(tensorA, scalar);
-}
-
-VulkanTensor operator*(VulkanTensor tensorA, VulkanTensor tensorB)
-{
-	return VulkanTensor::mul(tensorA, tensorB);
-}
-
-VulkanTensor operator*(VulkanTensor tensorA, float scalar)
-{
-	return VulkanTensor::mul(tensorA, scalar);
-}
-
-VulkanTensor operator*(float scalar, VulkanTensor tensorA)
-{
-	return VulkanTensor::mul(tensorA, scalar);
+	execute("vt_linear_i", {tensorZ, tensorA}, {alpha, beta}, update_descriptor);
 }
 
 }

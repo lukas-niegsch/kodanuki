@@ -3,7 +3,6 @@
 #include "source/splash/model.h"
 #include "engine/vulkan/device.h"
 #include "engine/vulkan/tensor.h"
-#include <vector>
 
 namespace kodanuki
 {
@@ -19,9 +18,7 @@ namespace kodanuki
  * currently all that we care about.
  *
  * The simulation holds vulkan tensors for the different properties of the
- * fluid system such as position and velocity. Because the rendering uses
- * frames in flight we actually store multiple copies simultaneously. The
- * rendering should only use the calculated positions for the current frame.
+ * fluid system such as position and velocity.
  * 
  * We use enums to quickly switch between scenes and the different algorithms.
  */
@@ -35,9 +32,8 @@ public:
 	 * changed during runtime using the different setter methods.
 	 * 
 	 * @param device The device on which to execute the tensor operations.
-	 * @param frame_count The number of simultaneous tensor copies.
 	 */
-	Simulation(VulkanDevice device, uint32_t frame_count);
+	Simulation(VulkanDevice device);
 
 	/**
 	 * Updates the tensors to load the new scene.
@@ -63,10 +59,9 @@ public:
 	 * This will use all the parameters that have been specified using the
 	 * different setter methods.
 	 *
-	 * @param frame The frame number module the frame count.
 	 * @param delta_time The elapsed time between the last tick. 
 	 */
-	void tick_fluids(uint32_t frame, float delta_time);
+	void tick_fluids(float delta_time);
 
 public:
 	/**
@@ -75,39 +70,35 @@ public:
 	 * @param frame The frame number module the frame count.
 	 * @return The mass tensor of the current frame.
 	 */
-	VulkanTensor get_mass(uint32_t frame);
+	VulkanTensor get_mass();
 
 	/**
 	 * Returns the position tensor of the current frame.
 	 * 
-	 * @param frame The frame number module the frame count.
 	 * @return The position tensor of the current frame.
 	 */
-	VulkanTensor get_position(uint32_t frame);
+	VulkanTensor get_position();
 
 	/**
 	 * Returns the velocity tensor of the current frame.
 	 * 
-	 * @param frame The frame number module the frame count.
 	 * @return The position tensor of the current frame.
 	 */
-	VulkanTensor get_velocity(uint32_t frame);
+	VulkanTensor get_velocity();
 
 	/**
 	 * Returns the pressure tensor of the current frame.
 	 * 
-	 * @param frame The frame number module the frame count.
 	 * @return The pressure tensor of the current frame.
 	 */
-	VulkanTensor get_pressure(uint32_t frame);
+	VulkanTensor get_pressure();
 
 	/**
 	 * Returns the density tensor of the current frame.
 	 * 
-	 * @param frame The frame number module the frame count.
 	 * @return The pressure tensor of the current frame.
 	 */
-	VulkanTensor get_density(uint32_t frame);
+	VulkanTensor get_density();
 
 	/**
 	 * Returns the number of particles in the current scene.
@@ -117,11 +108,6 @@ public:
 	uint32_t get_particle_count();
 
 private:
-	/**
-	 * Deletes all the tensor data and sets the particle count to zero.
-	 */
-	void reset_tensors();
-
 	/**
 	 * Creates a new empty tensor for the simulation.
 	 *
@@ -136,11 +122,12 @@ private:
 	uint32_t count_frame;
 	uint32_t count_particles;
 	UD parameters;
-	std::vector<VulkanTensor> tensors_mass;
-	std::vector<VulkanTensor> tensors_position;
-	std::vector<VulkanTensor> tensors_velocity;
-	std::vector<VulkanTensor> tensors_pressure;
-	std::vector<VulkanTensor> tensors_density;
+	VulkanTensor tensor_mass;
+	VulkanTensor tensor_position;
+	VulkanTensor tensor_velocity;
+	VulkanTensor tensor_pressure;
+	VulkanTensor tensor_density;
+	bool update_descriptors;
 };
 
 }

@@ -121,20 +121,20 @@ public:
 	VulkanTensor operator=(const VulkanTensor& other);
 
 public:
-	static VulkanTensor add(VulkanTensor tensorA, VulkanTensor tensorB);
-	static void add_i(VulkanTensor tensorZ, VulkanTensor tensorA);
-	static VulkanTensor add(VulkanTensor tensorA, float scalar);
-	static void add_i(VulkanTensor tensorZ, float scalar);
-	static VulkanTensor mul(VulkanTensor tensorA, VulkanTensor tensorB);
-	static void mul_i(VulkanTensor tensorZ, VulkanTensor tensorA);
-	static VulkanTensor mul(VulkanTensor tensorA, float scalar);
-	static void mul_i(VulkanTensor tensorZ, float scalar);
-	static VulkanTensor pow(VulkanTensor tensorA, float exponent);
-	static void pow_i(VulkanTensor tensorZ, float exponent);
-	static VulkanTensor copy(VulkanTensor tensorA);
-	static void copy_i(VulkanTensor tensorZ, VulkanTensor tensorA);
-	static VulkanTensor linear(float alpha, VulkanTensor tensorA, float beta, VulkanTensor tensorB);
-	static void linear_i(float alpha, VulkanTensor tensorZ, float beta, VulkanTensor tensorA);
+	static VulkanTensor add(VulkanTensor tensorA, VulkanTensor tensorB, bool update_descriptor);
+	static void add_i(VulkanTensor tensorZ, VulkanTensor tensorA, bool update_descriptor);
+	static VulkanTensor add(VulkanTensor tensorA, float scalar, bool update_descriptor);
+	static void add_i(VulkanTensor tensorZ, float scalar, bool update_descriptor);
+	static VulkanTensor mul(VulkanTensor tensorA, VulkanTensor tensorB, bool update_descriptor);
+	static void mul_i(VulkanTensor tensorZ, VulkanTensor tensorA, bool update_descriptor);
+	static VulkanTensor mul(VulkanTensor tensorA, float scalar, bool update_descriptor);
+	static void mul_i(VulkanTensor tensorZ, float scalar, bool update_descriptor);
+	static VulkanTensor pow(VulkanTensor tensorA, float exponent, bool update_descriptor);
+	static void pow_i(VulkanTensor tensorZ, float exponent, bool update_descriptor);
+	static VulkanTensor copy(VulkanTensor tensorA, bool update_descriptor);
+	static void copy_i(VulkanTensor tensorZ, VulkanTensor tensorA, bool update_descriptor);
+	static VulkanTensor linear(float alpha, VulkanTensor tensorA, float beta, VulkanTensor tensorB, bool update_descriptor);
+	static void linear_i(float alpha, VulkanTensor tensorZ, float beta, VulkanTensor tensorA, bool update_descriptor);
 
 	/**
 	 * Fills the given tensor with some value.
@@ -325,20 +325,14 @@ private:
 	 * @param name The name of the shader that will be executed.
 	 * @param tensors The arguments to the compute shader.
 	 * @param constants Some additional constants for the compute shader.
+	 * @param update_descriptor Should the descriptor be updated.
 	 */
-	static void execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants);
+	static void execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants, bool update_descriptor);
 
 private:
 	// Shared state to automatically delete unused instances.
 	std::shared_ptr<struct TensorState> state;
 };
-
-VulkanTensor operator+(VulkanTensor tensorA, VulkanTensor tensorB);
-VulkanTensor operator+(VulkanTensor tensorA, float scalar);
-VulkanTensor operator+(float scalar, VulkanTensor tensorA);
-VulkanTensor operator*(VulkanTensor tensorA, VulkanTensor tensorB);
-VulkanTensor operator*(VulkanTensor tensorA, float scalar);
-VulkanTensor operator*(float scalar, VulkanTensor tensorA);
 
 // Shortcut for equations for a vulkan tensor.
 using vt = VulkanTensor;

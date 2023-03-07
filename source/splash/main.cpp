@@ -68,7 +68,7 @@ int main()
 		.render_pipeline = render_fluid
 	}};
 
-	Simulation simulation(device, target.get_frame_count());
+	Simulation simulation(device);
 	simulation.load_scene(load_csv_scene("assets/models/debug.csv"));
 
 	uint32_t index_count = bridge.get_index_count();
@@ -84,11 +84,11 @@ int main()
 		uint32_t frame = renderer.aquire_frame();
 		handle_user_inputs(config, dts, frame, window, target, bridge, player_position, player_rotation);
 		show_config(config, dts);
-		simulation.tick_fluids(frame, dts);
+		simulation.tick_fluids(dts);
 
 		renderer.draw_command([&](VkCommandBuffer buffer) {
 			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_fluid);
-			VulkanTensor position = simulation.get_position(frame);
+			VulkanTensor position = simulation.get_position();
 			bridge.bind_render_resources(buffer, frame, position);
 			vkCmdDrawIndexed(buffer, index_count, instance_count, 0, 0, 0);
 			interface.draw(buffer);
