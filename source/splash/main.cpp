@@ -75,6 +75,9 @@ int main()
 	uint32_t instance_count = simulation.get_particle_count();
 
 	Config config;
+	config.compute_particle_count = instance_count;
+	config.visible_particle_count = instance_count;
+
 	glm::vec3 player_position = {0.0f, 20.0f, 0.0f};
 	glm::vec3 player_rotation = {0.0f, 0.0f, 0.0f};
 
@@ -83,6 +86,7 @@ int main()
 		float dts = window.get_delta_time_seconds();
 		uint32_t frame = renderer.aquire_frame();
 		handle_user_inputs(config, dts, frame, window, target, bridge, player_position, player_rotation);
+		
 		show_config(config, dts);
 		simulation.tick_fluids(dts);
 

@@ -43,6 +43,9 @@ struct Config
 	float move_speed = 60.0f;
 	float look_speed = 90.0f;
 	uint32_t max_dts_size = 60;
+	uint32_t visible_particle_count = 0;
+	uint32_t compute_particle_count = 0;
+	std::vector<float> vpc = std::vector<float>(max_dts_size, 0.0f);
 	std::vector<float> dts = std::vector<float>(max_dts_size, 0.0f);
 };
 
