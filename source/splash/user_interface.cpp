@@ -74,25 +74,11 @@ UserInterface::UserInterface(UserInterfaceBuilder builder)
 	init_info.ImageCount = builder.target.get_frame_count();
 	ImGui_ImplVulkan_Init(&init_info, builder.target.renderpass());
 
-	VkCommandPool command_pool = create_command_pool(builder.device, builder.device.queue_family_index());
-	VkCommandBuffer command_buffer = create_command_buffers(builder.device, command_pool, 1)[0];
+	builder.device.execute([&](VkCommandBuffer buffer) {
+		ImGui_ImplVulkan_CreateFontsTexture(buffer);
+	});
 
-	VkCommandBufferBeginInfo begin_info = {};
-	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	CHECK_VULKAN(vkBeginCommandBuffer(command_buffer, &begin_info));
-    ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
-	CHECK_VULKAN(vkEndCommandBuffer(command_buffer));
-
-	VkSubmitInfo submit_info = {};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &command_buffer;
-	CHECK_VULKAN(vkQueueSubmit(init_info.Queue, 1, &submit_info, VK_NULL_HANDLE));
-	
-	CHECK_VULKAN(vkDeviceWaitIdle(builder.device));
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
-	vkDestroyCommandPool(builder.device, command_pool, nullptr);
 }
 
 bool UserInterface::tick()
