@@ -91,32 +91,6 @@ uint32_t VulkanRenderer::aquire_frame()
 	return state->submit_frame;
 }
 
-void VulkanRenderer::call_command(std::function<void(VkCommandBuffer)> command, uint32_t queue_index)
-{
-	VkCommandBuffer buffer = state->compute_buffer;
-	CHECK_VULKAN(vkResetCommandBuffer(buffer, 0));
-	
-	VkCommandBufferBeginInfo buffer_info = {};
-	buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	CHECK_VULKAN(vkBeginCommandBuffer(buffer, &buffer_info));
-	command(buffer);
-	CHECK_VULKAN(vkEndCommandBuffer(buffer));
-
-	VkSubmitInfo info = {};
-	info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	info.waitSemaphoreCount = 0;
-	info.pWaitSemaphores = nullptr;
-	info.pWaitDstStageMask = nullptr;
-	info.commandBufferCount = 1;
-	info.pCommandBuffers = &buffer;
-	info.signalSemaphoreCount = 0;
-	info.pSignalSemaphores = nullptr;
-
-	VkQueue queue = state->device.queues()[queue_index];
-	CHECK_VULKAN(vkQueueSubmit(queue, 1, &info, nullptr));
-	CHECK_VULKAN(vkQueueWaitIdle(queue));
-}
-
 void VulkanRenderer::draw_command(std::function<void(VkCommandBuffer)> command)
 {
 	VkCommandBuffer buffer = state->command_buffers[state->submit_frame];

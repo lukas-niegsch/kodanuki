@@ -53,9 +53,6 @@ public:
 	// Signals that the next frame should be recorded.
 	uint32_t aquire_frame();
 
-	// Records the command buffer for compute shader calls.
-	void call_command(std::function<void(VkCommandBuffer)> command, uint32_t queue_index);
-
 	// Records the given shape to the command buffer.
 	void draw_command(std::function<void(VkCommandBuffer)> command);
 
