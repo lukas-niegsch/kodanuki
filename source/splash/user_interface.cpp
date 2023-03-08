@@ -7,53 +7,23 @@
 namespace kodanuki
 {
 
-std::vector<VkCommandBuffer> create_command_buffers(VkDevice device, VkCommandPool pool, uint32_t count)
-{
-	VkCommandBufferAllocateInfo buffer_info = {};
-	buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	buffer_info.commandPool = pool;
-	buffer_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	buffer_info.commandBufferCount = count;
-
-	std::vector<VkCommandBuffer> result(count);
-	CHECK_VULKAN(vkAllocateCommandBuffers(device, &buffer_info, result.data()));
-	return result;
-}
-
-VkCommandPool create_command_pool(VkDevice device, uint32_t queue_index)
-{
-	VkCommandPoolCreateInfo pool_info;
-	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	pool_info.pNext = nullptr;
-	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	pool_info.queueFamilyIndex = queue_index;
-
-	VkCommandPool command_pool;
-	CHECK_VULKAN(vkCreateCommandPool(device, &pool_info, nullptr, &command_pool));
-	return command_pool;
-}
-
 struct UserInterfaceState
 {
 	VulkanDevice device;
 	VulkanWindow window;
-	VkDescriptorPool imgui_pool;
 	~UserInterfaceState();
 };
 
 UserInterfaceState::~UserInterfaceState()
 {
-	CHECK_VULKAN(vkDeviceWaitIdle(device));
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
-	vkDestroyDescriptorPool(device, imgui_pool, nullptr);
 	ImGui::DestroyContext();
 }
 
 UserInterface::UserInterface(UserInterfaceBuilder builder)
 {
 	state = std::make_shared<UserInterfaceState>(builder.device, builder.window);
-	state->imgui_pool = create_descriptor_pool(builder.device);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -69,7 +39,7 @@ UserInterface::UserInterface(UserInterfaceBuilder builder)
 	init_info.Device = builder.device;
 	init_info.QueueFamily = builder.device.queue_family_index();
 	init_info.Queue = builder.device.queues()[1];
-	init_info.DescriptorPool = state->imgui_pool;
+	init_info.DescriptorPool = builder.device.get_descriptor_pool();
 	init_info.MinImageCount = 2;
 	init_info.ImageCount = builder.target.get_frame_count();
 	ImGui_ImplVulkan_Init(&init_info, builder.target.renderpass());
@@ -77,20 +47,11 @@ UserInterface::UserInterface(UserInterfaceBuilder builder)
 	builder.device.execute([&](VkCommandBuffer buffer) {
 		ImGui_ImplVulkan_CreateFontsTexture(buffer);
 	});
-
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 
 bool UserInterface::tick()
 {
-	static bool first_frame = true;
-
-	if (!first_frame) {
-		ImGui::Render();
-	} else {
-		first_frame = false;
-	}
-	
 	bool running = state->window.tick();
 
 	if (!running) {
