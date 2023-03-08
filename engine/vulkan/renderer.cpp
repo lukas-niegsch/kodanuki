@@ -13,7 +13,6 @@ struct RendererState
 	uint32_t render_frame;
 	uint32_t max_frame;
 	VkClearColorValue clear_color;
-	VkCommandPool command_pool;
 	std::vector<VkCommandBuffer> command_buffers;
 	std::vector<VkPipelineStageFlags> stage_masks;
 	std::vector<VkSemaphore> image_available_semaphores;
@@ -35,7 +34,9 @@ RendererState::~RendererState()
 	for (VkFence fence : aquire_frame_fences) {
 		vkDestroyFence(device, fence, nullptr);
 	}
-	vkDestroyCommandPool(device, command_pool, nullptr);
+	for (VkCommandBuffer buffer : command_buffers) {
+		vkFreeCommandBuffers(device, device.get_command_pool(), 1, &buffer);
+	}
 }
 
 void create_synchronization_objects(RendererState& state)
@@ -64,9 +65,8 @@ VulkanRenderer::VulkanRenderer(RendererBuilder builder)
 	state->clear_color = builder.clear_color;
 	state->max_frame = builder.target.get_frame_count();
 	state->stage_masks = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-	state->command_pool = create_command_pool(state->device, state->device.queue_family_index());
-	state->command_buffers = create_command_buffers(state->device, state->command_pool, state->max_frame);
-	state->compute_buffer = create_command_buffers(state->device, state->command_pool, 1)[0];
+	state->command_buffers = create_command_buffers(state->device, state->device.get_command_pool(), state->max_frame);
+	state->compute_buffer = create_command_buffers(state->device, state->device.get_command_pool(), 1)[0];
 	create_synchronization_objects(*state);
 	state->submit_frame = 0;
 	state->render_frame = 0;

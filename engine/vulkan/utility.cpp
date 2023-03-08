@@ -34,47 +34,6 @@ std::vector<VkDescriptorSet> create_descriptor_sets(VulkanDevice device, VkDescr
 	return descriptor_sets;
 }
 
-VkDescriptorPool create_descriptor_pool(VulkanDevice device)
-{
-	std::vector<VkDescriptorPoolSize> pool_sizes =
-	{
-		{ VK_DESCRIPTOR_TYPE_SAMPLER, 30 },
-		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 30 },
-		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 30 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 30 },
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 30 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 30 },
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 30 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 30 },
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 30 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 30 },
-		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 30 }
-	};
-
-	VkDescriptorPoolCreateInfo pool_info = {};
-	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-	pool_info.maxSets = 50 * static_cast<uint32_t>(pool_sizes.size());
-	pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
-	pool_info.pPoolSizes = pool_sizes.data();
-	VkDescriptorPool descriptor_pool;
-	CHECK_VULKAN(vkCreateDescriptorPool(device, &pool_info, nullptr, &descriptor_pool));
-	return descriptor_pool;
-}
-
-VkCommandPool create_command_pool(VkDevice device, uint32_t queue_index)
-{
-	VkCommandPoolCreateInfo pool_info;
-	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	pool_info.pNext = nullptr;
-	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	pool_info.queueFamilyIndex = queue_index;
-
-	VkCommandPool command_pool;
-	CHECK_VULKAN(vkCreateCommandPool(device, &pool_info, nullptr, &command_pool));
-	return command_pool;
-}
-
 std::vector<VkCommandBuffer> create_command_buffers(VkDevice device, VkCommandPool pool, uint32_t count)
 {
 	VkCommandBufferAllocateInfo buffer_info = {};

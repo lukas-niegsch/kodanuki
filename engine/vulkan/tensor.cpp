@@ -20,7 +20,6 @@ struct TensorState
 	std::optional<VkBuffer> staging_buffer;
 	std::optional<VkDeviceMemory> primary_memory;
 	std::optional<VkDeviceMemory> staging_memory;
-	VkCommandPool command_pool;
 	VkCommandBuffer transfer_buffer;
 	~TensorState();
 };
@@ -96,8 +95,7 @@ namespace kodanuki
 TensorState::~TensorState()
 {
 	CHECK_VULKAN(vkDeviceWaitIdle(device));
-	vkFreeCommandBuffers(device, command_pool, 1, &transfer_buffer);
-	vkDestroyCommandPool(device, command_pool, nullptr);
+	vkFreeCommandBuffers(device, device.get_command_pool(), 1, &transfer_buffer);
 	if (primary_buffer) {
 		vkDestroyBuffer(device, primary_buffer.value(), nullptr);
 	}
@@ -118,8 +116,7 @@ VulkanTensor::VulkanTensor(TensorBuilder builder)
 	state->shape = builder.shape;
 	state->dtype = builder.dtype;
 	state->dshare = builder.dshare;
-	state->command_pool = create_command_pool(state->device, state->device.queue_family_index());
-	state->transfer_buffer = create_command_buffers(state->device, state->command_pool, 1)[0];
+	state->transfer_buffer = create_command_buffers(state->device, state->device.get_command_pool(), 1)[0];
 	create_primary_buffer();
 	create_staging_buffer();
 }

@@ -72,9 +72,35 @@ public:
 	// Returns the globally used descriptor pool.
 	VkDescriptorPool get_descriptor_pool();
 
+	// Returns the globally used command pool.
+	VkCommandPool get_command_pool();
+
 public:
 	// Executes the given command for the device.
 	float execute(std::function<void(VkCommandBuffer)> command, bool debug = false);
+
+private:
+	/**
+	 * Creates the global descriptor pool.
+	 *
+	 * This descriptor pool is very large and be used throughout the
+	 * application. Any descriptor allocated using this pool must be
+	 * freed explicitely.
+	 *
+	 * @return The global descriptor pool.
+	 */
+	VkDescriptorPool create_descriptor_pool();
+
+	/**
+	 * Creates the global command pool.
+	 *
+	 * This command pool should only be used inside the main thread. Any
+	 * external thread must create its own command pool. Any command buffer
+	 * allocated using this pool must be freed explicitely.
+	 *
+	 * @return The global command pool.
+	 */
+	VkCommandPool create_command_pool();
 
 private:
 	// The abstract pointer to the implementation.
