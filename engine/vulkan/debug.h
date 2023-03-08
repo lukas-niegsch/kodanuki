@@ -214,4 +214,7 @@ std::string vulkan_debug(VkPhysicalDeviceSubgroupProperties info);
 template <>
 std::string vulkan_debug(VkFlags info);
 
+template <>
+std::string vulkan_debug(VkPhysicalDeviceType info);
+
 }

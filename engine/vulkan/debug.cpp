@@ -57,17 +57,7 @@ std::string vulkan_debug(VkPhysicalDeviceProperties info)
 	append_version(ss, "driverVersion", info.driverVersion);
 	ss << "vendorID: " << info.vendorID << '\n';
 	ss << "deviceID: " << info.deviceID << '\n';
-	ss << "deviceType: ";
-	switch(info.deviceType)
-	{
-		APPEND_SWITCH_CASE(VK_PHYSICAL_DEVICE_TYPE_OTHER);
-		APPEND_SWITCH_CASE(VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
-		APPEND_SWITCH_CASE(VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU);
-		APPEND_SWITCH_CASE(VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU);
-		APPEND_SWITCH_CASE(VK_PHYSICAL_DEVICE_TYPE_CPU);
-	default:
-		ss << "ERROR UNKNOWN DEVICE TYPE: " << info.deviceType << '\n';
-	}
+	ss << "deviceType: " << vulkan_debug(info.deviceType);
 	ss << "deviceName: " << info.deviceName << '\n';
 	ss << "pipelineCacheUUID:";
 	for (uint32_t i = 0; i < VK_UUID_SIZE; i++) {
@@ -109,32 +99,6 @@ std::string vulkan_debug(VkSurfaceFormatKHR info)
 	std::stringstream ss;
 	ss << "format: " << info.format << '\n';
 	ss << "colorSpace: " << info.colorSpace << '\n';
-	return ss.str();
-}
-
-template <>
-std::string vulkan_debug(VkPresentModeKHR info)
-{
-	std::stringstream ss;
-	ss << "mode: ";
-	switch(info)
-	{
-	case VK_PRESENT_MODE_IMMEDIATE_KHR:
-		ss << "VK_PRESENT_MODE_IMMEDIATE_KHR";
-		break;
-	case VK_PRESENT_MODE_MAILBOX_KHR:
-		ss << "VK_PRESENT_MODE_MAILBOX_KHR";
-		break;
-	case VK_PRESENT_MODE_FIFO_KHR:
-		ss << "VK_PRESENT_MODE_FIFO_KHR";
-		break;
-	case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
-		ss << "VK_PRESENT_MODE_FIFO_RELAXED_KHR";
-		break;
-	default:
-		ss << "unknown";
-	}
-	ss << '\n';
 	return ss.str();
 }
 
@@ -499,6 +463,39 @@ std::string vulkan_debug(VkFormat info)
 		APPEND_SWITCH_CASE(VK_FORMAT_ASTC_12x12_SRGB_BLOCK);
 	default:
 		ss << "FORMAT CODE NOT LISTED: " << info << '\n';
+	}
+	return ss.str();
+}
+
+template <>
+std::string vulkan_debug(VkPresentModeKHR info)
+{
+	std::stringstream ss;
+	switch (info) {
+		APPEND_SWITCH_CASE(VK_PRESENT_MODE_IMMEDIATE_KHR);
+		APPEND_SWITCH_CASE(VK_PRESENT_MODE_MAILBOX_KHR);
+		APPEND_SWITCH_CASE(VK_PRESENT_MODE_FIFO_KHR);
+		APPEND_SWITCH_CASE(VK_PRESENT_MODE_FIFO_RELAXED_KHR);
+		APPEND_SWITCH_CASE(VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR);
+		APPEND_SWITCH_CASE(VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR);
+	default:
+		ss << "PRESENT MODE UNKNOWN: " << info << '\n';
+	}
+	return ss.str();
+}
+
+template <>
+std::string vulkan_debug(VkPhysicalDeviceType info)
+{
+	std::stringstream ss;
+	switch(info) {
+		APPEND_SWITCH_CASE(VK_PHYSICAL_DEVICE_TYPE_OTHER);
+		APPEND_SWITCH_CASE(VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+		APPEND_SWITCH_CASE(VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU);
+		APPEND_SWITCH_CASE(VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU);
+		APPEND_SWITCH_CASE(VK_PHYSICAL_DEVICE_TYPE_CPU);
+	default:
+		ss << "ERROR UNKNOWN DEVICE TYPE: " << info << '\n';
 	}
 	return ss.str();
 }
