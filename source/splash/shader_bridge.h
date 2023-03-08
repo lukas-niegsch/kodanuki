@@ -35,6 +35,7 @@ public:
 	void bind_render_resources(VkCommandBuffer buffer, uint32_t frame, VulkanTensor positions);
 	void update_mvp(const MVP& new_mvp, uint32_t frame);
 	void tick_simulation(uint32_t frame, float delta_time);
+	VulkanTensor get_mvp(uint32_t frame);
 
 private:
 	void create_render_descriptors();

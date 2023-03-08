@@ -95,4 +95,10 @@ void ShaderBridge::update_mvp(const MVP& new_mvp, uint32_t frame)
 	});
 }
 
+VulkanTensor ShaderBridge::get_mvp(uint32_t frame)
+{
+	(void) frame;
+	return tensors.tensor_mvp;
+}
+
 }
