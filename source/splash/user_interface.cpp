@@ -31,7 +31,7 @@ UserInterface::UserInterface(UserInterfaceBuilder builder)
 	io.Fonts->AddFontFromFileTTF(builder.fontfile.c_str(), builder.fontsize);
 
 	ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForVulkan(state->window, true);
+	ImGui_ImplGlfw_InitForVulkan(builder.window, true);
 
 	ImGui_ImplVulkan_InitInfo init_info = {};
 	init_info.Instance = builder.device.instance();
@@ -52,17 +52,14 @@ UserInterface::UserInterface(UserInterfaceBuilder builder)
 
 bool UserInterface::tick()
 {
-	bool running = state->window.tick();
-
-	if (!running) {
-		return running;
+	if (!state->window.tick()) {
+		return false;
 	}
 
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-
-	return running;
+	return true;
 }
 
 void UserInterface::draw(VkCommandBuffer buffer)
