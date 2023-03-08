@@ -20,8 +20,8 @@ int main()
 {
 	VulkanWindow window = {{
 		.title = "Splash",
-		.width = 600,
-		.height = 600,
+		.width = 800,
+		.height = 800,
 		.resizeable = false,
 		.fullscreen = false,
 		.frames = 60

@@ -9,12 +9,12 @@ Scene load_csv_scene(std::string filename)
 	(void) filename;
 	// TODO: implement properly ...
 
+	Scene scene;
+	scene.instance_count = 1000000; // 81, 1024, 9000, 30000, 65536, 1000000;
+
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::normal_distribution<float> dist(0.0f, 50.0f);
-
-	Scene scene;
-	scene.instance_count = 65536; // 81, 1024, 9000, 30000, 65536, 1000000;
+	std::normal_distribution<float> dist(0.0f, std::cbrt(scene.instance_count / 2));
 
 	for (uint32_t i = 0; i < scene.instance_count; i++) {
 		scene.positions.push_back({dist(gen), dist(gen), dist(gen)});
