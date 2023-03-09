@@ -169,7 +169,9 @@ TEST_CASE("tensor operator overloading works")
 	});
 
 	// elementwise operator overloading
-	VulkanTensor z = vt::pow(4.0f * a + 3.0f * b * c + 3.0f, 2);
+	auto t1 = vt::linear(4.0f, a, 3.0f, vt::mul(b, c));
+	auto t2 = vt::add(t1, 3.0f);
+	VulkanTensor z = vt::pow(t2, 2);
 	z.with_maps<float>([](std::vector<float>& values) {
 		CHECK(values[0] == doctest::Approx(305.9f));
 		CHECK(values[1] == doctest::Approx(819.667f));
