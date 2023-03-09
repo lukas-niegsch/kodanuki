@@ -7,7 +7,7 @@
 namespace kodanuki
 {
 
-VkPipelineShaderStageCreateInfo create_shader_stage(VulkanShader shader, VkShaderStageFlagBits bit)
+VkPipelineShaderStageCreateInfo create_shader_stage(VulkanShaderModule shader, VkShaderStageFlagBits bit)
 {
 	VkPipelineShaderStageCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -21,7 +21,7 @@ VkPipelineShaderStageCreateInfo create_shader_stage(VulkanShader shader, VkShade
 
 void fill_shader_stages(std::vector<VkPipelineShaderStageCreateInfo>& stages, GraphicsPipelineBuilder& builder)
 {
-	auto append_stage = [&](std::optional<VulkanShader> shader, VkShaderStageFlagBits bit) {
+	auto append_stage = [&](std::optional<VulkanShaderModule> shader, VkShaderStageFlagBits bit) {
 		if (shader) {
 			stages.push_back(create_shader_stage(shader.value(), bit));
 		}
@@ -162,7 +162,7 @@ VulkanPipeline VulkanPipeline::from_comp_file(VulkanDevice device, std::string f
 
 	ComputePipelineBuilder builder = {
 		.device = device,
-		.compute_shader = create_shader(device, code),
+		.compute_shader = create_shader_module(device, code),
 		.push_constant_byte_size = push_constants[0]->size,
 		.bindings = bindings
 	};

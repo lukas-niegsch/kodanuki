@@ -32,16 +32,16 @@ struct GraphicsPipelineBuilder
 	VkPipelineLayoutCreateInfo layout_info;
 
 	// The handle to the vertex shader module.
-	std::optional<VulkanShader> vertex_shader;
+	std::optional<VulkanShaderModule> vertex_shader;
 
 	// The handle to the tesselation shader module.
-	std::optional<VulkanShader> tesselation;
+	std::optional<VulkanShaderModule> tesselation;
 
 	// The handle to the geometry shader module.
-	std::optional<VulkanShader> geometry_shader;
+	std::optional<VulkanShaderModule> geometry_shader;
 
 	// The handle to the fragment shader module.
-	std::optional<VulkanShader> fragment_shader;
+	std::optional<VulkanShaderModule> fragment_shader;
 
 	// The configuration of the dynamic state.
 	VkPipelineDynamicStateCreateInfo dynamic_state;
@@ -88,7 +88,7 @@ struct ComputePipelineBuilder
 	VulkanDevice device;
 
 	// The handle to the compute shader module.
-	VulkanShader compute_shader;
+	VulkanShaderModule compute_shader;
 
 	// The number of bytes inside the push_constant field.
 	uint32_t push_constant_byte_size;
