@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/utility/signature.h"
 #include "engine/utility/type_name.h"
+#include "engine/utility/wrapper.h"
 #include "extern/SPIRV-Reflect/spirv_reflect.h"
 #include <vulkan/vulkan.h>
 #include <iostream>
@@ -138,6 +139,29 @@ auto vectorize(Args ... args)
 	std::vector<T> result(size);
 	Function(args... , &size, result.data());
 	return result;
+}
+
+/**
+ * Creates a wrapper around vulkan's create/destroy pattern.
+ *
+ * The resulting wrapper will call the create method with the given
+ * arguments and will automatically call the destroy method once
+ * the object is no longer used.
+ *
+ * usage:
+ * create_wrapper<vkCreateBuffer, vkDestroyBuffer>(...);
+ */
+template <auto CreateFunction, auto DestroyFunction, typename ... Args>
+auto create_wrapper(std::remove_pointer_t<reverse_signature_t<2, CreateFunction>> arg0, Args ... args)
+{
+	using Q = kodanuki::reverse_signature_t<0, CreateFunction>;
+	using T = std::remove_pointer_t<Q>;
+	T* output = new T();
+	CHECK_VULKAN(CreateFunction(args..., &arg0, nullptr, output));
+	auto destroy = [&](T* ptr) {
+		DestroyFunction(args..., *ptr, nullptr);
+	};
+	return Wrapper<T>(output, destroy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
