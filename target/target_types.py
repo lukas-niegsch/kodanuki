@@ -46,6 +46,7 @@ class StatsTarget(Target):
 
 	def execute(self, args):
 		super().execute(args)
+		# subprocess.call(f'pygount -s cpp source engine | sort -rn', shell = True)
 		subprocess.call(f'pygount --format=summary engine source', shell = True)
 
 

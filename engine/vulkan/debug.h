@@ -9,31 +9,30 @@
 #include <vector>
 #define LINE_LENGTH 80
 
-#define ERROR(reason)							\
-	do {										\
-		std::stringstream err;					\
-		err << reason << '\n';					\
-		err << "File: " << __FILE__ << '\n';	\
-		err << "Line: " << __LINE__ << '\n';	\
-		std::cout << err.str();					\
-		std::terminate(); 						\
+#define ERROR(reason)									\
+	do {												\
+		std::stringstream err;							\
+		err << reason << '\n';							\
+		err << "File: " << __FILE__ << '\n';			\
+		err << "Line: " << __LINE__ << '\n';			\
+		std::cout << err.str();							\
+		std::terminate(); 								\
 	} while (false)
 
-#define CHECK_VULKAN(result)					\
-	do {										\
-		auto return_type = result;				\
-		if (return_type != VK_SUCCESS) {		\
-			ERROR(vulkan_debug(return_type));	\
-		}										\
+#define CHECK_RESULT(result, value)						\
+	do {												\
+		auto return_type = result;						\
+		if (return_type != value) {						\
+			ERROR(vulkan_debug(return_type));			\
+		}												\
 	} while (false)
 
-#define CHECK_SPIRV(result)									\
-	do {													\
-		auto return_type = result;							\
-		if (return_type != SPV_REFLECT_RESULT_SUCCESS) {	\
-			ERROR(vulkan_debug(return_type));				\
-		}													\
-	} while (false)
+#define CHECK_VULKAN(result)							\
+	CHECK_RESULT(result, VK_SUCCESS)
+
+#define CHECK_SPIRV(result)								\
+	CHECK_RESULT(result, SPV_REFLECT_RESULT_SUCCESS)
+
 
 namespace kodanuki
 {
@@ -79,25 +78,6 @@ template <typename T>
 void print_vulkan_struct(T info)
 {
 	std::cout << vulkan_debug<T>(info);
-}
-
-/**
- * Prints the values of the given structure.
- * 
- * This function will always throw a compiler error
- * unless it is specialized for the given type.
- * 
- * @param info The structure that should be printed.
- */
-template <typename T>
-void print_vulkan_struct(std::vector<T> info)
-{
-	for (int i = 0; i < (int) info.size(); i++) {
-		if (i != 0) {
-			std::cout << std::string(LINE_LENGTH, ' ') << '\n';
-		}
-		print_vulkan_struct<T>(info[i]);
-	}
 }
 
 /**
