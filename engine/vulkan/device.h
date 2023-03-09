@@ -54,7 +54,7 @@ public:
 	VulkanDevice(DeviceBuilder builder);
 
 	// Returns the handle to the logical device.
-	operator VkDevice();
+	operator VkDevice() const;
 
 public:
 	// Returns the handle to the instance.

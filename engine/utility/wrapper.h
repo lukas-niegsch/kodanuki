@@ -18,6 +18,11 @@ struct Wrapper
 {
 public:
 	/**
+	 * Default constructor so this class plays nicely with std::shared_ptr.
+	 */
+	Wrapper() = default;
+
+	/**
 	 * Creates a new wrapper around the pointer.
 	 *
 	 * This wrapper now owns the pointer. It will destroy the pointer once

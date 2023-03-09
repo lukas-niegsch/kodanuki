@@ -158,7 +158,7 @@ auto create_wrapper(std::remove_pointer_t<reverse_signature_t<2, CreateFunction>
 	using T = std::remove_pointer_t<Q>;
 	T* output = new T();
 	CHECK_VULKAN(CreateFunction(args..., &arg0, nullptr, output));
-	auto destroy = [&](T* ptr) {
+	auto destroy = [=](T* ptr) {
 		DestroyFunction(args..., *ptr, nullptr);
 	};
 	return Wrapper<T>(output, destroy);

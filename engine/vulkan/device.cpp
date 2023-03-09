@@ -140,7 +140,7 @@ VulkanDevice::VulkanDevice(DeviceBuilder builder)
 	CHECK_VULKAN(vkCreateQueryPool(logical_device, &query_info, nullptr, &pimpl->query_pool));
 }
 
-VulkanDevice::operator VkDevice()
+VulkanDevice::operator VkDevice() const
 {
 	return pimpl->logical_device;
 }

@@ -4,42 +4,28 @@
 namespace kodanuki
 {
 
-VkShaderModule create_shader_module(ShaderBuilder builder)
-{
-	VkShaderModuleCreateInfo shader_module_info;
-	shader_module_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	shader_module_info.pNext = nullptr;
-	shader_module_info.flags = 0;
-	shader_module_info.codeSize = builder.code.size();
-	shader_module_info.pCode = reinterpret_cast<const uint32_t*>(builder.code.data());
-
-	VkShaderModule result;
-	CHECK_VULKAN(vkCreateShaderModule(builder.device, &shader_module_info, nullptr, &result));
-	return result;
-}
-
 struct ShaderState
 {
-	VulkanDevice device;
-	VkShaderModule shader_module;
+	Wrapper<VkShaderModule> shader;
 	std::string entry_point;
-	~ShaderState();
 };
-
-ShaderState::~ShaderState()
-{
-	vkDestroyShaderModule(device, shader_module, nullptr);
-}
 
 VulkanShader::VulkanShader(ShaderBuilder builder)
 {
-	auto shader_module = create_shader_module(builder);
-	pimpl = std::make_shared<ShaderState>(builder.device, shader_module, builder.entry_point);
+	pimpl = std::make_shared<ShaderState>();
+	pimpl->entry_point = builder.entry_point;
+	pimpl->shader = create_wrapper<vkCreateShaderModule, vkDestroyShaderModule>({
+		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.codeSize = builder.code.size(),
+		.pCode = reinterpret_cast<const uint32_t*>(builder.code.data())
+	}, builder.device);
 }
 
 VulkanShader::operator VkShaderModule()
 {
-	return pimpl->shader_module;
+	return pimpl->shader;
 }
 
 std::string& VulkanShader::entry_point()
