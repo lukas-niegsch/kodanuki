@@ -1,6 +1,7 @@
 #include "engine/vulkan/window.h"
 #include "engine/vulkan/debug.h"
 #include <chrono>
+#include <functional>
 
 namespace kodanuki
 {
@@ -22,7 +23,7 @@ GLFWwindow* create_window(WindowBuilder builder)
 	glfwWindowHint(GLFW_RESIZABLE, builder.resizeable ? GLFW_TRUE : GLFW_FALSE);
 	auto window = glfwCreateWindow(width, height, builder.title.c_str(), monitor, NULL);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	return window;
 }
 
@@ -31,6 +32,11 @@ struct WindowState
 	GLFWwindow* window;
 	float delta_time;
 	std::chrono::high_resolution_clock::time_point current_time;
+	bool first_mouse_movement;
+	float last_mouse_x;
+	float last_mouse_y;
+	std::function<void(float, float)> cursor_movement_callback;
+	std::function<void(float)> cursor_scroll_callback;
 	~WindowState();
 };
 
@@ -49,6 +55,8 @@ VulkanWindow::VulkanWindow(WindowBuilder builder)
 	auto window = create_window(builder);
 	state = std::make_shared<WindowState>(window);
 	state->current_time = std::chrono::high_resolution_clock::now();
+	state->first_mouse_movement = true;
+	glfwSetWindowUserPointer(state->window, state.get());
 }
 
 VulkanWindow::operator GLFWwindow*()
@@ -93,6 +101,50 @@ float VulkanWindow::get_delta_time_seconds()
 bool VulkanWindow::is_key_pressed(int key, int action)
 {
 	return glfwGetKey(state->window, key) == action;
+}
+
+bool VulkanWindow::is_mouse_button_pressed(int key, int action)
+{
+	return glfwGetMouseButton(state->window, key) == action;
+}
+
+void vulkan_window_cursor_movement_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+	auto state = static_cast<WindowState*>(glfwGetWindowUserPointer(window));
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
+
+	if (state->first_mouse_movement) {
+		state->last_mouse_x = xpos;
+		state->last_mouse_y = ypos;
+		state->first_mouse_movement = false;
+	}
+
+	float xoffset = xpos - state->last_mouse_x;
+	float yoffset = state->last_mouse_y - ypos;
+
+	state->last_mouse_x = xpos;
+	state->last_mouse_y = ypos;
+	state->cursor_movement_callback(xoffset, yoffset);
+}
+
+void VulkanWindow::set_cursor_movement_callback(std::function<void(float, float)> callback)
+{
+	state->cursor_movement_callback = callback;
+	glfwSetCursorPosCallback(state->window, &vulkan_window_cursor_movement_callback);
+}
+
+void vulkan_window_cursor_scroll_callback(GLFWwindow* window, double, double yoffsetIn)
+{
+	auto state = static_cast<WindowState*>(glfwGetWindowUserPointer(window));
+	float yOffset = static_cast<float>(yoffsetIn);
+	state->cursor_scroll_callback(yOffset);
+}
+
+void VulkanWindow::set_cursor_scroll_callback(std::function<void(float)> callback)
+{
+	state->cursor_scroll_callback = callback;
+	glfwSetScrollCallback(state->window, &vulkan_window_cursor_scroll_callback);
 }
 
 };

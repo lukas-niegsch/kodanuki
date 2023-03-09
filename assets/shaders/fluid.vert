@@ -22,7 +22,7 @@ layout(location = 4) in vec3 inInstancePosition;
 
 layout(location = 0) out vec3 outFragColor;
 
-const vec3 LIGHT_DIRECTION = normalize(vec3(0.0, -1.0, 0.0));
+const vec3 LIGHT_DIRECTION = normalize(vec3(0.0, 1.0, 0.0));
 const float LIGHT_AMBIANT = 0.2;
 
 void main()

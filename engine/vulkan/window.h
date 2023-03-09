@@ -62,6 +62,10 @@ public:
 	bool tick();
 
 public:
+	void set_cursor_movement_callback(std::function<void(float, float)> callback);
+	void set_cursor_scroll_callback(std::function<void(float)> callback);
+
+public:
 	// Returns the handle to the surface.
 	VkSurfaceKHR create_surface(VulkanDevice device);
 
@@ -76,6 +80,9 @@ public:
 
 	// Returns true iff the key is being pressed.
 	bool is_key_pressed(int key, int action = GLFW_PRESS);
+
+	// Returns true iff the mouse button is being pressed.
+	bool is_mouse_button_pressed(int key, int action = GLFW_PRESS);
 
 private:
 	// The abstract pointer to the implementation.

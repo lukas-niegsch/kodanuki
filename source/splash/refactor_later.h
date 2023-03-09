@@ -2,7 +2,7 @@
 #include "source/splash/model.h"
 #include "engine/vulkan/utility.h"
 #include "source/splash/shader_bridge.h"
-#define GLM_FORCE_RADIANS
+#include "source/splash/camera.h"
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -121,10 +121,11 @@ void create_simple_renderpass(VulkanDevice device, VkRenderPass& renderpass)
 	CHECK_VULKAN(vkCreateRenderPass(device, &info, nullptr, &renderpass));
 }
 
-void handle_user_inputs(Config& config, float dts, uint32_t frame, VulkanWindow window, VulkanTarget target, ShaderBridge& bridge, glm::vec3& player_position, glm::vec3& player_rotation)
+void handle_user_inputs(Config& config, float dts, uint32_t frame, VulkanWindow window, VulkanTarget target, ShaderBridge& bridge, Camera& camera)
 {
-	glm::vec3 rotation {0.0f};
-	
+	camera.MovementSpeed = config.move_speed;
+	camera.MouseSensitivity = config.look_speed / 200;
+
 	if (window.is_key_pressed(GLFW_KEY_M)) {
 		config.is_demo_open = true;
 	}
@@ -137,67 +138,30 @@ void handle_user_inputs(Config& config, float dts, uint32_t frame, VulkanWindow 
 	if (window.is_key_pressed(GLFW_KEY_V)) {
 		config.is_menu_open = false;
 	}
-	if (window.is_key_pressed(GLFW_KEY_LEFT)) {
-		rotation.y += 1.0f;
-	}
-	if (window.is_key_pressed(GLFW_KEY_RIGHT)) {
-		rotation.y -= 1.0f;
-	}
-	if (window.is_key_pressed(GLFW_KEY_UP)) {
-		rotation.x += 1.0f;
-	}
-	if (window.is_key_pressed(GLFW_KEY_DOWN)) {
-		rotation.x -= 1.0f;
-	}
-
-	if (glm::dot(rotation, rotation) > std::numeric_limits<float>::epsilon()) {
-		player_rotation += config.look_speed * dts * glm::normalize(rotation); 
-	}
-	player_rotation.x = glm::clamp(player_rotation.x, glm::degrees(-75.0f), glm::degrees(75.0f));
-	player_rotation.y = glm::mod(player_rotation.y, glm::degrees(glm::two_pi<float>()));
-
-	float yaw = player_rotation.y;
-	float pitch = player_rotation.x;
-
-	glm::vec3 forward = glm::normalize(glm::vec3{
-		glm::cos(glm::radians(yaw)) * glm::cos(glm::radians(pitch)),
-		glm::sin(glm::radians(pitch)),
-		glm::sin(glm::radians(yaw)) * glm::cos(glm::radians(pitch))
-	});
-	glm::vec3 world_up {0.0f, -1.0f, 0.0f};
-	glm::vec3 right = glm::normalize(glm::cross(forward, world_up));
-	glm::vec3 up    = glm::normalize(glm::cross(right, forward));
-
-	glm::vec3 position {0.0f};
-	
 	if (window.is_key_pressed(GLFW_KEY_A)) {
-		position -= right;
+		camera.process_keyboard(Camera::LEFT, dts);
 	}
 	if (window.is_key_pressed(GLFW_KEY_S)) {
-		position -= forward;
+		camera.process_keyboard(Camera::BACKWARD, dts);
 	}
 	if (window.is_key_pressed(GLFW_KEY_D)) {
-		position += right;
+		camera.process_keyboard(Camera::RIGHT, dts);
 	}
 	if (window.is_key_pressed(GLFW_KEY_W)) {
-		position += forward;
+		camera.process_keyboard(Camera::FORWARD, dts);
 	}
 	if (window.is_key_pressed(GLFW_KEY_E)) {
-		position -= up;
+		camera.process_keyboard(Camera::DOWN, dts);
 	}
 	if (window.is_key_pressed(GLFW_KEY_Q)) {
-		position += up;
-	}
-
-	if (glm::dot(position, position) > std::numeric_limits<float>::epsilon()) {
-		player_position += config.move_speed * dts * glm::normalize(position); 
+		camera.process_keyboard(Camera::UP, dts);
 	}
 
 	auto extent = target.get_surface_extent();
 	MVP new_mvp;
 	new_mvp.model = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(1.0f, 0.0f, 1.0f));
-	new_mvp.view = glm::lookAt(player_position, player_position + forward, world_up);
-	new_mvp.projection = glm::perspective(glm::radians(45.0f), extent.width / (float) extent.height, 0.1f, config.render_distance);
+	new_mvp.view = camera.get_view_matrix();
+	new_mvp.projection = glm::perspective(45.0f, extent.width / (float) extent.height, 0.1f, config.render_distance);
 	bridge.update_mvp(new_mvp, frame);
 }
 

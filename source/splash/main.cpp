@@ -9,6 +9,7 @@
 #include "source/splash/model.h"
 #include "source/splash/scene.h"
 #include "source/splash/culling.h"
+#include "source/splash/camera.h"
 #include "engine/utility/alignment.h"
 #include "extern/imgui/imgui.h"
 #include "refactor_later.h"
@@ -53,6 +54,20 @@ int main()
 		.clear_color = {0.52941f, 0.80784f, 0.92157f, 1.0f}
 	}};
 
+	Camera camera;
+	window.set_cursor_movement_callback([&](float xoffset, float yoffset) {
+		if (ImGui::GetIO().WantCaptureMouse) {
+			return;
+		}
+		if (!window.is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
+			return;
+		}
+		camera.process_mouse_movement(xoffset, yoffset, true);
+	});
+	window.set_cursor_scroll_callback([&](float yoffset) {
+		camera.process_mouse_scroll(yoffset);
+	});
+
 	UserInterface interface = {{
 		.device = device,
 		.target = target,
@@ -69,20 +84,16 @@ int main()
 		.render_pipeline = render_fluid
 	}};
 
+	Config config;
 	Simulation simulation(device);
 	simulation.load_scene(load_csv_scene("assets/models/debug.csv"));
-
 	uint32_t index_count = bridge.get_index_count();
-
-	Config config;
-	glm::vec3 player_position = {0.0f, 20.0f, 0.0f};
-	glm::vec3 player_rotation = {0.0f, 0.0f, 0.0f};
 
 	while (interface.tick())
 	{
 		float dts = window.get_delta_time_seconds();
 		uint32_t frame = renderer.aquire_frame();
-		handle_user_inputs(config, dts, frame, window, target, bridge, player_position, player_rotation);
+		handle_user_inputs(config, dts, frame, window, target, bridge, camera);
 		
 		show_config(config, dts);
 		simulation.tick_fluids(dts);
