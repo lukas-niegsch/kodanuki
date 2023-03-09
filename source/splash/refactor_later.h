@@ -161,7 +161,7 @@ void handle_user_inputs(Config& config, float dts, uint32_t frame, VulkanWindow 
 	MVP new_mvp;
 	new_mvp.model = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(1.0f, 0.0f, 1.0f));
 	new_mvp.view = camera.get_view_matrix();
-	new_mvp.projection = glm::perspective(45.0f, extent.width / (float) extent.height, 0.1f, config.render_distance);
+	new_mvp.projection = camera.get_projection_matrix(extent.width, extent.height, config.render_distance);
 	bridge.update_mvp(new_mvp, frame);
 }
 
