@@ -73,7 +73,6 @@ int main()
 	simulation.load_scene(load_csv_scene("assets/models/debug.csv"));
 
 	uint32_t index_count = bridge.get_index_count();
-	uint32_t instance_count = simulation.get_particle_count();
 
 	Config config;
 	glm::vec3 player_position = {0.0f, 20.0f, 0.0f};
@@ -97,7 +96,7 @@ int main()
 		renderer.draw_command([&](VkCommandBuffer buffer) {
 			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_fluid);
 			bridge.bind_render_resources(buffer, frame, visibles);
-			vkCmdDrawIndexed(buffer, index_count, instance_count, 0, 0, 0);
+			vkCmdDrawIndexed(buffer, index_count, config.visible_particle_count, 0, 0, 0);
 			interface.draw(buffer);
 		});
 

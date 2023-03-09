@@ -10,7 +10,7 @@ Scene load_csv_scene(std::string filename)
 	// TODO: implement properly ...
 
 	Scene scene;
-	scene.instance_count = 1000000; // 81, 1024, 9000, 30000, 65536, 1000000;
+	scene.instance_count = 65536; // 81, 1024, 9000, 30000, 65536, 1000000;
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
