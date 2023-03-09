@@ -1,7 +1,8 @@
 #pragma once
 #include "engine/vulkan/device.h"
-#include "engine/vulkan/shader.h"
 #include "engine/vulkan/target.h"
+#include "engine/vulkan/debug.h"
+#include "engine/vulkan/wrapper.h"
 #include <vulkan/vulkan.h>
 #include <optional>
 

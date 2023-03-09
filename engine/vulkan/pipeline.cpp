@@ -14,7 +14,7 @@ VkPipelineShaderStageCreateInfo create_shader_stage(VulkanShader shader, VkShade
 	info.pNext = nullptr;
 	info.stage = bit;
 	info.module = shader;
-	info.pName = shader.entry_point().c_str();
+	info.pName = "main";
 	info.pSpecializationInfo = nullptr;
 	return info;
 }
@@ -160,15 +160,9 @@ VulkanPipeline VulkanPipeline::from_comp_file(VulkanDevice device, std::string f
 	auto push_constants = vectorize<spvReflectEnumeratePushConstantBlocks>(&reflect_module);
 	assert(push_constants.size() == 1); // Only one push constant block allowed!
 
-	ShaderBuilder fluid_compute_builder = {
-		.device = device,
-		.code = code,
-		.entry_point = "main"
-	};
-
 	ComputePipelineBuilder builder = {
 		.device = device,
-		.compute_shader = VulkanShader(fluid_compute_builder),
+		.compute_shader = create_shader(device, code),
 		.push_constant_byte_size = push_constants[0]->size,
 		.bindings = bindings
 	};

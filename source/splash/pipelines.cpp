@@ -1,5 +1,4 @@
 #include "source/splash/pipelines.h"
-#include "engine/vulkan/shader.h"
 #include "engine/vulkan/debug.h"
 #include "engine/utility/file.h"
 #include "source/splash/model.h"
@@ -10,18 +9,6 @@ namespace kodanuki
 
 VulkanPipeline create_render_fluid_pipeline(VulkanDevice device, VulkanTarget target)
 {
-	ShaderBuilder fluid_vertex_builder = {
-		.device = device,
-		.code = read_file_into_buffer("assets/shaders/fluid.vert.spv"),
-		.entry_point = "main"
-	};
-
-	ShaderBuilder fluid_fragment_builder = {
-		.device = device,
-		.code = read_file_into_buffer("assets/shaders/fluid.frag.spv"),
-		.entry_point = "main"
-	};
-
 	// Don't include any dynamic states.
 	VkPipelineDynamicStateCreateInfo dynamic_state = {};
 	dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -177,10 +164,10 @@ VulkanPipeline create_render_fluid_pipeline(VulkanDevice device, VulkanTarget ta
 		.device = device,
 		.target = target,
 		.layout_info = layout_info,
-		.vertex_shader = VulkanShader(fluid_vertex_builder),
+		.vertex_shader = create_shader(device, read_file_into_buffer("assets/shaders/fluid.vert.spv")),
 		.tesselation = {},
 		.geometry_shader = {},
-		.fragment_shader = VulkanShader(fluid_fragment_builder),
+		.fragment_shader = create_shader(device, read_file_into_buffer("assets/shaders/fluid.frag.spv")),
 		.dynamic_state = dynamic_state,
 		.vertex_input = vertex_input,
 		.input_assembly = input_assembly,
