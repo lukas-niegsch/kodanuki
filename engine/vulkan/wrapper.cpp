@@ -46,6 +46,23 @@ VulkanDescriptorPool create_descriptor_pool(VkDevice device, const std::vector<V
 	}, device);
 }
 
+VulkanDescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool pool, const VkDescriptorSetLayout layout)
+{
+	VkDescriptorSet* output = new VkDescriptorSet();
+	VkDescriptorSetAllocateInfo info = {
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+		.pNext = nullptr,
+		.descriptorPool = pool,
+		.descriptorSetCount = 1,
+		.pSetLayouts = &layout
+	};
+	CHECK_VULKAN(vkAllocateDescriptorSets(device, &info, output));
+	auto destroy = [=](VkDescriptorSet* ptr) {
+		vkFreeDescriptorSets(device, pool, 1, ptr);
+	};
+	return Wrapper<VkDescriptorSet>(output, destroy);
+}
+
 VulkanCommandPool create_command_pool(VkDevice device, uint32_t queue_family_index)
 {
 	return create_wrapper<vkCreateCommandPool, vkDestroyCommandPool>({
@@ -54,6 +71,23 @@ VulkanCommandPool create_command_pool(VkDevice device, uint32_t queue_family_ind
 		.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 		.queueFamilyIndex = queue_family_index
 	}, device);
+}
+
+VulkanCommandBuffer create_command_buffer(VkDevice device, VkCommandPool pool)
+{
+	VkCommandBuffer* output = new VkCommandBuffer();
+	VkCommandBufferAllocateInfo info = {
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+		.pNext = nullptr,
+		.commandPool = pool,
+		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		.commandBufferCount = 1
+	};
+	CHECK_VULKAN(vkAllocateCommandBuffers(device, &info, output));
+	auto destroy = [=](VkCommandBuffer* ptr) {
+		vkFreeCommandBuffers(device, pool, 1, ptr);
+	};
+	return Wrapper<VkCommandBuffer>(output, destroy);
 }
 
 VulkanQueryPool create_query_pool(VkDevice device, uint32_t time_stamps)

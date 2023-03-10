@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/utility/signature.h"
 #include "engine/utility/type_name.h"
-#include "engine/utility/wrapper.h"
+#include "engine/vulkan/wrapper.h"
 #include "extern/SPIRV-Reflect/spirv_reflect.h"
 #include <vulkan/vulkan.h>
 #include <iostream>
@@ -132,8 +132,7 @@ void print_vulkan_info(std::vector<T> info)
 template <auto Function, typename ... Args>
 auto vectorize(Args ... args)
 {
-	using Q = kodanuki::reverse_signature_t<0, Function>;
-	using T = std::remove_pointer_t<Q>;
+	using T = std::remove_pointer_t<reverse_signature_t<0, Function>>;
 	uint32_t size;
 	Function(args... , &size, nullptr);
 	std::vector<T> result(size);
@@ -154,8 +153,7 @@ auto vectorize(Args ... args)
 template <auto CreateFunction, auto DestroyFunction, typename ... Args>
 auto create_wrapper(std::remove_pointer_t<reverse_signature_t<2, CreateFunction>> arg0, Args ... args)
 {
-	using Q = kodanuki::reverse_signature_t<0, CreateFunction>;
-	using T = std::remove_pointer_t<Q>;
+	using T = std::remove_pointer_t<reverse_signature_t<0, CreateFunction>>;
 	T* output = new T();
 	CHECK_VULKAN(CreateFunction(args..., &arg0, nullptr, output));
 	auto destroy = [=](T* ptr) {
