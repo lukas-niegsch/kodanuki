@@ -50,7 +50,7 @@ private:
 	VkDescriptorSetLayout render_descriptor_layout;
 	VkDescriptorPool descriptor_pool;
 	VulkanDevice device;
-	std::vector<VkDescriptorSet> render_descriptors;
+	std::vector<VulkanDescriptorSet> render_descriptors;
 	RenderTensors tensors;
 	VulkanPipelineCache cache;
 };

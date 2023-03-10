@@ -18,33 +18,4 @@ uint32_t find_memory_type(VulkanDevice device, uint32_t type_filter, VkMemoryPro
 	throw std::runtime_error("Failed to find suitable memory type!");
 }
 
-std::vector<VkDescriptorSet> create_descriptor_sets(VulkanDevice device, VkDescriptorPool pool, VkDescriptorSetLayout layout, uint32_t count)
-{
-	std::vector<VkDescriptorSetLayout> layouts(count, layout);
-	std::vector<VkDescriptorSet> descriptor_sets(count);
-
-	VkDescriptorSetAllocateInfo allocate_info = {};
-	allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocate_info.pNext = nullptr;
-    allocate_info.descriptorPool = pool;
-    allocate_info.descriptorSetCount = count;
-    allocate_info.pSetLayouts = layouts.data();
-	CHECK_VULKAN(vkAllocateDescriptorSets(device, &allocate_info, descriptor_sets.data()));
-
-	return descriptor_sets;
-}
-
-std::vector<VkCommandBuffer> create_command_buffers(VkDevice device, VkCommandPool pool, uint32_t count)
-{
-	VkCommandBufferAllocateInfo buffer_info = {};
-	buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	buffer_info.commandPool = pool;
-	buffer_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	buffer_info.commandBufferCount = count;
-
-	std::vector<VkCommandBuffer> result(count);
-	CHECK_VULKAN(vkAllocateCommandBuffers(device, &buffer_info, result.data()));
-	return result;
-}
-
 }

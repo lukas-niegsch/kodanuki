@@ -256,14 +256,6 @@ public:
 
 private:
 	/**
-	 * Creates the command pool and the command buffer.
-	 *
-	 * This command buffer will be used to transfer from the staging
-	 * buffer to the primary buffer.
-	 */
-	void create_command_buffer();
-
-	/**
 	 * Creates the primary memory and primary buffer.
 	 *
 	 * The primary buffer will be used for all the operations. It will be

@@ -26,7 +26,8 @@ uint32_t ShaderBridge::get_index_count()
 
 void ShaderBridge::bind_render_resources(VkCommandBuffer buffer, uint32_t frame, VulkanTensor positions)
 {
-	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_pipeline_layout, 0, 1, &render_descriptors[frame], 0, nullptr);
+	VkDescriptorSet descriptor = render_descriptors[frame];
+	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_pipeline_layout, 0, 1, &descriptor, 0, nullptr);
 
 	std::vector<VkBuffer> buffers = {
 		tensors.tensor_vertex.get_buffer(),
@@ -40,9 +41,8 @@ void ShaderBridge::bind_render_resources(VkCommandBuffer buffer, uint32_t frame,
 
 void ShaderBridge::create_render_descriptors()
 {
-	render_descriptors = create_descriptor_sets(device, descriptor_pool, render_descriptor_layout, count_frame);
-	
 	for (uint32_t i = 0; i < count_frame; i++) {
+		render_descriptors.push_back(create_descriptor_set(device, descriptor_pool, render_descriptor_layout));
 		tensors.tensor_mvp.update_descriptor(render_descriptors[i], VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0);
 	}
 }

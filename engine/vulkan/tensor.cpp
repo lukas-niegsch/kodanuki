@@ -1,5 +1,6 @@
 #ifdef INCLUDE_TENSOR_INLINE_HEADER
 #include "engine/vulkan/debug.h"
+#include "engine/vulkan/wrapper.h"
 #include <optional>
 #include <iostream>
 #include <cmath>
@@ -20,7 +21,7 @@ struct TensorState
 	std::optional<VkBuffer> staging_buffer;
 	std::optional<VkDeviceMemory> primary_memory;
 	std::optional<VkDeviceMemory> staging_memory;
-	VkCommandBuffer transfer_buffer;
+	VulkanCommandBuffer transfer_buffer;
 	~TensorState();
 };
 
@@ -95,7 +96,7 @@ namespace kodanuki
 TensorState::~TensorState()
 {
 	CHECK_VULKAN(vkDeviceWaitIdle(device));
-	vkFreeCommandBuffers(device, device.get_command_pool(), 1, &transfer_buffer);
+	transfer_buffer = {};
 	if (primary_buffer) {
 		vkDestroyBuffer(device, primary_buffer.value(), nullptr);
 	}
@@ -116,7 +117,7 @@ VulkanTensor::VulkanTensor(TensorBuilder builder)
 	state->shape = builder.shape;
 	state->dtype = builder.dtype;
 	state->dshare = builder.dshare;
-	state->transfer_buffer = create_command_buffers(state->device, state->device.get_command_pool(), 1)[0];
+	state->transfer_buffer = create_command_buffer(state->device, state->device.get_command_pool());
 	create_primary_buffer();
 	create_staging_buffer();
 }
@@ -306,10 +307,11 @@ void VulkanTensor::copy_buffer(VkBuffer source_buffer, VkBuffer target_buffer, V
 	vkCmdCopyBuffer(state->transfer_buffer, source_buffer, target_buffer, 1, &config);
 	vkEndCommandBuffer(state->transfer_buffer);
 
+	VkCommandBuffer transfer_buffer = state->transfer_buffer;
 	VkSubmitInfo submit_info = {};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &state->transfer_buffer;
+	submit_info.pCommandBuffers = &transfer_buffer;
 	CHECK_VULKAN(vkQueueSubmit(state->device.queues()[0], 1, &submit_info, VK_NULL_HANDLE));
 	
 	CHECK_VULKAN(vkDeviceWaitIdle(state->device));
