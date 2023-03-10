@@ -298,14 +298,9 @@ void VulkanTensor::create_buffer(VkBuffer& buffer, VkDeviceMemory& memory, VkBuf
 
 void VulkanTensor::copy_buffer(VkBuffer source_buffer, VkBuffer target_buffer, VkBufferCopy config)
 {
-	CHECK_VULKAN(vkDeviceWaitIdle(state->device));
-
-	VkCommandBufferBeginInfo begin_info = {};
-	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	CHECK_VULKAN(vkBeginCommandBuffer(state->transfer_buffer, &begin_info));
-	vkCmdCopyBuffer(state->transfer_buffer, source_buffer, target_buffer, 1, &config);
-	vkEndCommandBuffer(state->transfer_buffer);
+	state->device.with_command_buffer(state->transfer_buffer, [&](VkCommandBuffer buffer) {
+		vkCmdCopyBuffer(buffer, source_buffer, target_buffer, 1, &config);
+	});
 
 	VkCommandBuffer transfer_buffer = state->transfer_buffer;
 	VkSubmitInfo submit_info = {};
@@ -313,7 +308,6 @@ void VulkanTensor::copy_buffer(VkBuffer source_buffer, VkBuffer target_buffer, V
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &transfer_buffer;
 	CHECK_VULKAN(vkQueueSubmit(state->device.get_queues()[0], 1, &submit_info, VK_NULL_HANDLE));
-	
 	CHECK_VULKAN(vkDeviceWaitIdle(state->device));
 }
 
