@@ -5,6 +5,29 @@ constexpr uint32_t VK_NULL_BIT = 0;
 namespace kodanuki
 {
 
+VulkanInstance create_instance(std::vector<const char*> layers, std::vector<const char*> extensions)
+{
+	VkApplicationInfo info = {
+		.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+		.pNext = nullptr,
+		.pApplicationName = nullptr,
+		.applicationVersion = VK_MAKE_VERSION(0, 0, 0),
+		.pEngineName = "kodanuki",
+		.engineVersion = VK_MAKE_VERSION(0, 0, 1),
+		.apiVersion = VK_API_VERSION_1_3
+	};
+	return create_wrapper<vkCreateInstance, vkDestroyInstance>({
+		.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.pApplicationInfo = &info,
+		.enabledLayerCount = static_cast<uint32_t>(layers.size()),
+		.ppEnabledLayerNames = layers.data(),
+		.enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
+		.ppEnabledExtensionNames = extensions.data()
+	});
+}
+
 VulkanShaderModule create_shader_module(VkDevice device, std::vector<char> code)
 {
 	return create_wrapper<vkCreateShaderModule, vkDestroyShaderModule>({

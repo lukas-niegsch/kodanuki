@@ -57,6 +57,7 @@ private:
 	std::shared_ptr<T> state;
 };
 
+using VulkanInstance = Wrapper<VkInstance>;
 using VulkanShaderModule = Wrapper<VkShaderModule>;
 using VulkanFence = Wrapper<VkFence>;
 using VulkanSemaphore = Wrapper<VkSemaphore>;
@@ -65,6 +66,15 @@ using VulkanDescriptorSet = Wrapper<VkDescriptorSet>;
 using VulkanCommandPool = Wrapper<VkCommandPool>;
 using VulkanCommandBuffer = Wrapper<VkCommandBuffer>;
 using VulkanQueryPool = Wrapper<VkQueryPool>;
+
+/**
+ * Vulkan instances hold the context of the application.
+ * 
+ * @param layers The layers that should be enabled.
+ * @param extensions The extensions that should be used.
+ * @return The wrapper around the vulkan instance.
+ */
+VulkanInstance create_instance(std::vector<const char*> layers, std::vector<const char*> extensions);
 
 /**
  * Shader modules contain shader code that the device can execute.
