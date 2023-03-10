@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/vulkan/wrapper.h"
 #include <vulkan/vulkan.h>
 #include <functional>
 #include <memory>
@@ -89,18 +90,7 @@ private:
 	 *
 	 * @return The global descriptor pool.
 	 */
-	VkDescriptorPool create_descriptor_pool();
-
-	/**
-	 * Creates the global command pool.
-	 *
-	 * This command pool should only be used inside the main thread. Any
-	 * external thread must create its own command pool. Any command buffer
-	 * allocated using this pool must be freed explicitely.
-	 *
-	 * @return The global command pool.
-	 */
-	VkCommandPool create_command_pool();
+	VulkanDescriptorPool create_default_descriptor_pool();
 
 private:
 	// The abstract pointer to the implementation.

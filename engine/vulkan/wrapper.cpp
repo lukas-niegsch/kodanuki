@@ -46,4 +46,26 @@ VulkanDescriptorPool create_descriptor_pool(VkDevice device, const std::vector<V
 	}, device);
 }
 
+VulkanCommandPool create_command_pool(VkDevice device, uint32_t queue_family_index)
+{
+	return create_wrapper<vkCreateCommandPool, vkDestroyCommandPool>({
+		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+		.queueFamilyIndex = queue_family_index
+	}, device);
+}
+
+VulkanQueryPool create_query_pool(VkDevice device, uint32_t time_stamps)
+{
+	return create_wrapper<vkCreateQueryPool, vkDestroyQueryPool>({
+		.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.queryType = VK_QUERY_TYPE_TIMESTAMP,
+		.queryCount = time_stamps,
+		.pipelineStatistics = 0
+	}, device);
+}
+
 }

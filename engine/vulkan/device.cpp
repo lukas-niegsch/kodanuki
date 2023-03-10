@@ -100,18 +100,20 @@ struct DeviceState
 	std::vector<VkQueue> queues;
 	VkCommandBuffer execute_buffer;
 	VkQueue execute_queue;
-	VkQueryPool query_pool;
-	VkDescriptorPool descriptor_pool;
-	VkCommandPool command_pool;
+
+	VulkanCommandPool command_pool;
+	VulkanQueryPool query_pool;
+	VulkanDescriptorPool descriptor_pool;
+
 	~DeviceState();
 };
 
 DeviceState::~DeviceState()
 {
 	CHECK_VULKAN(vkDeviceWaitIdle(logical_device));
-	vkDestroyQueryPool(logical_device, query_pool, nullptr);
-	vkDestroyDescriptorPool(logical_device, descriptor_pool, nullptr);
-	vkDestroyCommandPool(logical_device, command_pool, nullptr);
+	command_pool = {};
+	descriptor_pool = {};
+	query_pool = {};
 	vkDestroyDevice(logical_device, nullptr);
 	vkDestroyInstance(instance, nullptr);
 }
@@ -126,18 +128,10 @@ VulkanDevice::VulkanDevice(DeviceBuilder builder)
 	auto queues = get_queue_handles(logical_device, queue_family);
 	pimpl = std::make_shared<DeviceState>(instance, physical_device, logical_device, queue_index, queues);
 	pimpl->execute_queue = queues.back();
-	pimpl->command_pool = create_command_pool();
+	pimpl->command_pool = create_command_pool(logical_device, queue_family_index());
+	pimpl->descriptor_pool = create_default_descriptor_pool();
 	pimpl->execute_buffer = create_command_buffers(logical_device, pimpl->command_pool, 1)[0];
-	pimpl->descriptor_pool = create_descriptor_pool();
-
-	VkQueryPoolCreateInfo query_info;
-	query_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
-	query_info.pNext = nullptr;
-	query_info.flags = 0;
-	query_info.queryType = VK_QUERY_TYPE_TIMESTAMP;
-	query_info.queryCount = 2;
-	query_info.pipelineStatistics = 0;
-	CHECK_VULKAN(vkCreateQueryPool(logical_device, &query_info, nullptr, &pimpl->query_pool));
+	pimpl->query_pool = create_query_pool(logical_device, 2);
 }
 
 VulkanDevice::operator VkDevice() const
@@ -219,7 +213,7 @@ float VulkanDevice::execute(std::function<void(VkCommandBuffer)> command, bool d
 	return 0.0f;
 }
 
-VkDescriptorPool VulkanDevice::create_descriptor_pool()
+VulkanDescriptorPool VulkanDevice::create_default_descriptor_pool()
 {
 	std::vector<VkDescriptorPoolSize> pool_sizes = {
 		{ VK_DESCRIPTOR_TYPE_SAMPLER, 30 },
@@ -235,27 +229,7 @@ VkDescriptorPool VulkanDevice::create_descriptor_pool()
 		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 30 }
 	};
 
-	VkDescriptorPoolCreateInfo pool_info = {};
-	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-	pool_info.maxSets = 50 * static_cast<uint32_t>(pool_sizes.size());
-	pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
-	pool_info.pPoolSizes = pool_sizes.data();
-	VkDescriptorPool descriptor_pool;
-	CHECK_VULKAN(vkCreateDescriptorPool(*this, &pool_info, nullptr, &descriptor_pool));
-	return descriptor_pool;
-}
-
-VkCommandPool VulkanDevice::create_command_pool()
-{
-	VkCommandPoolCreateInfo pool_info = {};
-	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	pool_info.pNext = nullptr;
-	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	pool_info.queueFamilyIndex = queue_family_index();
-	VkCommandPool command_pool;
-	CHECK_VULKAN(vkCreateCommandPool(*this, &pool_info, nullptr, &command_pool));
-	return command_pool;
+	return create_descriptor_pool(pimpl->logical_device, pool_sizes);
 }
 
 }
