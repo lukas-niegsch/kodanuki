@@ -17,7 +17,7 @@ struct ShaderBridgeBuilder
 	VulkanDeviceOld device;
 	uint32_t frame_count;
 	Model model;
-	VulkanPipeline render_pipeline;
+	VulkanPipelineOld render_pipeline;
 };
 
 struct RenderTensors
@@ -52,7 +52,7 @@ private:
 	VulkanDeviceOld device;
 	std::vector<VulkanDescriptorSet> render_descriptors;
 	RenderTensors tensors;
-	VulkanPipelineCache cache;
+	VulkanPipelineOldCache cache;
 };
 
 }

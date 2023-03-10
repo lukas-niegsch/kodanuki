@@ -12,7 +12,7 @@ namespace kodanuki
 struct TensorState
 {
 	VulkanDeviceOld device;
-	VulkanPipelineCache& cache;
+	VulkanPipelineOldCache& cache;
 	std::vector<std::size_t> shape;
 	VulkanTensor::MemoryDataType dtype;
 	VulkanTensor::MemorySharing dshare;
@@ -347,9 +347,9 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 
 	if (!cache.contains(name)) {
 		std::string filename = std::string("assets/shaders/") + name + ".comp.spv";
-		cache.emplace(name, VulkanPipeline::from_comp_file(device, filename));
+		cache.emplace(name, VulkanPipelineOld::from_comp_file(device, filename));
 	}
-	VulkanPipeline shader = cache.at(name);
+	VulkanPipelineOld shader = cache.at(name);
 
 	// The first element of each push_constant block will be the tensor size.
 	uint32_t count = tensors[0].numel();

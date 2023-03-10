@@ -7,7 +7,7 @@
 namespace kodanuki
 {
 
-VulkanPipeline create_render_fluid_pipeline(VulkanDeviceOld device, VulkanTarget target)
+VulkanPipelineOld create_render_fluid_pipeline(VulkanDeviceOld device, VulkanTarget target)
 {
 	// Don't include any dynamic states.
 	VkPipelineDynamicStateCreateInfo dynamic_state = {};
@@ -179,7 +179,7 @@ VulkanPipeline create_render_fluid_pipeline(VulkanDeviceOld device, VulkanTarget
 		.descriptor_sets = {mvp_descriptor}
 	};
 
-	return VulkanPipeline(builder);
+	return VulkanPipelineOld(builder);
 }
 
 }

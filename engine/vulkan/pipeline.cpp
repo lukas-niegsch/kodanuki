@@ -87,7 +87,7 @@ PipelineState::~PipelineState()
 	vkDestroyDescriptorSetLayout(device, descriptor, nullptr);
 }
 
-VulkanPipeline::VulkanPipeline(GraphicsPipelineBuilder builder)
+VulkanPipelineOld::VulkanPipelineOld(GraphicsPipelineBuilder builder)
 {
 	auto[pipeline, layout] = create_graphics_pipeline(builder);
 	pimpl = std::make_shared<PipelineState>(builder.device);
@@ -98,7 +98,7 @@ VulkanPipeline::VulkanPipeline(GraphicsPipelineBuilder builder)
 		pimpl->device.get_descriptor_pool(), pimpl->descriptor);
 }
 
-VulkanPipeline::VulkanPipeline(ComputePipelineBuilder builder)
+VulkanPipelineOld::VulkanPipelineOld(ComputePipelineBuilder builder)
 {
 	pimpl = std::make_shared<PipelineState>(builder.device);
 	
@@ -138,7 +138,7 @@ VulkanPipeline::VulkanPipeline(ComputePipelineBuilder builder)
 		pimpl->descriptor);
 }
 
-VulkanPipeline VulkanPipeline::from_comp_file(VulkanDeviceOld device, std::string filename)
+VulkanPipelineOld VulkanPipelineOld::from_comp_file(VulkanDeviceOld device, std::string filename)
 {
 	std::vector<char> code = read_file_into_buffer(filename);
 	
@@ -168,25 +168,25 @@ VulkanPipeline VulkanPipeline::from_comp_file(VulkanDeviceOld device, std::strin
 	};
 
 	spvReflectDestroyShaderModule(&reflect_module);
-	return VulkanPipeline(builder);
+	return VulkanPipelineOld(builder);
 }
 
-VulkanPipeline::operator VkPipeline()
+VulkanPipelineOld::operator VkPipeline()
 {
 	return pimpl->pipeline;
 }
 
-VkDescriptorSetLayout VulkanPipeline::get_descriptor_layout()
+VkDescriptorSetLayout VulkanPipelineOld::get_descriptor_layout()
 {
 	return pimpl->descriptor;
 }
 
-VkPipelineLayout VulkanPipeline::get_pipeline_layout()
+VkPipelineLayout VulkanPipelineOld::get_pipeline_layout()
 {
 	return pimpl->layout;
 }
 
-VkDescriptorSet VulkanPipeline::get_primary_descriptor()
+VkDescriptorSet VulkanPipelineOld::get_primary_descriptor()
 {
 	return pimpl->descriptor_set;
 }

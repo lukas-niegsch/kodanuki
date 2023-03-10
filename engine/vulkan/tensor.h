@@ -84,7 +84,7 @@ public:
 		VulkanDeviceOld device;
 
 		// The vulkan pipeline cache for the compute pipelines.
-		VulkanPipelineCache& cache;
+		VulkanPipelineOldCache& cache;
 
 		// The shape of the tensor (row-major format).
 		std::vector<std::size_t> shape;
