@@ -45,19 +45,14 @@ VulkanContext::VulkanContext(ContextBuilder builder)
 	execute_queue = queues.back();
 }
 
-float VulkanContext::execute(std::function<void(VkCommandBuffer)> command, bool debug)
+float VulkanContext::execute(std::function<void(VkCommandBuffer)> command)
 {
 	with_command_buffer(execute_buffer, [&](VkCommandBuffer buffer) {
-		if (debug) {
-			vkCmdResetQueryPool(buffer, query_pool, 0, 2);
-			vkCmdWriteTimestamp(buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, query_pool, 0);
-		}
+		vkCmdResetQueryPool(buffer, query_pool, 0, 2);
+		vkCmdWriteTimestamp(buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, query_pool, 0);
 		command(buffer);
-		if (debug) {
-			vkCmdWriteTimestamp(buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, query_pool, 1);
-		}
+		vkCmdWriteTimestamp(buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, query_pool, 1);
 	});
-
 	VkCommandBuffer buffer = execute_buffer;
 	VkSubmitInfo info = {
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -70,16 +65,25 @@ float VulkanContext::execute(std::function<void(VkCommandBuffer)> command, bool 
 		.signalSemaphoreCount = 0,
 		.pSignalSemaphores = nullptr
 	};
-
 	CHECK_VULKAN(vkQueueSubmit(execute_queue, 1, &info, nullptr));
 	CHECK_VULKAN(vkQueueWaitIdle(execute_queue));
+	uint64_t ts[2];
+	CHECK_VULKAN(vkGetQueryPoolResults(logical_device, query_pool, 0, 2, sizeof(uint64_t) * 2, ts, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT));
+	return (ts[1] - ts[0]);
+}
 
-	if (debug) {
-		uint64_t ts[2];
-		CHECK_VULKAN(vkGetQueryPoolResults(logical_device, query_pool, 0, 2, sizeof(uint64_t) * 2, ts, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT));
-		return (ts[1] - ts[0]);
-	}
-	return 0.0f;
+void VulkanContext::with_command_buffer(VkCommandBuffer buffer, std::function<void(VkCommandBuffer)> closure)
+{
+	CHECK_VULKAN(vkResetCommandBuffer(buffer, 0));
+	VkCommandBufferBeginInfo info = {
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.pInheritanceInfo = nullptr
+	};
+	CHECK_VULKAN(vkBeginCommandBuffer(buffer, &info));
+	closure(buffer);
+	CHECK_VULKAN(vkEndCommandBuffer(buffer));
 }
 
 VulkanDescriptorPool VulkanContext::create_default_descriptor_pool()

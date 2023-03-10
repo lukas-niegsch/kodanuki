@@ -57,7 +57,6 @@ public:
 	// Returns the handle to the logical device.
 	operator VkDevice() const;
 
-public:
 	// Returns the handle to the instance.
 	VkInstance get_instance();
 
@@ -77,8 +76,30 @@ public:
 	VkCommandPool get_command_pool();
 
 public:
-	// Executes the given command for the device.
-	float execute(std::function<void(VkCommandBuffer)> command, bool debug = false);
+	/**
+	 * Executes the given command using the last queue.
+	 *
+	 * We wait for the command to finish and measure the time device took
+	 * to execute the command. This time will not include the waiting for
+	 * example if other commands are executed inside the same queue.
+	 * 
+	 * @param command The command that should be executed.
+	 * @return The time the command took in nanoseconds.
+	 */
+	float execute(std::function<void(VkCommandBuffer)> command);
+
+	/**
+	* Execute the given callback closure with the command buffer.
+	*
+	* This will call the following functions:
+	* vkResetCommandBuffer
+	* vkBeginCommandBuffer
+	* vkEndCommandBuffer
+	*
+	* @param buffer The command buffer used inside the closure.
+	* @param closure The function that will be executed.
+	*/
+	void with_command_buffer(VkCommandBuffer buffer, std::function<void(VkCommandBuffer)> closure);
 
 private:
 	/**

@@ -235,17 +235,4 @@ VulkanPipeline create_pipeline(VkDevice device, VkComputePipelineCreateInfo info
  */
 VulkanPipeline create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo info);
 
-/**
- * Execute the given callback closure with the command buffer.
- *
- * This will call the following functions:
- * vkResetCommandBuffer
- * vkBeginCommandBuffer
- * vkEndCommandBuffer
- *
- * @param buffer The command buffer used inside the closure.
- * @param closure The function that will be executed.
- */
-void with_command_buffer(VkCommandBuffer buffer, std::function<void(VkCommandBuffer)> closure);
-
 }
