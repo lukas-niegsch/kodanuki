@@ -263,4 +263,18 @@ VulkanPipeline create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo inf
 	return Wrapper<VkPipeline>(output, destroy);
 }
 
+VulkanBuffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage)
+{
+	return create_wrapper<vkCreateBuffer, vkDestroyBuffer>({
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.size = size,
+		.usage = usage,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		.queueFamilyIndexCount = 0,
+		.pQueueFamilyIndices = nullptr
+	}, device);
+}
+
 }

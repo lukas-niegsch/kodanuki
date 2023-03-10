@@ -74,6 +74,7 @@ using VulkanDeviceMemory = Wrapper<VkDeviceMemory>;
 using VulkanSurface = Wrapper<VkSurfaceKHR>;
 using VulkanSwapchain = Wrapper<VkSwapchainKHR>;
 using VulkanPipeline = Wrapper<VkPipeline>;
+using VulkanBuffer = Wrapper<VkBuffer>;
 
 /**
  * Vulkan instances hold the context of the application.
@@ -234,5 +235,15 @@ VulkanPipeline create_pipeline(VkDevice device, VkComputePipelineCreateInfo info
  * @return The wrapper around the vulkan pipeline.
  */
 VulkanPipeline create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo info);
+
+/**
+ * Buffers describe how some memory block is used.
+ *
+ * @param device The device that stores the buffer.
+ * @param size The size of memory that the buffer contains.
+ * @param usage The usage flags for what the buffer is used.
+ * @return The wrapper around the vulkan buffer.
+ */
+VulkanBuffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage);
 
 }
