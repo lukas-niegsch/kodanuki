@@ -11,7 +11,7 @@ namespace kodanuki
 
 struct TensorState
 {
-	VulkanDevice device;
+	VulkanDeviceOld device;
 	VulkanPipelineCache& cache;
 	std::vector<std::size_t> shape;
 	VulkanTensor::MemoryDataType dtype;

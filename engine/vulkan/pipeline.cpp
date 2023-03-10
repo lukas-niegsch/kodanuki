@@ -70,7 +70,7 @@ std::pair<VkPipeline, VkPipelineLayout> create_graphics_pipeline(GraphicsPipelin
 
 struct PipelineState
 {
-	VulkanDevice device;
+	VulkanDeviceOld device;
 	VkPipeline pipeline;
 	VkPipelineLayout layout;
 	VkDescriptorSetLayout descriptor;
@@ -138,7 +138,7 @@ VulkanPipeline::VulkanPipeline(ComputePipelineBuilder builder)
 		pimpl->descriptor);
 }
 
-VulkanPipeline VulkanPipeline::from_comp_file(VulkanDevice device, std::string filename)
+VulkanPipeline VulkanPipeline::from_comp_file(VulkanDeviceOld device, std::string filename)
 {
 	std::vector<char> code = read_file_into_buffer(filename);
 	

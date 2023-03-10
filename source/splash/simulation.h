@@ -33,7 +33,7 @@ public:
 	 * 
 	 * @param device The device on which to execute the tensor operations.
 	 */
-	Simulation(VulkanDevice device);
+	Simulation(VulkanDeviceOld device);
 
 	/**
 	 * Updates the tensors to load the new scene.
@@ -117,7 +117,7 @@ private:
 	VulkanTensor create_tensor(std::vector<std::size_t> shape);
 
 private:
-	VulkanDevice device;
+	VulkanDeviceOld device;
 	VulkanPipelineCache cache;
 	uint32_t count_frame;
 	uint32_t count_particles;

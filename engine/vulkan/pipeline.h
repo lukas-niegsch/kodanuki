@@ -23,7 +23,7 @@ namespace kodanuki
 struct GraphicsPipelineBuilder
 {
 	// The vulkan device for which the pipeline is created.
-	VulkanDevice device;
+	VulkanDeviceOld device;
 
 	// The target that the pipeline should use.
 	VulkanTarget target;
@@ -85,7 +85,7 @@ struct GraphicsPipelineBuilder
 struct ComputePipelineBuilder
 {
 	// The vulkan device for which the pipeline is created.
-	VulkanDevice device;
+	VulkanDeviceOld device;
 
 	// The handle to the compute shader module.
 	VulkanShaderModule compute_shader;
@@ -117,7 +117,7 @@ public:
 	VulkanPipeline(ComputePipelineBuilder builder);
 
 	// Automatically creates a vulkan pipeline from the SPIRV file.
-	static VulkanPipeline from_comp_file(VulkanDevice device, std::string filename);
+	static VulkanPipeline from_comp_file(VulkanDeviceOld device, std::string filename);
 
 	// Returns the handle to the native vulkan pipeline.
 	operator VkPipeline();

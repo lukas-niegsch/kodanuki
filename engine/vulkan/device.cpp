@@ -93,7 +93,7 @@ DeviceState::~DeviceState()
 	vkDestroyInstance(instance, nullptr);
 }
 
-VulkanDevice::VulkanDevice(DeviceBuilder builder)
+VulkanDeviceOld::VulkanDeviceOld(DeviceBuilder builder)
 {
 	auto instance = create_instance(builder.instance_layers, builder.instance_extensions);
 	auto physical_device = select_physical_device(instance, builder.gpu_score);
@@ -109,42 +109,42 @@ VulkanDevice::VulkanDevice(DeviceBuilder builder)
 	pimpl->query_pool = create_query_pool(logical_device, 2);
 }
 
-VulkanDevice::operator VkDevice() const
+VulkanDeviceOld::operator VkDevice() const
 {
 	return pimpl->logical_device;
 }
 
-VkInstance VulkanDevice::instance()
+VkInstance VulkanDeviceOld::instance()
 {
 	return pimpl->instance;
 }
 
-VkPhysicalDevice VulkanDevice::physical_device()
+VkPhysicalDevice VulkanDeviceOld::physical_device()
 {
 	return pimpl->physical_device;
 }
 
-std::vector<VkQueue> VulkanDevice::queues()
+std::vector<VkQueue> VulkanDeviceOld::queues()
 {
 	return pimpl->queues;
 }
 
-uint32_t VulkanDevice::queue_family_index()
+uint32_t VulkanDeviceOld::queue_family_index()
 {
 	return pimpl->queue_index;
 }
 
-VkDescriptorPool VulkanDevice::get_descriptor_pool()
+VkDescriptorPool VulkanDeviceOld::get_descriptor_pool()
 {
 	return pimpl->descriptor_pool;
 }
 
-VkCommandPool VulkanDevice::get_command_pool()
+VkCommandPool VulkanDeviceOld::get_command_pool()
 {
 	return pimpl->command_pool;
 }
 
-float VulkanDevice::execute(std::function<void(VkCommandBuffer)> command, bool debug)
+float VulkanDeviceOld::execute(std::function<void(VkCommandBuffer)> command, bool debug)
 {
 	VkCommandBuffer buffer = pimpl->execute_buffer;
 	CHECK_VULKAN(vkResetCommandBuffer(buffer, 0));
@@ -188,7 +188,7 @@ float VulkanDevice::execute(std::function<void(VkCommandBuffer)> command, bool d
 	return 0.0f;
 }
 
-VulkanDescriptorPool VulkanDevice::create_default_descriptor_pool()
+VulkanDescriptorPool VulkanDeviceOld::create_default_descriptor_pool()
 {
 	std::vector<VkDescriptorPoolSize> pool_sizes = {
 		{ VK_DESCRIPTOR_TYPE_SAMPLER, 30 },

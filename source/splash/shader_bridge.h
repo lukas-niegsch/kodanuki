@@ -14,7 +14,7 @@ namespace kodanuki
 
 struct ShaderBridgeBuilder
 {
-	VulkanDevice device;
+	VulkanDeviceOld device;
 	uint32_t frame_count;
 	Model model;
 	VulkanPipeline render_pipeline;
@@ -49,7 +49,7 @@ private:
 	VkPipelineLayout render_pipeline_layout;
 	VkDescriptorSetLayout render_descriptor_layout;
 	VkDescriptorPool descriptor_pool;
-	VulkanDevice device;
+	VulkanDeviceOld device;
 	std::vector<VulkanDescriptorSet> render_descriptors;
 	RenderTensors tensors;
 	VulkanPipelineCache cache;
