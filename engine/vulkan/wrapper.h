@@ -2,6 +2,7 @@
 #include <vulkan/vulkan.h>
 #include <memory>
 #include <functional>
+class GLFWwindow;
 
 namespace kodanuki
 {
@@ -58,6 +59,7 @@ private:
 };
 
 using VulkanInstance = Wrapper<VkInstance>;
+using VulkanDevice = Wrapper<VkDevice>;
 using VulkanShaderModule = Wrapper<VkShaderModule>;
 using VulkanFence = Wrapper<VkFence>;
 using VulkanSemaphore = Wrapper<VkSemaphore>;
@@ -66,6 +68,12 @@ using VulkanDescriptorSet = Wrapper<VkDescriptorSet>;
 using VulkanCommandPool = Wrapper<VkCommandPool>;
 using VulkanCommandBuffer = Wrapper<VkCommandBuffer>;
 using VulkanQueryPool = Wrapper<VkQueryPool>;
+using VulkanFrameBuffer = Wrapper<VkFramebuffer>;
+using VulkanImageView = Wrapper<VkImageView>;
+using VulkanDeviceOldMemory = Wrapper<VkDeviceMemory>;
+using VulkanSurface = Wrapper<VkSurfaceKHR>;
+using VulkanSwapchain = Wrapper<VkSwapchainKHR>;
+using VulkanPipeline = Wrapper<VkPipeline>;
 
 /**
  * Vulkan instances hold the context of the application.
@@ -75,6 +83,17 @@ using VulkanQueryPool = Wrapper<VkQueryPool>;
  * @return The wrapper around the vulkan instance.
  */
 VulkanInstance create_instance(std::vector<const char*> layers, std::vector<const char*> extensions);
+
+/**
+ * Devices are logical wrappers around physical graphics cards.
+ *
+ * @param physical_device The physical device that will be used.
+ * @param queue_family The index of the used queue family.
+ * @param queue_priorities The priorities and number of queues.
+ * @param extensions The extensions that should be used.
+ * @return The wrapper around the vulkan device.
+ */
+VulkanDevice create_device(VkPhysicalDevice physical_device, uint32_t queue_family, std::vector<float> queue_priorities, std::vector<const char*> extensions);
 
 /**
  * Shader modules contain shader code that the device can execute.
@@ -147,5 +166,73 @@ VulkanCommandBuffer create_command_buffer(VkDevice device, VkCommandPool pool);
  * @return The wrapper around the vulkan query pool.
  */
 VulkanQueryPool create_query_pool(VkDevice device, uint32_t time_stamps);
+
+/**
+ * Framebuffers are the outputs from renderpasses.
+ *
+ * @param device The device that stores the frame buffer.
+ * @param renderpass The renderpass which will produce frames.
+ * @param extent The extent of the surface.
+ * @param attachments The attachments that the renderpass produces.
+ * @return The wrapper around the vulkan frame buffer.
+ */
+VulkanFrameBuffer create_frame_buffer(VkDevice device, VkRenderPass renderpass, VkExtent2D extent, std::vector<VkImageView> attachments);
+
+/**
+ * Image views allows for modifying vulkan images.
+ *
+ * @param device The device that stores the image view.
+ * @param format The format how the image is interpreted.
+ * @param image The image which should be modified.
+ * @return The wrapper around the vulkan image view.
+ */
+VulkanImageView create_image_view(VkDevice device, VkFormat format, VkImage image);
+
+/**
+ * Device memory maintains a blocks of memory.
+ *
+ * @param device The device that stores the device memory.
+ * @param physical_device The device where the memory is allocated.
+ * @param requirements The requirements that the memory must satisfy.
+ * @param properties The properties that the memory must satisfy.
+ * @return The wrapper around the vulkan device memory.
+ */
+VulkanDeviceOldMemory create_device_memory(VkDevice device, VkPhysicalDevice physical_device, VkMemoryRequirements requirements, VkMemoryPropertyFlags properties);
+
+/**
+ * Surfaces represent the renderable part of the screen.
+ *
+ * @param instance The instance that stores the context.
+ * @param window The GLFW window on which frames are rendered.
+ * @return The wrapper around the vulkan surface.
+ */
+VulkanSurface create_surface(VkInstance instance, GLFWwindow* window);
+
+/**
+ * Swapchains replace the different frames.
+ *
+ * @param device The device that stores the swapchain.
+ * @param info The information on how to create the swapchain.
+ * @return The wrapper around the vulkan swapchain.
+ */
+VulkanSwapchain create_swapchain(VkDevice device, VkSwapchainCreateInfoKHR info);
+
+/**
+ * Compute pipelines allows running a series of commands.
+ *
+ * @param device The devies that stores the pipeline.
+ * @param info The information on how to create the copute pipeline.
+ * @return The wrapper around the vulkan pipeline.
+ */
+VulkanPipeline create_pipeline(VkDevice device, VkComputePipelineCreateInfo info);
+
+/**
+ * Graphics pipelines allows running some renderpass.
+ *
+ * @param device The devies that stores the pipeline.
+ * @param info The information on how to create the copute pipeline.
+ * @return The wrapper around the vulkan pipeline.
+ */
+VulkanPipeline create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo info);
 
 }
