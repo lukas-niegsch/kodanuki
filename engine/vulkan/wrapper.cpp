@@ -174,7 +174,7 @@ VulkanFrameBuffer create_frame_buffer(VkDevice device, VkRenderPass renderpass, 
 	}, device);
 }
 
-VulkanImageView create_image_view(VkDevice device, VkFormat format, VkImage image)
+VulkanImageView create_image_view(VkDevice device, VkFormat format, VkImage image, VkImageAspectFlagBits mask)
 {
 	VkComponentMapping components = {
 		.r = VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -183,7 +183,7 @@ VulkanImageView create_image_view(VkDevice device, VkFormat format, VkImage imag
 		.a = VK_COMPONENT_SWIZZLE_IDENTITY
 	};
 	VkImageSubresourceRange subresource_range = {
-		.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+		.aspectMask = mask,
 		.baseMipLevel = 0,
 		.levelCount = 1,
 		.baseArrayLayer = 0,
@@ -201,7 +201,7 @@ VulkanImageView create_image_view(VkDevice device, VkFormat format, VkImage imag
 	}, device);
 }
 
-VulkanContextMemory create_device_memory(VkDevice device, VkPhysicalDevice physical_device, VkMemoryRequirements requirements, VkMemoryPropertyFlags properties)
+VulkanDeviceMemory create_device_memory(VkDevice device, VkPhysicalDevice physical_device, VkMemoryRequirements requirements, VkMemoryPropertyFlags properties)
 {
 	VkPhysicalDeviceMemoryProperties physical_properties;
 	vkGetPhysicalDeviceMemoryProperties(physical_device, &physical_properties);
