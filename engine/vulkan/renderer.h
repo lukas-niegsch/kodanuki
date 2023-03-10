@@ -1,4 +1,4 @@
-#include "engine/vulkan/device.h"
+#include "engine/vulkan/context.h"
 #include "engine/vulkan/target.h"
 #include <vulkan/vulkan.h>
 #include <functional>
@@ -16,7 +16,7 @@ namespace kodanuki
 struct RendererBuilder
 {
 	// The device on which the rendering takes place.
-	VulkanDeviceOld device;
+	VulkanContext device;
 
 	// The target which defines the rendering output.
 	VulkanTarget target;

@@ -2,7 +2,7 @@
 #include "source/splash/user_interface.h"
 #include "source/splash/shader_bridge.h"
 #include "engine/vulkan/debug.h"
-#include "engine/vulkan/device.h"
+#include "engine/vulkan/context.h"
 #include "engine/vulkan/window.h"
 #include "engine/vulkan/target.h"
 #include "engine/vulkan/renderer.h"
@@ -29,7 +29,7 @@ int main()
 		.frames = 60
 	}};
 
-	VulkanDeviceOld device = {{
+	VulkanContext device = {{
 		.instance_layers = {"VK_LAYER_KHRONOS_validation"},
 		.instance_extensions = window.required_instance_extensions(),
 		.device_extensions = {"VK_KHR_swapchain"},

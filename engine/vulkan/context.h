@@ -48,11 +48,11 @@ struct DeviceBuilder
  * some graphics card based on the provided builder. This class
  * handles the interaction with the graphics card.
  */
-class VulkanDeviceOld
+class VulkanContext
 {
 public:
 	// Creates a new vulkan device from the given builder.
-	VulkanDeviceOld(DeviceBuilder builder);
+	VulkanContext(DeviceBuilder builder);
 
 	// Returns the handle to the logical device.
 	operator VkDevice() const;

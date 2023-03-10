@@ -1,7 +1,7 @@
 #pragma once
 #include "source/splash/scene.h"
 #include "source/splash/model.h"
-#include "engine/vulkan/device.h"
+#include "engine/vulkan/context.h"
 #include "engine/vulkan/tensor.h"
 
 namespace kodanuki
@@ -33,7 +33,7 @@ public:
 	 * 
 	 * @param device The device on which to execute the tensor operations.
 	 */
-	Simulation(VulkanDeviceOld device);
+	Simulation(VulkanContext device);
 
 	/**
 	 * Updates the tensors to load the new scene.
@@ -117,7 +117,7 @@ private:
 	VulkanTensor create_tensor(std::vector<std::size_t> shape);
 
 private:
-	VulkanDeviceOld device;
+	VulkanContext device;
 	VulkanPipelineOldCache cache;
 	uint32_t count_frame;
 	uint32_t count_particles;

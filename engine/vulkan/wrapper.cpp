@@ -201,7 +201,7 @@ VulkanImageView create_image_view(VkDevice device, VkFormat format, VkImage imag
 	}, device);
 }
 
-VulkanDeviceOldMemory create_device_memory(VkDevice device, VkPhysicalDevice physical_device, VkMemoryRequirements requirements, VkMemoryPropertyFlags properties)
+VulkanContextMemory create_device_memory(VkDevice device, VkPhysicalDevice physical_device, VkMemoryRequirements requirements, VkMemoryPropertyFlags properties)
 {
 	VkPhysicalDeviceMemoryProperties physical_properties;
 	vkGetPhysicalDeviceMemoryProperties(physical_device, &physical_properties);

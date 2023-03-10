@@ -72,7 +72,7 @@ bool VulkanWindow::tick()
 	return !should_close();
 }
 
-VkSurfaceKHR VulkanWindow::create_surface(VulkanDeviceOld device)
+VkSurfaceKHR VulkanWindow::create_surface(VulkanContext device)
 {
 	VkInstance instance = device.instance();
 	VkSurfaceKHR surface;

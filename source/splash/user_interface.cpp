@@ -9,7 +9,7 @@ namespace kodanuki
 
 struct UserInterfaceState
 {
-	VulkanDeviceOld device;
+	VulkanContext device;
 	VulkanWindow window;
 	~UserInterfaceState();
 };

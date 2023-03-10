@@ -8,7 +8,7 @@ namespace kodanuki
 struct TargetState
 {
 public:
-    VulkanDeviceOld device;
+    VulkanContext device;
     VulkanWindow window;
     VkRenderPass renderpass;
     VkSurfaceKHR surface;

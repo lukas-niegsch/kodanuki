@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/vulkan/device.h"
+#include "engine/vulkan/context.h"
 #include "engine/vulkan/window.h"
 #include <vulkan/vulkan.h>
 #include <functional>
@@ -22,13 +22,13 @@ namespace kodanuki
 struct TargetBuilder
 {
 	// The vulkan device which does the rendering.
-	VulkanDeviceOld device;
+	VulkanContext device;
 
     // The vulkan window on which the viewport renders.
     VulkanWindow window;
 
     // The function that creates the renderpass.
-    std::function<void(VulkanDeviceOld, VkRenderPass&)> create_renderpass;
+    std::function<void(VulkanContext, VkRenderPass&)> create_renderpass;
 
 	// The format of the surface.
 	VkSurfaceFormatKHR surface_format;

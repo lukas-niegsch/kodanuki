@@ -4,7 +4,7 @@
 namespace kodanuki
 {
 
-uint32_t find_memory_type(VulkanDeviceOld device, uint32_t type_filter, VkMemoryPropertyFlags properties)
+uint32_t find_memory_type(VulkanContext device, uint32_t type_filter, VkMemoryPropertyFlags properties)
 {
 	VkPhysicalDeviceMemoryProperties memory_properties;
 	vkGetPhysicalDeviceMemoryProperties(device.physical_device(), &memory_properties);

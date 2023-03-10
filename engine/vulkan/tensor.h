@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/vulkan/device.h"
+#include "engine/vulkan/context.h"
 #include "engine/vulkan/pipeline.h"
 #include "engine/utility/signature.h"
 #include <vector>
@@ -81,7 +81,7 @@ public:
 	struct TensorBuilder
 	{
 		// The vulkan device that holds the context.
-		VulkanDeviceOld device;
+		VulkanContext device;
 
 		// The vulkan pipeline cache for the compute pipelines.
 		VulkanPipelineOldCache& cache;

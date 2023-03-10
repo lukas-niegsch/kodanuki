@@ -70,7 +70,7 @@ using VulkanCommandBuffer = Wrapper<VkCommandBuffer>;
 using VulkanQueryPool = Wrapper<VkQueryPool>;
 using VulkanFrameBuffer = Wrapper<VkFramebuffer>;
 using VulkanImageView = Wrapper<VkImageView>;
-using VulkanDeviceOldMemory = Wrapper<VkDeviceMemory>;
+using VulkanContextMemory = Wrapper<VkDeviceMemory>;
 using VulkanSurface = Wrapper<VkSurfaceKHR>;
 using VulkanSwapchain = Wrapper<VkSwapchainKHR>;
 using VulkanPipeline = Wrapper<VkPipeline>;
@@ -197,7 +197,7 @@ VulkanImageView create_image_view(VkDevice device, VkFormat format, VkImage imag
  * @param properties The properties that the memory must satisfy.
  * @return The wrapper around the vulkan device memory.
  */
-VulkanDeviceOldMemory create_device_memory(VkDevice device, VkPhysicalDevice physical_device, VkMemoryRequirements requirements, VkMemoryPropertyFlags properties);
+VulkanContextMemory create_device_memory(VkDevice device, VkPhysicalDevice physical_device, VkMemoryRequirements requirements, VkMemoryPropertyFlags properties);
 
 /**
  * Surfaces represent the renderable part of the screen.

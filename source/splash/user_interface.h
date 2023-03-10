@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/vulkan/device.h"
+#include "engine/vulkan/context.h"
 #include "engine/vulkan/target.h"
 #include "engine/vulkan/window.h"
 #include <vulkan/vulkan.h>
@@ -11,7 +11,7 @@ namespace kodanuki
 
 struct UserInterfaceBuilder
 {
-	VulkanDeviceOld device;
+	VulkanContext device;
 	VulkanTarget target;
 	VulkanWindow window;
 	std::string fontfile;

@@ -3,7 +3,7 @@
 namespace kodanuki
 {
 
-Simulation::Simulation(VulkanDeviceOld device)
+Simulation::Simulation(VulkanContext device)
 : device(device)
 , tensor_mass(create_tensor({1}))
 , tensor_position(create_tensor({1}))

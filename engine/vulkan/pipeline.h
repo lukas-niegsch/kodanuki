@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/vulkan/device.h"
+#include "engine/vulkan/context.h"
 #include "engine/vulkan/target.h"
 #include "engine/vulkan/debug.h"
 #include "engine/vulkan/wrapper.h"
@@ -23,7 +23,7 @@ namespace kodanuki
 struct GraphicsPipelineBuilder
 {
 	// The vulkan device for which the pipeline is created.
-	VulkanDeviceOld device;
+	VulkanContext device;
 
 	// The target that the pipeline should use.
 	VulkanTarget target;
@@ -85,7 +85,7 @@ struct GraphicsPipelineBuilder
 struct ComputePipelineBuilder
 {
 	// The vulkan device for which the pipeline is created.
-	VulkanDeviceOld device;
+	VulkanContext device;
 
 	// The handle to the compute shader module.
 	VulkanShaderModule compute_shader;
@@ -117,7 +117,7 @@ public:
 	VulkanPipelineOld(ComputePipelineBuilder builder);
 
 	// Automatically creates a vulkan pipeline from the SPIRV file.
-	static VulkanPipelineOld from_comp_file(VulkanDeviceOld device, std::string filename);
+	static VulkanPipelineOld from_comp_file(VulkanContext device, std::string filename);
 
 	// Returns the handle to the native vulkan pipeline.
 	operator VkPipeline();

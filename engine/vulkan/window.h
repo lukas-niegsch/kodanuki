@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/vulkan/device.h"
+#include "engine/vulkan/context.h"
 #include <vulkan/vulkan.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -67,7 +67,7 @@ public:
 
 public:
 	// Returns the handle to the surface.
-	VkSurfaceKHR create_surface(VulkanDeviceOld device);
+	VkSurfaceKHR create_surface(VulkanContext device);
 
 	// Returns the list of required instance extensions.
 	std::vector<const char*> required_instance_extensions();

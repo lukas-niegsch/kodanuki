@@ -1,4 +1,4 @@
-#include "engine/vulkan/device.h"
+#include "engine/vulkan/context.h"
 #include "engine/vulkan/debug.h"
 #include "engine/vulkan/utility.h"
 #include "engine/vulkan/wrapper.h"
@@ -93,7 +93,7 @@ DeviceState::~DeviceState()
 	vkDestroyInstance(instance, nullptr);
 }
 
-VulkanDeviceOld::VulkanDeviceOld(DeviceBuilder builder)
+VulkanContext::VulkanContext(DeviceBuilder builder)
 {
 	auto instance = create_instance(builder.instance_layers, builder.instance_extensions);
 	auto physical_device = select_physical_device(instance, builder.gpu_score);
@@ -109,42 +109,42 @@ VulkanDeviceOld::VulkanDeviceOld(DeviceBuilder builder)
 	pimpl->query_pool = create_query_pool(logical_device, 2);
 }
 
-VulkanDeviceOld::operator VkDevice() const
+VulkanContext::operator VkDevice() const
 {
 	return pimpl->logical_device;
 }
 
-VkInstance VulkanDeviceOld::instance()
+VkInstance VulkanContext::instance()
 {
 	return pimpl->instance;
 }
 
-VkPhysicalDevice VulkanDeviceOld::physical_device()
+VkPhysicalDevice VulkanContext::physical_device()
 {
 	return pimpl->physical_device;
 }
 
-std::vector<VkQueue> VulkanDeviceOld::queues()
+std::vector<VkQueue> VulkanContext::queues()
 {
 	return pimpl->queues;
 }
 
-uint32_t VulkanDeviceOld::queue_family_index()
+uint32_t VulkanContext::queue_family_index()
 {
 	return pimpl->queue_index;
 }
 
-VkDescriptorPool VulkanDeviceOld::get_descriptor_pool()
+VkDescriptorPool VulkanContext::get_descriptor_pool()
 {
 	return pimpl->descriptor_pool;
 }
 
-VkCommandPool VulkanDeviceOld::get_command_pool()
+VkCommandPool VulkanContext::get_command_pool()
 {
 	return pimpl->command_pool;
 }
 
-float VulkanDeviceOld::execute(std::function<void(VkCommandBuffer)> command, bool debug)
+float VulkanContext::execute(std::function<void(VkCommandBuffer)> command, bool debug)
 {
 	VkCommandBuffer buffer = pimpl->execute_buffer;
 	CHECK_VULKAN(vkResetCommandBuffer(buffer, 0));
@@ -188,7 +188,7 @@ float VulkanDeviceOld::execute(std::function<void(VkCommandBuffer)> command, boo
 	return 0.0f;
 }
 
-VulkanDescriptorPool VulkanDeviceOld::create_default_descriptor_pool()
+VulkanDescriptorPool VulkanContext::create_default_descriptor_pool()
 {
 	std::vector<VkDescriptorPoolSize> pool_sizes = {
 		{ VK_DESCRIPTOR_TYPE_SAMPLER, 30 },

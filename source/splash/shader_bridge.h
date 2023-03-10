@@ -3,7 +3,7 @@
 #include "source/splash/model.h"
 #include "source/splash/simulation.h"
 #include "engine/utility/alignment.h"
-#include "engine/vulkan/device.h"
+#include "engine/vulkan/context.h"
 #include "engine/vulkan/pipeline.h"
 #include "engine/vulkan/tensor.h"
 #include <vulkan/vulkan.h>
@@ -14,7 +14,7 @@ namespace kodanuki
 
 struct ShaderBridgeBuilder
 {
-	VulkanDeviceOld device;
+	VulkanContext device;
 	uint32_t frame_count;
 	Model model;
 	VulkanPipelineOld render_pipeline;
@@ -49,7 +49,7 @@ private:
 	VkPipelineLayout render_pipeline_layout;
 	VkDescriptorSetLayout render_descriptor_layout;
 	VkDescriptorPool descriptor_pool;
-	VulkanDeviceOld device;
+	VulkanContext device;
 	std::vector<VulkanDescriptorSet> render_descriptors;
 	RenderTensors tensors;
 	VulkanPipelineOldCache cache;
