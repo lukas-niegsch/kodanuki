@@ -210,7 +210,7 @@ VulkanSurface create_surface(VkInstance instance, GLFWwindow* window);
 
 /**
  * Swapchains replace the different frames.
- *
+ *vkEndCommandBuffer
  * @param device The device that stores the swapchain.
  * @param info The information on how to create the swapchain.
  * @return The wrapper around the vulkan swapchain.
@@ -234,5 +234,18 @@ VulkanPipeline create_pipeline(VkDevice device, VkComputePipelineCreateInfo info
  * @return The wrapper around the vulkan pipeline.
  */
 VulkanPipeline create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo info);
+
+/**
+ * Execute the given callback closure with the command buffer.
+ *
+ * This will call the following functions:
+ * vkResetCommandBuffer
+ * vkBeginCommandBuffer
+ * vkEndCommandBuffer
+ *
+ * @param buffer The command buffer used inside the closure.
+ * @param closure The function that will be executed.
+ */
+void with_command_buffer(VkCommandBuffer buffer, std::function<void(VkCommandBuffer)> closure);
 
 }

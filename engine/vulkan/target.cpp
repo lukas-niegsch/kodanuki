@@ -57,7 +57,7 @@ void TargetState::create_surface()
 
 void TargetState::delete_surface()
 {
-    vkDestroySurfaceKHR(device.instance(), surface, nullptr);
+    vkDestroySurfaceKHR(device.get_instance(), surface, nullptr);
 }
 
 void TargetState::create_swapchain()
@@ -229,7 +229,7 @@ VkSwapchainKHR VulkanTarget::swapchain()
 VkExtent2D VulkanTarget::get_surface_extent()
 {
     VkSurfaceCapabilitiesKHR capabilities;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(state->device.physical_device(), state->surface, &capabilities);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(state->device.get_physical_device(), state->surface, &capabilities);
     return capabilities.currentExtent;
 }
 

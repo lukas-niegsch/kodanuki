@@ -34,11 +34,11 @@ UserInterface::UserInterface(UserInterfaceBuilder builder)
 	ImGui_ImplGlfw_InitForVulkan(builder.window, true);
 
 	ImGui_ImplVulkan_InitInfo init_info = {};
-	init_info.Instance = builder.device.instance();
-	init_info.PhysicalDevice = builder.device.physical_device();
+	init_info.Instance = builder.device.get_instance();
+	init_info.PhysicalDevice = builder.device.get_physical_device();
 	init_info.Device = builder.device;
-	init_info.QueueFamily = builder.device.queue_family_index();
-	init_info.Queue = builder.device.queues()[1];
+	init_info.QueueFamily = builder.device.get_queue_family();
+	init_info.Queue = builder.device.get_queues()[1];
 	init_info.DescriptorPool = builder.device.get_descriptor_pool();
 	init_info.MinImageCount = 2;
 	init_info.ImageCount = builder.target.get_frame_count();

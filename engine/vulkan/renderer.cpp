@@ -109,7 +109,7 @@ void VulkanRenderer::submit_frame(uint32_t queue_index)
 	info.signalSemaphoreCount = 1;
 	info.pSignalSemaphores = &render_finished;
 
-	VkQueue queue = state->device.queues()[queue_index];
+	VkQueue queue = state->device.get_queues()[queue_index];
 	CHECK_VULKAN(vkQueueSubmit(queue, 1, &info, aquire_frame));
 	state->submit_frame = (state->submit_frame + 1) % state->max_frame;
 }
@@ -127,7 +127,7 @@ void VulkanRenderer::render_frame(uint32_t queue_index)
 	info.pSwapchains = &swapchain;
 	info.pImageIndices = &state->render_frame;
 
-	VkQueue queue = state->device.queues()[queue_index];
+	VkQueue queue = state->device.get_queues()[queue_index];
 	auto result = vkQueuePresentKHR(queue, &info);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {

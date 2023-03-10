@@ -312,7 +312,7 @@ void VulkanTensor::copy_buffer(VkBuffer source_buffer, VkBuffer target_buffer, V
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &transfer_buffer;
-	CHECK_VULKAN(vkQueueSubmit(state->device.queues()[0], 1, &submit_info, VK_NULL_HANDLE));
+	CHECK_VULKAN(vkQueueSubmit(state->device.get_queues()[0], 1, &submit_info, VK_NULL_HANDLE));
 	
 	CHECK_VULKAN(vkDeviceWaitIdle(state->device));
 }

@@ -9,7 +9,7 @@ namespace kodanuki
 {
 
 /**
- * Contains all the configurable information for creating a device.
+ * Contains all the configurable information for creating a context.
  *
  * These values will be considered as much as possible when selecting
  * the graphics card and how the logical device is created. The caller
@@ -20,7 +20,7 @@ namespace kodanuki
  * The user has a gpu with graphics compute capabilities.
  * The gpu has at least the selected amount of queue families.
  */
-struct DeviceBuilder
+struct ContextBuilder
 {
 	// Enables the given layers for the vulkan instance.
 	std::vector<const char*> instance_layers;
@@ -52,23 +52,23 @@ class VulkanContext
 {
 public:
 	// Creates a new vulkan device from the given builder.
-	VulkanContext(DeviceBuilder builder);
+	VulkanContext(ContextBuilder builder);
 
 	// Returns the handle to the logical device.
 	operator VkDevice() const;
 
 public:
 	// Returns the handle to the instance.
-	VkInstance instance();
+	VkInstance get_instance();
 
 	// Returns the handle to the physical device.
-	VkPhysicalDevice physical_device();
+	VkPhysicalDevice get_physical_device();
 
 	// Returns the handles to the queues.
-	std::vector<VkQueue> queues();
+	std::vector<VkQueue> get_queues();
 
 	// Returns the used queue family index.
-	uint32_t queue_family_index();
+	uint32_t get_queue_family();
 
 	// Returns the globally used descriptor pool.
 	VkDescriptorPool get_descriptor_pool();
@@ -93,8 +93,16 @@ private:
 	VulkanDescriptorPool create_default_descriptor_pool();
 
 private:
-	// The abstract pointer to the implementation.
-	std::shared_ptr<struct DeviceState> pimpl;
+	VulkanInstance instance;
+	VulkanDevice logical_device;
+	VulkanCommandPool command_pool;
+	VulkanCommandBuffer execute_buffer;
+	VulkanQueryPool query_pool;
+	VulkanDescriptorPool descriptor_pool;
+	VkPhysicalDevice physical_device;
+	std::vector<VkQueue> queues;
+	VkQueue execute_queue;
+	uint32_t queue_family;
 };
 
 }

@@ -74,7 +74,7 @@ bool VulkanWindow::tick()
 
 VkSurfaceKHR VulkanWindow::create_surface(VulkanContext device)
 {
-	VkInstance instance = device.instance();
+	VkInstance instance = device.get_instance();
 	VkSurfaceKHR surface;
 	CHECK_VULKAN(glfwCreateWindowSurface(instance, state->window, nullptr, &surface));
 	return surface;

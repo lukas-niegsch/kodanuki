@@ -263,4 +263,18 @@ VulkanPipeline create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo inf
 	return Wrapper<VkPipeline>(output, destroy);
 }
 
+void with_command_buffer(VkCommandBuffer buffer, std::function<void(VkCommandBuffer)> closure)
+{
+	CHECK_VULKAN(vkResetCommandBuffer(buffer, 0));
+	VkCommandBufferBeginInfo info = {
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.pInheritanceInfo = nullptr
+	};
+	CHECK_VULKAN(vkBeginCommandBuffer(buffer, &info));
+	closure(buffer);
+	CHECK_VULKAN(vkEndCommandBuffer(buffer));
+}
+
 }
