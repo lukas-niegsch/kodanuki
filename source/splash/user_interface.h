@@ -11,7 +11,7 @@ namespace kodanuki
 
 struct UserInterfaceBuilder
 {
-	VulkanContext device;
+	VulkanDevice device;
 	VulkanTarget target;
 	VulkanWindow window;
 	std::string fontfile;

@@ -16,7 +16,7 @@ namespace kodanuki
 struct RendererBuilder
 {
 	// The device on which the rendering takes place.
-	VulkanContext device;
+	VulkanDevice device;
 
 	// The target which defines the rendering output.
 	VulkanTarget target;

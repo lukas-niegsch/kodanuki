@@ -7,6 +7,6 @@ namespace kodanuki
 {
 
 // The graphics pipeline that renders fluid particles.
-VulkanPipelineOld create_render_fluid_pipeline(VulkanContext device, VulkanTarget target);
+VulkanPipelineOld create_render_fluid_pipeline(VulkanDevice device, VulkanTarget target);
 
 }

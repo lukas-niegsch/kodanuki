@@ -28,7 +28,7 @@ int main()
 		.frames = 60
 	}};
 
-	VulkanContext device = {{
+	VulkanDevice device = {{
 		.instance_layers = {"VK_LAYER_KHRONOS_validation"},
 		.instance_extensions = window.required_instance_extensions(),
 		.device_extensions = {"VK_KHR_swapchain"},

@@ -22,13 +22,13 @@ namespace kodanuki
 struct TargetBuilder
 {
 	// The vulkan device which does the rendering.
-	VulkanContext device;
+	VulkanDevice device;
 
     // The vulkan window on which the viewport renders.
     VulkanWindow window;
 
     // The function that creates the renderpass.
-    std::function<void(VulkanContext, VkRenderPass&)> create_renderpass;
+    std::function<void(VulkanDevice, VkRenderPass&)> create_renderpass;
 
 	// The format of the surface.
 	VkSurfaceFormatKHR surface_format;

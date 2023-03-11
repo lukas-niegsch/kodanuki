@@ -30,7 +30,7 @@ std::vector<VkQueue> get_queue_handles(VkDevice logical_device, uint32_t queue_f
 	return result;
 }
 
-VulkanContext::VulkanContext(ContextBuilder builder)
+VulkanDevice::VulkanDevice(ContextBuilder builder)
 {
 	instance = create_instance(builder.instance_layers, builder.instance_extensions);
 	physical_device = select_physical_device(instance, builder.gpu_score);
@@ -44,7 +44,7 @@ VulkanContext::VulkanContext(ContextBuilder builder)
 	execute_queue = queues.back();
 }
 
-float VulkanContext::execute(std::function<void(VkCommandBuffer)> command)
+float VulkanDevice::execute(std::function<void(VkCommandBuffer)> command)
 {
 	with_command_buffer(execute_buffer, [&](VkCommandBuffer buffer) {
 		vkCmdResetQueryPool(buffer, query_pool, 0, 2);
@@ -71,7 +71,7 @@ float VulkanContext::execute(std::function<void(VkCommandBuffer)> command)
 	return (ts[1] - ts[0]);
 }
 
-void VulkanContext::with_command_buffer(VkCommandBuffer buffer, std::function<void(VkCommandBuffer)> closure)
+void VulkanDevice::with_command_buffer(VkCommandBuffer buffer, std::function<void(VkCommandBuffer)> closure)
 {
 	CHECK_VULKAN(vkResetCommandBuffer(buffer, 0));
 	VkCommandBufferBeginInfo info = {
@@ -85,7 +85,7 @@ void VulkanContext::with_command_buffer(VkCommandBuffer buffer, std::function<vo
 	CHECK_VULKAN(vkEndCommandBuffer(buffer));
 }
 
-Wrapper<VkDescriptorPool> VulkanContext::create_default_descriptor_pool()
+Wrapper<VkDescriptorPool> VulkanDevice::create_default_descriptor_pool()
 {
 	std::vector<VkDescriptorPoolSize> pool_sizes = {
 		{ VK_DESCRIPTOR_TYPE_SAMPLER, 30 },
@@ -104,37 +104,37 @@ Wrapper<VkDescriptorPool> VulkanContext::create_default_descriptor_pool()
 	return create_descriptor_pool(logical_device, pool_sizes);
 }
 
-VulkanContext::operator VkDevice() const
+VulkanDevice::operator VkDevice() const
 {
 	return logical_device;
 }
 
-VkInstance VulkanContext::get_instance()
+VkInstance VulkanDevice::get_instance()
 {
 	return instance;
 }
 
-VkPhysicalDevice VulkanContext::get_physical_device()
+VkPhysicalDevice VulkanDevice::get_physical_device()
 {
 	return physical_device;
 }
 
-std::vector<VkQueue> VulkanContext::get_queues()
+std::vector<VkQueue> VulkanDevice::get_queues()
 {
 	return queues;
 }
 
-uint32_t VulkanContext::get_queue_family()
+uint32_t VulkanDevice::get_queue_family()
 {
 	return queue_family;
 }
 
-VkDescriptorPool VulkanContext::get_descriptor_pool()
+VkDescriptorPool VulkanDevice::get_descriptor_pool()
 {
 	return descriptor_pool;
 }
 
-VkCommandPool VulkanContext::get_command_pool()
+VkCommandPool VulkanDevice::get_command_pool()
 {
 	return command_pool;
 }

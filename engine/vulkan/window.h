@@ -67,7 +67,7 @@ public:
 
 public:
 	// Returns the handle to the surface.
-	VkSurfaceKHR create_surface(VulkanContext device);
+	VkSurfaceKHR create_surface(VulkanDevice device);
 
 	// Returns the list of required instance extensions.
 	std::vector<const char*> required_instance_extensions();

@@ -17,9 +17,9 @@ int score_queue_family(VkQueueFamilyProperties family)
 	return score;
 }
 
-VulkanContext create_default_device()
+VulkanDevice create_default_device()
 {
-	VulkanContext device = {{
+	VulkanDevice device = {{
 		.instance_layers = {"VK_LAYER_KHRONOS_validation"},
 		.instance_extensions = {},
 		.device_extensions = {},
@@ -33,7 +33,7 @@ VulkanContext create_default_device()
 TEST_CASE("Tensor API usage example")
 {
 	// Each vulkan tensor requires a vulkan device for executing commands.
-	VulkanContext device = create_default_device();
+	VulkanDevice device = create_default_device();
 	VulkanPipelineOldCache cache;
 	
 	// Heres how to create some tensors allocating memory on the device.
@@ -69,7 +69,7 @@ TEST_CASE("Tensor API usage example")
 
 TEST_CASE("access and modification of tensor memory is possible")
 {
-	VulkanContext device = create_default_device();
+	VulkanDevice device = create_default_device();
 	VulkanPipelineOldCache cache;
 
 	VulkanTensor a = {{
@@ -93,7 +93,7 @@ TEST_CASE("access and modification of tensor memory is possible")
 
 TEST_CASE("adding two tensors works")
 {
-	VulkanContext device = create_default_device();
+	VulkanDevice device = create_default_device();
 	VulkanPipelineOldCache cache;
 	VulkanTensor a = {{
 		.device = device,
@@ -129,7 +129,7 @@ TEST_CASE("adding two tensors works")
 
 TEST_CASE("tensor operator overloading works")
 {
-	VulkanContext device = create_default_device();
+	VulkanDevice device = create_default_device();
 	VulkanPipelineOldCache cache;
 	VulkanTensor a = {{
 		.device = device,

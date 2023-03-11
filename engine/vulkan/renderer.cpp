@@ -7,7 +7,7 @@ namespace kodanuki
 
 struct RendererState
 {
-	VulkanContext device;
+	VulkanDevice device;
 	VulkanTarget target;
 	uint32_t submit_frame;
 	uint32_t render_frame;

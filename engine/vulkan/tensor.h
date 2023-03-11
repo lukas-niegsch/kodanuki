@@ -81,7 +81,7 @@ public:
 	struct TensorBuilder
 	{
 		// The vulkan device that holds the context.
-		VulkanContext device;
+		VulkanDevice device;
 
 		// The vulkan pipeline cache for the compute pipelines.
 		VulkanPipelineOldCache& cache;
