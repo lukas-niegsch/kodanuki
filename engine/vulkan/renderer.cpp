@@ -56,39 +56,29 @@ uint32_t VulkanRenderer::aquire_frame()
 	}
 
 	CHECK_VULKAN(vkResetFences(state->device, 1, &aquire_frame));
-
-	const VkCommandBuffer& command_buffer = state->command_buffers[state->submit_frame];
-	CHECK_VULKAN(vkResetCommandBuffer(command_buffer, 0));
 	return state->submit_frame;
 }
 
 void VulkanRenderer::draw_command(std::function<void(VkCommandBuffer)> command)
 {
-	const VkCommandBuffer& buffer = state->command_buffers[state->submit_frame];
+	state->device.with_command_buffer(state->command_buffers[state->submit_frame], [&](VkCommandBuffer buffer) {
+		std::array<VkClearValue, 2> clear_values = {};
+		clear_values[0].color = state->clear_color;
+		clear_values[1].depthStencil = {1.0f, 0};
 
-	VkCommandBufferBeginInfo buffer_info = {};
-	buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	CHECK_VULKAN(vkBeginCommandBuffer(buffer, &buffer_info));
+		VkRenderPassBeginInfo renderpass_info = {};
+		renderpass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderpass_info.renderPass = state->target.renderpass();
+		renderpass_info.framebuffer = state->target.get_frame_buffer(state->submit_frame);
+		renderpass_info.renderArea.offset = {0, 0};
+		renderpass_info.renderArea.extent = state->target.get_surface_extent();
+		renderpass_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
+		renderpass_info.pClearValues = clear_values.data();
 
-	std::array<VkClearValue, 2> clear_values = {};
-	clear_values[0].color = state->clear_color;
-	clear_values[1].depthStencil = {1.0f, 0};
-
-	VkRenderPassBeginInfo renderpass_info = {};
-	renderpass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderpass_info.renderPass = state->target.renderpass();
-	renderpass_info.framebuffer = state->target.get_frame_buffer(state->submit_frame);
-	renderpass_info.renderArea.offset = {0, 0};
-	renderpass_info.renderArea.extent = state->target.get_surface_extent();
-	renderpass_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
-	renderpass_info.pClearValues = clear_values.data();
-
-	vkCmdBeginRenderPass(buffer, &renderpass_info, VK_SUBPASS_CONTENTS_INLINE);
-
-	command(buffer);
-
-	vkCmdEndRenderPass(buffer);
-	CHECK_VULKAN(vkEndCommandBuffer(buffer));
+		vkCmdBeginRenderPass(buffer, &renderpass_info, VK_SUBPASS_CONTENTS_INLINE);
+		command(buffer);
+		vkCmdEndRenderPass(buffer);
+	});
 }
 
 void VulkanRenderer::submit_frame(uint32_t queue_index)

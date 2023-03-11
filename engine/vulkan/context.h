@@ -42,16 +42,16 @@ struct ContextBuilder
 };
 
 /**
- * The vulkan device is a wrapper around the graphics card.
+ * The vulkan context is a wrapper around the graphics card.
  *
- * Each vulkan device creates its own vulkan instance and picks
+ * Each vulkan context creates its own vulkan instance and picks
  * some graphics card based on the provided builder. This class
  * handles the interaction with the graphics card.
  */
 class VulkanContext
 {
 public:
-	// Creates a new vulkan device from the given builder.
+	// Creates a new vulkan context from the given builder.
 	VulkanContext(ContextBuilder builder);
 
 	// Returns the handle to the logical device.
