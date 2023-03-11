@@ -1,5 +1,4 @@
 #include "source/splash/shader_bridge.h"
-#include "engine/vulkan/utility.h"
 #include "engine/utility/alignment.h"
 
 namespace kodanuki

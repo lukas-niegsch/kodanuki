@@ -1,6 +1,5 @@
 #include "engine/vulkan/pipeline.h"
 #include "engine/vulkan/debug.h"
-#include "engine/vulkan/utility.h"
 #include "engine/utility/file.h"
 #include "engine/vulkan/wrapper.h"
 #include <cassert>

@@ -19,9 +19,9 @@ struct TensorState
 	std::optional<VkBufferUsageFlags> usage;
 	std::optional<VkBuffer> primary_buffer;
 	std::optional<VkBuffer> staging_buffer;
-	std::optional<VkDeviceMemory> primary_memory;
-	std::optional<VkDeviceMemory> staging_memory;
 	VulkanCommandBuffer transfer_buffer;
+	std::optional<VulkanDeviceMemory> primary_memory;
+	std::optional<VulkanDeviceMemory> staging_memory;
 	~TensorState();
 };
 
@@ -87,7 +87,6 @@ void VulkanTensor::fill(VulkanTensor& tensor, const T& value)
 
 #else // INCLUDE_TENSOR_INLINE_HEADER
 #include "engine/vulkan/tensor.h"
-#include "engine/vulkan/utility.h"
 #include "engine/utility/alignment.h"
 
 namespace kodanuki
@@ -103,12 +102,8 @@ TensorState::~TensorState()
 	if (staging_buffer) {
 		vkDestroyBuffer(device, staging_buffer.value(), nullptr);
 	}
-	if (primary_memory) {
-		vkFreeMemory(device, primary_memory.value(), nullptr);
-	}
-	if (staging_memory) {
-		vkFreeMemory(device, staging_memory.value(), nullptr);
-	}
+	primary_memory = {};
+	staging_memory = {};
 }
 
 VulkanTensor::VulkanTensor(TensorBuilder builder)
@@ -234,7 +229,7 @@ void VulkanTensor::create_primary_buffer()
 	}
 
 	VkBuffer buffer;
-	VkDeviceMemory memory;
+	VulkanDeviceMemory memory;
 	
 	create_buffer(
 		buffer,
@@ -262,7 +257,7 @@ void VulkanTensor::create_staging_buffer()
 	properties |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 	VkBuffer buffer;
-	VkDeviceMemory memory;
+	VulkanDeviceMemory memory;
 	
 	create_buffer(
 		buffer,
@@ -275,7 +270,7 @@ void VulkanTensor::create_staging_buffer()
 	state->staging_memory = memory;
 }
 
-void VulkanTensor::create_buffer(VkBuffer& buffer, VkDeviceMemory& memory, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+void VulkanTensor::create_buffer(VkBuffer& buffer, VulkanDeviceMemory& memory, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 {
 	VkBufferCreateInfo buffer_info = {};
 	buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -286,13 +281,10 @@ void VulkanTensor::create_buffer(VkBuffer& buffer, VkDeviceMemory& memory, VkBuf
 
 	VkMemoryRequirements requirements;
 	vkGetBufferMemoryRequirements(state->device, buffer, &requirements);
-
-	VkMemoryAllocateInfo allocate_info = {};
-	allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocate_info.allocationSize = requirements.size;
-	allocate_info.memoryTypeIndex = find_memory_type(state->device, requirements.memoryTypeBits, properties);
-	CHECK_VULKAN(vkAllocateMemory(state->device, &allocate_info, nullptr, &memory));
-
+	memory = create_device_memory(
+		state->device, state->device.get_physical_device(), requirements,
+		properties
+	);
 	vkBindBufferMemory(state->device, buffer, memory, 0);
 }
 

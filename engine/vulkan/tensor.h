@@ -282,7 +282,7 @@ private:
 	 * @param usage The usage flags that this buffer has.
 	 * @param properties The property flags that this buffer has.
 	 */
-	void create_buffer(VkBuffer& buffer, VkDeviceMemory& memory, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+	void create_buffer(VkBuffer& buffer, VulkanDeviceMemory& memory, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 
 	/**
 	 * Copies the data from the source buffer to the target buffer.

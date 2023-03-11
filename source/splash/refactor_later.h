@@ -1,6 +1,5 @@
 
 #include "source/splash/model.h"
-#include "engine/vulkan/utility.h"
 #include "source/splash/shader_bridge.h"
 #include "source/splash/camera.h"
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

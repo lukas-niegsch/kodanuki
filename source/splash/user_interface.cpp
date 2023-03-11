@@ -1,7 +1,6 @@
 #include "source/splash/user_interface.h"
 #include "source/splash/user_interface_backend.h"
 #include "engine/vulkan/debug.h"
-#include "engine/vulkan/utility.h"
 #include <vector>
 
 namespace kodanuki

@@ -1,6 +1,5 @@
 #include "engine/vulkan/target.h"
 #include "engine/vulkan/debug.h"
-#include "engine/vulkan/utility.h"
 #include "engine/vulkan/wrapper.h"
 
 namespace kodanuki
