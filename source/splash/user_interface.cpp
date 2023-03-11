@@ -74,11 +74,6 @@ void show_config(Config& config, float delta_time)
 		ImGui::ShowDemoWindow(&config.is_demo_open);
 	}
 
-	if (config.vpc.size() >= config.max_dts_size) {
-		config.vpc.erase(config.vpc.begin());
-	}
-	config.vpc.push_back(1.0f * config.visible_particle_count / config.compute_particle_count);
-
 	if (config.dts.size() >= config.max_dts_size) {
 		config.dts.erase(config.dts.begin());
 	}
@@ -90,14 +85,8 @@ void show_config(Config& config, float delta_time)
 		std::string frame_time = std::string("FPS: ")
 			+ std::to_string(delta_time * 1000)
 			+ " ms";
-		std::string particles = std::string("VPC: ")
-			+ std::to_string(config.visible_particle_count)
-			+ " / "
-			+ std::to_string(config.compute_particle_count);
-
 		ImGui::Begin("Configuration", nullptr, window_flags);
 		ImGui::PlotHistogram(frame_time.c_str(), config.dts.data(), config.dts.size(), 0, NULL, 0.0f, 60.0f);
-		ImGui::PlotHistogram(particles.c_str(), config.vpc.data(), config.dts.size(), 0, NULL, 0.0f, 1.0f);
 		ImGui::SliderFloat("Render Distance", &config.render_distance, 10.0f, 300.0f);
 		ImGui::SliderFloat("Movement Speed", &config.move_speed, 10.0f, 300.0f);
 		ImGui::SliderFloat("Camera Speed", &config.look_speed, 10.0f, 300.0f);

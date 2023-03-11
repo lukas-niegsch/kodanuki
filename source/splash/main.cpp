@@ -8,7 +8,6 @@
 #include "engine/vulkan/renderer.h"
 #include "source/splash/model.h"
 #include "source/splash/scene.h"
-#include "source/splash/culling.h"
 #include "source/splash/camera.h"
 #include "engine/utility/alignment.h"
 #include "extern/imgui/imgui.h"
@@ -88,6 +87,7 @@ int main()
 	Simulation simulation(device);
 	simulation.load_scene(load_csv_scene("assets/models/debug.csv"));
 	uint32_t index_count = bridge.get_index_count();
+	uint32_t instance_count = simulation.get_particle_count();
 
 	while (interface.tick())
 	{
@@ -98,16 +98,11 @@ int main()
 		show_config(config, dts);
 		simulation.tick_fluids(dts);
 
-		VulkanTensor position = simulation.get_position();
-		VulkanTensor mvp = bridge.get_mvp(frame);
-		VulkanTensor visibles = cull_invisible_spheres(position, mvp);
-		config.compute_particle_count = position.numel() / 3;
-		config.visible_particle_count = visibles.numel() / 3;
-
 		renderer.draw_command([&](VkCommandBuffer buffer) {
 			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_fluid);
-			bridge.bind_render_resources(buffer, frame, visibles);
-			vkCmdDrawIndexed(buffer, index_count, config.visible_particle_count, 0, 0, 0);
+			VulkanTensor positions = simulation.get_position();
+			bridge.bind_render_resources(buffer, frame, positions);
+			vkCmdDrawIndexed(buffer, index_count, instance_count, 0, 0, 0);
 			interface.draw(buffer);
 		});
 
