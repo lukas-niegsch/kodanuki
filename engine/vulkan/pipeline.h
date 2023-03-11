@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/vulkan/context.h"
+#include "engine/vulkan/device.h"
 #include "engine/vulkan/target.h"
 #include "engine/vulkan/debug.h"
 #include "engine/vulkan/wrapper.h"
@@ -32,16 +32,16 @@ struct GraphicsPipelineBuilder
 	VkPipelineLayoutCreateInfo layout_info;
 
 	// The handle to the vertex shader module.
-	std::optional<VulkanShaderModule> vertex_shader;
+	std::optional<Wrapper<VkShaderModule>> vertex_shader;
 
 	// The handle to the tesselation shader module.
-	std::optional<VulkanShaderModule> tesselation;
+	std::optional<Wrapper<VkShaderModule>> tesselation;
 
 	// The handle to the geometry shader module.
-	std::optional<VulkanShaderModule> geometry_shader;
+	std::optional<Wrapper<VkShaderModule>> geometry_shader;
 
 	// The handle to the fragment shader module.
-	std::optional<VulkanShaderModule> fragment_shader;
+	std::optional<Wrapper<VkShaderModule>> fragment_shader;
 
 	// The configuration of the dynamic state.
 	VkPipelineDynamicStateCreateInfo dynamic_state;
@@ -88,7 +88,7 @@ struct ComputePipelineBuilder
 	VulkanContext device;
 
 	// The handle to the compute shader module.
-	VulkanShaderModule compute_shader;
+	Wrapper<VkShaderModule> compute_shader;
 
 	// The number of bytes inside the push_constant field.
 	uint32_t push_constant_byte_size;

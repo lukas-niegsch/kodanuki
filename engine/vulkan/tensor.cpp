@@ -19,9 +19,9 @@ struct TensorState
 	std::optional<VkBufferUsageFlags> usage;
 	std::optional<VkBuffer> primary_buffer;
 	std::optional<VkBuffer> staging_buffer;
-	VulkanCommandBuffer transfer_buffer;
-	std::optional<VulkanDeviceMemory> primary_memory;
-	std::optional<VulkanDeviceMemory> staging_memory;
+	Wrapper<VkCommandBuffer> transfer_buffer;
+	std::optional<Wrapper<VkDeviceMemory>> primary_memory;
+	std::optional<Wrapper<VkDeviceMemory>> staging_memory;
 	~TensorState();
 };
 
@@ -229,7 +229,7 @@ void VulkanTensor::create_primary_buffer()
 	}
 
 	VkBuffer buffer;
-	VulkanDeviceMemory memory;
+	Wrapper<VkDeviceMemory> memory;
 	
 	create_buffer(
 		buffer,
@@ -257,7 +257,7 @@ void VulkanTensor::create_staging_buffer()
 	properties |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 	VkBuffer buffer;
-	VulkanDeviceMemory memory;
+	Wrapper<VkDeviceMemory> memory;
 	
 	create_buffer(
 		buffer,
@@ -270,7 +270,7 @@ void VulkanTensor::create_staging_buffer()
 	state->staging_memory = memory;
 }
 
-void VulkanTensor::create_buffer(VkBuffer& buffer, VulkanDeviceMemory& memory, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+void VulkanTensor::create_buffer(VkBuffer& buffer, Wrapper<VkDeviceMemory>& memory, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 {
 	VkBufferCreateInfo buffer_info = {};
 	buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

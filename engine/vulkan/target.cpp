@@ -21,8 +21,8 @@ public:
 	std::vector<VkFramebuffer> framebuffers;
 	VkFormat depth_image_format;
 	VkImage depth_image;
-	VulkanDeviceMemory depth_image_memory;
-	VulkanImageView depth_image_view;
+	Wrapper<VkDeviceMemory> depth_image_memory;
+	Wrapper<VkImageView> depth_image_view;
 
 public:
 	~TargetState();

@@ -7,7 +7,7 @@
 namespace kodanuki
 {
 
-VulkanInstance create_instance(std::vector<const char*> layers, std::vector<const char*> extensions)
+Wrapper<VkInstance> create_instance(std::vector<const char*> layers, std::vector<const char*> extensions)
 {
 	VkApplicationInfo info = {
 		.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -30,7 +30,7 @@ VulkanInstance create_instance(std::vector<const char*> layers, std::vector<cons
 	});
 }
 
-VulkanDevice create_device(VkPhysicalDevice physical_device, uint32_t queue_family, std::vector<float> queue_priorities, std::vector<const char*> extensions)
+Wrapper<VkDevice> create_device(VkPhysicalDevice physical_device, uint32_t queue_family, std::vector<float> queue_priorities, std::vector<const char*> extensions)
 {
 	VkDeviceQueueCreateInfo info = {
 		.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -62,7 +62,7 @@ VulkanDevice create_device(VkPhysicalDevice physical_device, uint32_t queue_fami
 	return Wrapper<VkDevice>(output, destroy);
 }
 
-VulkanShaderModule create_shader_module(VkDevice device, std::vector<char> code)
+Wrapper<VkShaderModule> create_shader_module(VkDevice device, std::vector<char> code)
 {
 	return create_wrapper<vkCreateShaderModule, vkDestroyShaderModule>({
 		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -73,7 +73,7 @@ VulkanShaderModule create_shader_module(VkDevice device, std::vector<char> code)
 	}, device);
 }
 
-VulkanFence create_fence(VkDevice device, VkFenceCreateFlagBits flags)
+Wrapper<VkFence> create_fence(VkDevice device, VkFenceCreateFlagBits flags)
 {
 	return create_wrapper<vkCreateFence, vkDestroyFence>({
 		.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
@@ -82,7 +82,7 @@ VulkanFence create_fence(VkDevice device, VkFenceCreateFlagBits flags)
 	}, device);
 }
 
-VulkanSemaphore create_semaphore(VkDevice device)
+Wrapper<VkSemaphore> create_semaphore(VkDevice device)
 {
 	return create_wrapper<vkCreateSemaphore, vkDestroySemaphore>({
 		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
@@ -91,7 +91,7 @@ VulkanSemaphore create_semaphore(VkDevice device)
 	}, device);
 }
 
-VulkanDescriptorPool create_descriptor_pool(VkDevice device, const std::vector<VkDescriptorPoolSize> pool_sizes)
+Wrapper<VkDescriptorPool> create_descriptor_pool(VkDevice device, const std::vector<VkDescriptorPoolSize> pool_sizes)
 {
 	return create_wrapper<vkCreateDescriptorPool, vkDestroyDescriptorPool>({
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
@@ -103,7 +103,7 @@ VulkanDescriptorPool create_descriptor_pool(VkDevice device, const std::vector<V
 	}, device);
 }
 
-VulkanDescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool pool, const VkDescriptorSetLayout layout)
+Wrapper<VkDescriptorSet> create_descriptor_set(VkDevice device, VkDescriptorPool pool, const VkDescriptorSetLayout layout)
 {
 	VkDescriptorSet* output = new VkDescriptorSet();
 	VkDescriptorSetAllocateInfo info = {
@@ -120,7 +120,7 @@ VulkanDescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool pool
 	return Wrapper<VkDescriptorSet>(output, destroy);
 }
 
-VulkanCommandPool create_command_pool(VkDevice device, uint32_t queue_family_index)
+Wrapper<VkCommandPool> create_command_pool(VkDevice device, uint32_t queue_family_index)
 {
 	return create_wrapper<vkCreateCommandPool, vkDestroyCommandPool>({
 		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
@@ -130,7 +130,7 @@ VulkanCommandPool create_command_pool(VkDevice device, uint32_t queue_family_ind
 	}, device);
 }
 
-VulkanCommandBuffer create_command_buffer(VkDevice device, VkCommandPool pool)
+Wrapper<VkCommandBuffer> create_command_buffer(VkDevice device, VkCommandPool pool)
 {
 	VkCommandBuffer* output = new VkCommandBuffer();
 	VkCommandBufferAllocateInfo info = {
@@ -147,7 +147,7 @@ VulkanCommandBuffer create_command_buffer(VkDevice device, VkCommandPool pool)
 	return Wrapper<VkCommandBuffer>(output, destroy);
 }
 
-VulkanQueryPool create_query_pool(VkDevice device, uint32_t time_stamps)
+Wrapper<VkQueryPool> create_query_pool(VkDevice device, uint32_t time_stamps)
 {
 	return create_wrapper<vkCreateQueryPool, vkDestroyQueryPool>({
 		.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO,
@@ -159,7 +159,7 @@ VulkanQueryPool create_query_pool(VkDevice device, uint32_t time_stamps)
 	}, device);
 }
 
-VulkanFrameBuffer create_frame_buffer(VkDevice device, VkRenderPass renderpass, VkExtent2D extent, std::vector<VkImageView> attachments)
+Wrapper<VkFramebuffer> create_frame_buffer(VkDevice device, VkRenderPass renderpass, VkExtent2D extent, std::vector<VkImageView> attachments)
 {
 	return create_wrapper<vkCreateFramebuffer, vkDestroyFramebuffer>({
 		.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
@@ -174,7 +174,7 @@ VulkanFrameBuffer create_frame_buffer(VkDevice device, VkRenderPass renderpass, 
 	}, device);
 }
 
-VulkanImageView create_image_view(VkDevice device, VkFormat format, VkImage image, VkImageAspectFlagBits mask)
+Wrapper<VkImageView> create_image_view(VkDevice device, VkFormat format, VkImage image, VkImageAspectFlagBits mask)
 {
 	VkComponentMapping components = {
 		.r = VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -201,7 +201,7 @@ VulkanImageView create_image_view(VkDevice device, VkFormat format, VkImage imag
 	}, device);
 }
 
-VulkanDeviceMemory create_device_memory(VkDevice device, VkPhysicalDevice physical_device, VkMemoryRequirements requirements, VkMemoryPropertyFlags properties)
+Wrapper<VkDeviceMemory> create_device_memory(VkDevice device, VkPhysicalDevice physical_device, VkMemoryRequirements requirements, VkMemoryPropertyFlags properties)
 {
 	VkPhysicalDeviceMemoryProperties physical_properties;
 	vkGetPhysicalDeviceMemoryProperties(physical_device, &physical_properties);
@@ -226,7 +226,7 @@ VulkanDeviceMemory create_device_memory(VkDevice device, VkPhysicalDevice physic
 	}, device);
 }
 
-VulkanSurface create_surface(VkInstance instance, GLFWwindow* window)
+Wrapper<VkSurfaceKHR> create_surface(VkInstance instance, GLFWwindow* window)
 {
 	VkSurfaceKHR* output = new VkSurfaceKHR();
 	CHECK_VULKAN(glfwCreateWindowSurface(instance, window, nullptr, output));
@@ -236,14 +236,14 @@ VulkanSurface create_surface(VkInstance instance, GLFWwindow* window)
 	return Wrapper<VkSurfaceKHR>(output, destroy);
 }
 
-VulkanSwapchain create_swapchain(VkDevice device, VkSwapchainCreateInfoKHR info)
+Wrapper<VkSwapchainKHR> create_swapchain(VkDevice device, VkSwapchainCreateInfoKHR info)
 {
 	return create_wrapper<vkCreateSwapchainKHR, vkDestroySwapchainKHR>(
 		info, device
 	);
 }
 
-VulkanPipeline create_pipeline(VkDevice device, VkComputePipelineCreateInfo info)
+Wrapper<VkPipeline> create_pipeline(VkDevice device, VkComputePipelineCreateInfo info)
 {
 	VkPipeline* output = new VkPipeline();
 	CHECK_VULKAN(vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &info, nullptr, output));
@@ -253,7 +253,7 @@ VulkanPipeline create_pipeline(VkDevice device, VkComputePipelineCreateInfo info
 	return Wrapper<VkPipeline>(output, destroy);
 }
 
-VulkanPipeline create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo info)
+Wrapper<VkPipeline> create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo info)
 {
 	VkPipeline* output = new VkPipeline();
 	CHECK_VULKAN(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &info, nullptr, output));
@@ -263,7 +263,7 @@ VulkanPipeline create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo inf
 	return Wrapper<VkPipeline>(output, destroy);
 }
 
-VulkanBuffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage)
+Wrapper<VkBuffer> create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage)
 {
 	return create_wrapper<vkCreateBuffer, vkDestroyBuffer>({
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,

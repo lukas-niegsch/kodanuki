@@ -2,7 +2,7 @@
 #include "source/splash/user_interface.h"
 #include "source/splash/shader_bridge.h"
 #include "engine/vulkan/debug.h"
-#include "engine/vulkan/context.h"
+#include "engine/vulkan/device.h"
 #include "engine/vulkan/window.h"
 #include "engine/vulkan/target.h"
 #include "engine/vulkan/renderer.h"

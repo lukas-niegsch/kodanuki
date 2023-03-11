@@ -9,7 +9,7 @@ namespace kodanuki
 {
 
 /**
- * Contains all the configurable information for creating a context.
+ * Contains all the configurable information for creating a device.
  *
  * These values will be considered as much as possible when selecting
  * the graphics card and how the logical device is created. The caller
@@ -42,16 +42,16 @@ struct ContextBuilder
 };
 
 /**
- * The vulkan context is a wrapper around the graphics card.
+ * The vulkan device is a wrapper around the graphics card.
  *
- * Each vulkan context creates its own vulkan instance and picks
+ * Each vulkan device creates its own vulkan instance and picks
  * some graphics card based on the provided builder. This class
  * handles the interaction with the graphics card.
  */
 class VulkanContext
 {
 public:
-	// Creates a new vulkan context from the given builder.
+	// Creates a new vulkan device from the given builder.
 	VulkanContext(ContextBuilder builder);
 
 	// Returns the handle to the logical device.
@@ -111,15 +111,15 @@ private:
 	 *
 	 * @return The global descriptor pool.
 	 */
-	VulkanDescriptorPool create_default_descriptor_pool();
+	Wrapper<VkDescriptorPool> create_default_descriptor_pool();
 
 private:
-	VulkanInstance instance;
-	VulkanDevice logical_device;
-	VulkanCommandPool command_pool;
-	VulkanCommandBuffer execute_buffer;
-	VulkanQueryPool query_pool;
-	VulkanDescriptorPool descriptor_pool;
+	Wrapper<VkInstance> instance;
+	Wrapper<VkDevice> logical_device;
+	Wrapper<VkCommandPool> command_pool;
+	Wrapper<VkCommandBuffer> execute_buffer;
+	Wrapper<VkQueryPool> query_pool;
+	Wrapper<VkDescriptorPool> descriptor_pool;
 	VkPhysicalDevice physical_device;
 	std::vector<VkQueue> queues;
 	VkQueue execute_queue;

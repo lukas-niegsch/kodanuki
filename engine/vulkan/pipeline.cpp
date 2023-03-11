@@ -7,7 +7,7 @@
 namespace kodanuki
 {
 
-VkPipelineShaderStageCreateInfo create_shader_stage(VulkanShaderModule shader, VkShaderStageFlagBits bit)
+VkPipelineShaderStageCreateInfo create_shader_stage(Wrapper<VkShaderModule> shader, VkShaderStageFlagBits bit)
 {
 	VkPipelineShaderStageCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -21,7 +21,7 @@ VkPipelineShaderStageCreateInfo create_shader_stage(VulkanShaderModule shader, V
 
 void fill_shader_stages(std::vector<VkPipelineShaderStageCreateInfo>& stages, GraphicsPipelineBuilder& builder)
 {
-	auto append_stage = [&](std::optional<VulkanShaderModule> shader, VkShaderStageFlagBits bit) {
+	auto append_stage = [&](std::optional<Wrapper<VkShaderModule>> shader, VkShaderStageFlagBits bit) {
 		if (shader) {
 			stages.push_back(create_shader_stage(shader.value(), bit));
 		}
@@ -73,7 +73,7 @@ struct PipelineState
 	VkPipeline pipeline;
 	VkPipelineLayout layout;
 	VkDescriptorSetLayout descriptor;
-	VulkanDescriptorSet descriptor_set;
+	Wrapper<VkDescriptorSet> descriptor_set;
 	~PipelineState();
 };
 

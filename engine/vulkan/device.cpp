@@ -1,4 +1,4 @@
-#include "engine/vulkan/context.h"
+#include "engine/vulkan/device.h"
 #include "engine/vulkan/debug.h"
 #include "engine/vulkan/wrapper.h"
 #include <cassert>
@@ -85,7 +85,7 @@ void VulkanContext::with_command_buffer(VkCommandBuffer buffer, std::function<vo
 	CHECK_VULKAN(vkEndCommandBuffer(buffer));
 }
 
-VulkanDescriptorPool VulkanContext::create_default_descriptor_pool()
+Wrapper<VkDescriptorPool> VulkanContext::create_default_descriptor_pool()
 {
 	std::vector<VkDescriptorPoolSize> pool_sizes = {
 		{ VK_DESCRIPTOR_TYPE_SAMPLER, 30 },

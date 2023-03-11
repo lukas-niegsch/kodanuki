@@ -58,24 +58,6 @@ private:
 	std::shared_ptr<T> state;
 };
 
-using VulkanInstance = Wrapper<VkInstance>;
-using VulkanDevice = Wrapper<VkDevice>;
-using VulkanShaderModule = Wrapper<VkShaderModule>;
-using VulkanFence = Wrapper<VkFence>;
-using VulkanSemaphore = Wrapper<VkSemaphore>;
-using VulkanDescriptorPool = Wrapper<VkDescriptorPool>;
-using VulkanDescriptorSet = Wrapper<VkDescriptorSet>;
-using VulkanCommandPool = Wrapper<VkCommandPool>;
-using VulkanCommandBuffer = Wrapper<VkCommandBuffer>;
-using VulkanQueryPool = Wrapper<VkQueryPool>;
-using VulkanFrameBuffer = Wrapper<VkFramebuffer>;
-using VulkanImageView = Wrapper<VkImageView>;
-using VulkanDeviceMemory = Wrapper<VkDeviceMemory>;
-using VulkanSurface = Wrapper<VkSurfaceKHR>;
-using VulkanSwapchain = Wrapper<VkSwapchainKHR>;
-using VulkanPipeline = Wrapper<VkPipeline>;
-using VulkanBuffer = Wrapper<VkBuffer>;
-
 /**
  * Vulkan instances hold the context of the application.
  * 
@@ -83,7 +65,7 @@ using VulkanBuffer = Wrapper<VkBuffer>;
  * @param extensions The extensions that should be used.
  * @return The wrapper around the vulkan instance.
  */
-VulkanInstance create_instance(std::vector<const char*> layers, std::vector<const char*> extensions);
+Wrapper<VkInstance> create_instance(std::vector<const char*> layers, std::vector<const char*> extensions);
 
 /**
  * Devices are logical wrappers around physical graphics cards.
@@ -94,7 +76,7 @@ VulkanInstance create_instance(std::vector<const char*> layers, std::vector<cons
  * @param extensions The extensions that should be used.
  * @return The wrapper around the vulkan device.
  */
-VulkanDevice create_device(VkPhysicalDevice physical_device, uint32_t queue_family, std::vector<float> queue_priorities, std::vector<const char*> extensions);
+Wrapper<VkDevice> create_device(VkPhysicalDevice physical_device, uint32_t queue_family, std::vector<float> queue_priorities, std::vector<const char*> extensions);
 
 /**
  * Shader modules contain shader code that the device can execute.
@@ -103,7 +85,7 @@ VulkanDevice create_device(VkPhysicalDevice physical_device, uint32_t queue_fami
  * @param code The bytes of the shader SPIRV shader file.
  * @return The wrapper around the vulkan shader module.
  */
-VulkanShaderModule create_shader_module(VkDevice device, std::vector<char> code);
+Wrapper<VkShaderModule> create_shader_module(VkDevice device, std::vector<char> code);
 
 /**
  * Fences are synchronization primitives used for waiting inside the host.
@@ -112,7 +94,7 @@ VulkanShaderModule create_shader_module(VkDevice device, std::vector<char> code)
  * @param flags The flags with which the fence is created.
  * @return The wrapper around the vulkan fence.
  */
-VulkanFence create_fence(VkDevice device, VkFenceCreateFlagBits flags);
+Wrapper<VkFence> create_fence(VkDevice device, VkFenceCreateFlagBits flags);
 
 /**
  * Semaphores are synchronization primitives used for waiting inside the device.
@@ -120,7 +102,7 @@ VulkanFence create_fence(VkDevice device, VkFenceCreateFlagBits flags);
  * @param device The device that stores the semaphore.
  * @return The wrapper around the vulkan semaphore.
  */
-VulkanSemaphore create_semaphore(VkDevice device);
+Wrapper<VkSemaphore> create_semaphore(VkDevice device);
 
 /**
  * Descriptor pools maintain multiple descriptor sets.
@@ -129,7 +111,7 @@ VulkanSemaphore create_semaphore(VkDevice device);
  * @param pool_sizes The sizes of the descriptor pool for each type.
  * @return The wrapper around the vulkan descriptor pool.
  */
-VulkanDescriptorPool create_descriptor_pool(VkDevice device, const std::vector<VkDescriptorPoolSize> pool_sizes);
+Wrapper<VkDescriptorPool> create_descriptor_pool(VkDevice device, const std::vector<VkDescriptorPoolSize> pool_sizes);
 
 /**
  * Descriptor sets hold the information for pipelines.
@@ -139,7 +121,7 @@ VulkanDescriptorPool create_descriptor_pool(VkDevice device, const std::vector<V
  * @param layout The layout with which the descriptor set is created.
  * @return The wrapper around the vulkan descriptor set.
  */
-VulkanDescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool pool, const VkDescriptorSetLayout layout);
+Wrapper<VkDescriptorSet> create_descriptor_set(VkDevice device, VkDescriptorPool pool, const VkDescriptorSetLayout layout);
 
 /**
  * Command pools maintain multiple command buffers.
@@ -148,7 +130,7 @@ VulkanDescriptorSet create_descriptor_set(VkDevice device, VkDescriptorPool pool
  * @param queue_family_index The queue family on which the command buffers operate.
  * @return The wrapper around the vulkan command pool.
  */
-VulkanCommandPool create_command_pool(VkDevice device, uint32_t queue_family_index);
+Wrapper<VkCommandPool> create_command_pool(VkDevice device, uint32_t queue_family_index);
 
 /**
  * Command buffers hold the information for queue commands.
@@ -157,7 +139,7 @@ VulkanCommandPool create_command_pool(VkDevice device, uint32_t queue_family_ind
  * @param pool The pool which maintains the command buffer.
  * @return The wrapper around the vulkan command buffer.
  */
-VulkanCommandBuffer create_command_buffer(VkDevice device, VkCommandPool pool);
+Wrapper<VkCommandBuffer> create_command_buffer(VkDevice device, VkCommandPool pool);
 
 /**
  * Query pools maintain multiple timestamps.
@@ -166,7 +148,7 @@ VulkanCommandBuffer create_command_buffer(VkDevice device, VkCommandPool pool);
  * @param time_stamps The maximum number of timestamps.
  * @return The wrapper around the vulkan query pool.
  */
-VulkanQueryPool create_query_pool(VkDevice device, uint32_t time_stamps);
+Wrapper<VkQueryPool> create_query_pool(VkDevice device, uint32_t time_stamps);
 
 /**
  * Framebuffers are the outputs from renderpasses.
@@ -177,7 +159,7 @@ VulkanQueryPool create_query_pool(VkDevice device, uint32_t time_stamps);
  * @param attachments The attachments that the renderpass produces.
  * @return The wrapper around the vulkan frame buffer.
  */
-VulkanFrameBuffer create_frame_buffer(VkDevice device, VkRenderPass renderpass, VkExtent2D extent, std::vector<VkImageView> attachments);
+Wrapper<VkFramebuffer> create_frame_buffer(VkDevice device, VkRenderPass renderpass, VkExtent2D extent, std::vector<VkImageView> attachments);
 
 /**
  * Image views allows for modifying vulkan images.
@@ -187,7 +169,7 @@ VulkanFrameBuffer create_frame_buffer(VkDevice device, VkRenderPass renderpass, 
  * @param image The image which should be modified.
  * @return The wrapper around the vulkan image view.
  */
-VulkanImageView create_image_view(VkDevice device, VkFormat format, VkImage image, VkImageAspectFlagBits mask);
+Wrapper<VkImageView> create_image_view(VkDevice device, VkFormat format, VkImage image, VkImageAspectFlagBits mask);
 
 /**
  * Device memory maintains a blocks of memory.
@@ -198,7 +180,7 @@ VulkanImageView create_image_view(VkDevice device, VkFormat format, VkImage imag
  * @param properties The properties that the memory must satisfy.
  * @return The wrapper around the vulkan device memory.
  */
-VulkanDeviceMemory create_device_memory(VkDevice device, VkPhysicalDevice physical_device, VkMemoryRequirements requirements, VkMemoryPropertyFlags properties);
+Wrapper<VkDeviceMemory> create_device_memory(VkDevice device, VkPhysicalDevice physical_device, VkMemoryRequirements requirements, VkMemoryPropertyFlags properties);
 
 /**
  * Surfaces represent the renderable part of the screen.
@@ -207,7 +189,7 @@ VulkanDeviceMemory create_device_memory(VkDevice device, VkPhysicalDevice physic
  * @param window The GLFW window on which frames are rendered.
  * @return The wrapper around the vulkan surface.
  */
-VulkanSurface create_surface(VkInstance instance, GLFWwindow* window);
+Wrapper<VkSurfaceKHR> create_surface(VkInstance instance, GLFWwindow* window);
 
 /**
  * Swapchains replace the different frames.
@@ -216,7 +198,7 @@ VulkanSurface create_surface(VkInstance instance, GLFWwindow* window);
  * @param info The information on how to create the swapchain.
  * @return The wrapper around the vulkan swapchain.
  */
-VulkanSwapchain create_swapchain(VkDevice device, VkSwapchainCreateInfoKHR info);
+Wrapper<VkSwapchainKHR> create_swapchain(VkDevice device, VkSwapchainCreateInfoKHR info);
 
 /**
  * Compute pipelines allows running a series of commands.
@@ -225,7 +207,7 @@ VulkanSwapchain create_swapchain(VkDevice device, VkSwapchainCreateInfoKHR info)
  * @param info The information on how to create the copute pipeline.
  * @return The wrapper around the vulkan pipeline.
  */
-VulkanPipeline create_pipeline(VkDevice device, VkComputePipelineCreateInfo info);
+Wrapper<VkPipeline> create_pipeline(VkDevice device, VkComputePipelineCreateInfo info);
 
 /**
  * Graphics pipelines allows running some renderpass.
@@ -234,7 +216,7 @@ VulkanPipeline create_pipeline(VkDevice device, VkComputePipelineCreateInfo info
  * @param info The information on how to create the copute pipeline.
  * @return The wrapper around the vulkan pipeline.
  */
-VulkanPipeline create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo info);
+Wrapper<VkPipeline> create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo info);
 
 /**
  * Buffers describe how some memory block is used.
@@ -244,6 +226,6 @@ VulkanPipeline create_pipeline(VkDevice device, VkGraphicsPipelineCreateInfo inf
  * @param usage The usage flags for what the buffer is used.
  * @return The wrapper around the vulkan buffer.
  */
-VulkanBuffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage);
+Wrapper<VkBuffer> create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage);
 
 }

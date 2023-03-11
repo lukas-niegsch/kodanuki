@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/vulkan/context.h"
+#include "engine/vulkan/device.h"
 #include "engine/vulkan/pipeline.h"
 #include "engine/utility/signature.h"
 #include <vector>
@@ -282,7 +282,7 @@ private:
 	 * @param usage The usage flags that this buffer has.
 	 * @param properties The property flags that this buffer has.
 	 */
-	void create_buffer(VkBuffer& buffer, VulkanDeviceMemory& memory, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+	void create_buffer(VkBuffer& buffer, Wrapper<VkDeviceMemory>& memory, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 
 	/**
 	 * Copies the data from the source buffer to the target buffer.

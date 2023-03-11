@@ -1,7 +1,7 @@
 #pragma once
 #include "source/splash/scene.h"
 #include "source/splash/model.h"
-#include "engine/vulkan/context.h"
+#include "engine/vulkan/device.h"
 #include "engine/vulkan/tensor.h"
 
 namespace kodanuki

@@ -14,11 +14,11 @@ struct RendererState
 	uint32_t max_frame;
 	VkClearColorValue clear_color;
 	std::vector<VkPipelineStageFlags> stage_masks;
-	std::vector<VulkanCommandBuffer> command_buffers;
-	std::vector<VulkanSemaphore> image_available_semaphores;
-	std::vector<VulkanSemaphore> render_finished_semaphores;
-	std::vector<VulkanFence> aquire_frame_fences;
-	VulkanCommandBuffer compute_buffer;
+	std::vector<Wrapper<VkCommandBuffer>> command_buffers;
+	std::vector<Wrapper<VkSemaphore>> image_available_semaphores;
+	std::vector<Wrapper<VkSemaphore>> render_finished_semaphores;
+	std::vector<Wrapper<VkFence>> aquire_frame_fences;
+	Wrapper<VkCommandBuffer> compute_buffer;
 };
 
 VulkanRenderer::VulkanRenderer(RendererBuilder builder)
