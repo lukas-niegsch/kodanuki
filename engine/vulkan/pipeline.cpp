@@ -57,7 +57,7 @@ std::pair<VkPipeline, VkPipelineLayout> create_graphics_pipeline(GraphicsPipelin
 	info.pColorBlendState = &builder.color_blend;
 	info.pDynamicState = &builder.dynamic_state;
 	info.layout = layout;
-	info.renderPass = builder.target.renderpass();
+	info.renderPass = builder.target.get_renderpass();
 	info.subpass = 0;
 	info.basePipelineHandle = VK_NULL_HANDLE;
 	info.basePipelineIndex = -1;

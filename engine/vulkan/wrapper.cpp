@@ -277,4 +277,21 @@ Wrapper<VkBuffer> create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsag
 	}, device);
 }
 
+Wrapper<VkRenderPass> create_renderpass(VkDevice device, std::function<void(VkDevice, VkRenderPass&)> builder)
+{
+	VkRenderPass* output = new VkRenderPass();
+	builder(device, *output);
+	auto destroy = [=](VkRenderPass* ptr) {
+		vkDestroyRenderPass(device, *ptr, nullptr);
+	};
+	return Wrapper<VkRenderPass>(output, destroy);
+}
+
+Wrapper<VkImage> create_image(VkDevice device, VkImageCreateInfo info)
+{
+	return create_wrapper<vkCreateImage, vkDestroyImage>(
+		info, device
+	);
+}
+
 }

@@ -45,12 +45,12 @@ uint32_t VulkanRenderer::aquire_frame()
 	CHECK_VULKAN(vkWaitForFences(state->device, 1, &aquire_frame, VK_TRUE, AQUIRE_TIMEOUT));
 
 	const VkSemaphore& image_available = state->image_available_semaphores[state->submit_frame];
-	auto result = vkAcquireNextImageKHR(state->device, state->target.swapchain(),
+	auto result = vkAcquireNextImageKHR(state->device, state->target.get_swapchain(),
 		AQUIRE_TIMEOUT, image_available, VK_NULL_HANDLE, &state->render_frame);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 		throw std::runtime_error("swapchain recreation not implement inside renderer");
-		state->target.recreate_swapchain();
+		state->target.update_target_swapchain();
 	} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 		throw std::runtime_error("failed to acquire swap chain image!");
 	}
@@ -68,7 +68,7 @@ void VulkanRenderer::draw_command(std::function<void(VkCommandBuffer)> command)
 
 		VkRenderPassBeginInfo renderpass_info = {};
 		renderpass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderpass_info.renderPass = state->target.renderpass();
+		renderpass_info.renderPass = state->target.get_renderpass();
 		renderpass_info.framebuffer = state->target.get_frame_buffer(state->submit_frame);
 		renderpass_info.renderArea.offset = {0, 0};
 		renderpass_info.renderArea.extent = state->target.get_surface_extent();
@@ -105,7 +105,7 @@ void VulkanRenderer::submit_frame(uint32_t queue_index)
 
 void VulkanRenderer::render_frame(uint32_t queue_index)
 {
-	VkSwapchainKHR swapchain = state->target.swapchain();
+	VkSwapchainKHR swapchain = state->target.get_swapchain();
 	const VkSemaphore& render_finished = state->render_finished_semaphores[state->render_frame];
 	
 	VkPresentInfoKHR info = {};
@@ -121,7 +121,7 @@ void VulkanRenderer::render_frame(uint32_t queue_index)
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		throw std::runtime_error("swapchain recreation not implement inside renderer");
-		state->target.recreate_swapchain();
+		state->target.update_target_swapchain();
 	} else if (result != VK_SUCCESS) {
 		throw std::runtime_error("failed to present swap chain image!");
 	}

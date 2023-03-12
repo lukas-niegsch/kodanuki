@@ -23,7 +23,7 @@ int score_queue_family(VkQueueFamilyProperties family)
 	return score;
 }
 
-void create_simple_renderpass(VulkanDevice device, VkRenderPass& renderpass)
+void create_simple_renderpass(VkDevice device, VkRenderPass& renderpass)
 {
 	// Our pipeline outputs a single color for each pixel.
 	VkAttachmentDescription color_attachment = {};

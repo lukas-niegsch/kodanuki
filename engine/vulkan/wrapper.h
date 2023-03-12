@@ -41,9 +41,12 @@ public:
 	/**
 	 * Dereferences and returns the underlying type.
 	 */
-	operator T&() const
+	operator T() const
 	{
-		return *state;
+		if (state) {
+			return *state;
+		}
+		return VK_NULL_HANDLE;
 	}
 
 private:
@@ -219,5 +222,23 @@ Wrapper<VkPipeline> create_pipeline(VkDevice device, VkGraphicsPipelineCreateInf
  * @return The wrapper around the vulkan buffer.
  */
 Wrapper<VkBuffer> create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage);
+
+/**
+ * Renderpasses describe the vulkan graphics pipelines.
+ *
+ * @param device The device that stores the renderpass.
+ * @param builder The functon that creates the renderpass.
+ * @return The wrapper around the vulkan renderpass.
+ */
+Wrapper<VkRenderPass> create_renderpass(VkDevice device, std::function<void(VkDevice, VkRenderPass&)> builder);
+
+/**
+ * Images hold multidimension drawing data.
+ *
+ * @param device The device that stores the image.
+ * @param info The information on how to create the image.
+ * @return The wrapper around the vulkan image.
+ */
+Wrapper<VkImage> create_image(VkDevice device, VkImageCreateInfo info);
 
 }

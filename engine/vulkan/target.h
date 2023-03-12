@@ -24,11 +24,11 @@ struct TargetBuilder
 	// The vulkan device which does the rendering.
 	VulkanDevice device;
 
-    // The vulkan window on which the viewport renders.
-    VulkanWindow window;
+	// The vulkan window on which the viewport renders.
+	VulkanWindow window;
 
-    // The function that creates the renderpass.
-    std::function<void(VulkanDevice, VkRenderPass&)> create_renderpass;
+	// The function that creates the renderpass.
+	std::function<void(VkDevice, VkRenderPass&)> create_renderpass;
 
 	// The format of the surface.
 	VkSurfaceFormatKHR surface_format;
@@ -57,18 +57,18 @@ struct TargetBuilder
 class VulkanTarget
 {
 public:
-    // Creates a new vulkan target from the given builder.
-    VulkanTarget(TargetBuilder builder);
+	// Creates a new vulkan target from the given builder.
+	VulkanTarget(TargetBuilder builder);
 
 public:
-    // Returns the handle to the created renderpass.
-    VkRenderPass renderpass();
+	// Returns the handle to the created renderpass.
+	VkRenderPass get_renderpass();
 
 	// Returns the handle to the created swapchain.
-	VkSwapchainKHR swapchain();
+	VkSwapchainKHR get_swapchain();
 
-    // Returns the current extent of the surface.
-    VkExtent2D get_surface_extent();
+	// Returns the current extent of the surface.
+	VkExtent2D get_surface_extent();
 
 	// Returns the frame count.
 	uint32_t get_frame_count();
@@ -76,12 +76,32 @@ public:
 	// Returns the handle to frame buffer at the given index.
 	VkFramebuffer get_frame_buffer(uint32_t index);
 
-	// Recreates the swapchain, must be called on overy surface change.
-	void recreate_swapchain();
+	// Creates the swapchain (and deletes the previous one).
+	void update_target_swapchain();
 
 private:
-	// The abstract pointer to the implementation.
-	std::shared_ptr<struct TargetState> state;
+	// Creates the depth image (and deletes the prevous one).
+	void update_depth_image();
+
+	// Creates the render image (and deletes the previous ones).
+	void update_render_images();
+
+private:
+	VulkanDevice device;
+	VulkanWindow window;
+	Wrapper<VkRenderPass> renderpass;
+	Wrapper<VkSurfaceKHR> surface;
+	Wrapper<VkSwapchainKHR> swapchain;
+	Wrapper<VkImage> depth_image;
+	Wrapper<VkDeviceMemory> depth_image_memory;
+	Wrapper<VkImageView> depth_image_view;
+	std::vector<Wrapper<VkImageView>> imageviews;
+	std::vector<Wrapper<VkFramebuffer>> framebuffers;
+	VkFormat depth_image_format;
+	VkSurfaceFormatKHR surface_format;
+	VkPresentModeKHR present_mode;
+	VkExtent2D surface_extent;
+	uint32_t frame_count;
 };
 
 }

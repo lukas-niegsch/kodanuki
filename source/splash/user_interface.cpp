@@ -41,7 +41,7 @@ UserInterface::UserInterface(UserInterfaceBuilder builder)
 	init_info.DescriptorPool = builder.device.get_descriptor_pool();
 	init_info.MinImageCount = 2;
 	init_info.ImageCount = builder.target.get_frame_count();
-	ImGui_ImplVulkan_Init(&init_info, builder.target.renderpass());
+	ImGui_ImplVulkan_Init(&init_info, builder.target.get_renderpass());
 
 	builder.device.execute([&](VkCommandBuffer buffer) {
 		ImGui_ImplVulkan_CreateFontsTexture(buffer);
