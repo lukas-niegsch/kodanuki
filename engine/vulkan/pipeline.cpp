@@ -162,7 +162,7 @@ VulkanPipelineOld VulkanPipelineOld::from_comp_file(VulkanDevice device, std::st
 	ComputePipelineBuilder builder = {
 		.device = device,
 		.compute_shader = create_shader_module(device, code),
-		.push_constant_byte_size = push_constants[0]->size,
+		.push_constant_byte_size = 128,
 		.bindings = bindings
 	};
 

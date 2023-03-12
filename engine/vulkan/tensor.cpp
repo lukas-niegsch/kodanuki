@@ -337,9 +337,15 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 	}
 	VulkanPipelineOld shader = cache.at(name);
 
-	// The first element of each push_constant block will be the tensor size.
-	uint32_t count = tensors[0].numel();
-	constants.insert(constants.begin(), std::bit_cast<float>(count));
+	// The last elements of each push_constant block will be the tensor shape.
+	uint32_t tensor_size = tensors[0].numel();
+	std::vector<std::size_t> shape = tensors[0].get_shape();
+	uint32_t dimension = shape.size();
+	constants.push_back(std::bit_cast<float>(tensor_size));
+	constants.push_back(std::bit_cast<float>(dimension));
+	for (uint32_t dim : shape) {
+		constants.push_back(std::bit_cast<float>(dim));
+	}
 
 	VkPipelineLayout shader_layout = shader.get_pipeline_layout();
 	VkDescriptorSet descriptor = shader.get_primary_descriptor();
