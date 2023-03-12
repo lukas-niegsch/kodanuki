@@ -30,7 +30,7 @@ std::vector<VkQueue> get_queue_handles(VkDevice logical_device, uint32_t queue_f
 	return result;
 }
 
-VulkanDevice::VulkanDevice(ContextBuilder builder)
+VulkanDevice::VulkanDevice(DeviceBuilder builder)
 {
 	instance = create_instance(builder.instance_layers, builder.instance_extensions);
 	physical_device = select_physical_device(instance, builder.gpu_score);

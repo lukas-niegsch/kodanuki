@@ -159,6 +159,7 @@ class ShadersTarget(Target):
 		self.make_compute_shader(args, 'copy', 'A[]')
 		self.make_compute_shader(args, 'linear', 'params.alpha * A[] + params.beta * B[]')
 		self.make_compute_shader(args, 'linear_i', 'params.alpha * Z[] + params.beta * A[]')
+		self.make_compute_shader(args, 'range_i', 'params.start + params.step * index')
 
 		command = f'find {args.src_dir}/assets/shaders/ -regextype posix-extended -regex ".*\.(comp|frag|geom|tesc|tese|vert)" -exec glslc {{}} -o {{}}.spv \;'
 		subprocess.call(command, shell = True)

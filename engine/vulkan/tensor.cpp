@@ -446,6 +446,11 @@ void VulkanTensor::linear_i(float alpha, VulkanTensor tensorZ, float beta, Vulka
 	execute("vt_linear_i", {tensorZ, tensorA}, {alpha, beta}, update_descriptor);
 }
 
+void VulkanTensor::range_i(VulkanTensor tensorZ, float start, float steps, bool update_descriptor)
+{
+	execute("vt_range_i", {tensorZ}, {start, steps}, update_descriptor);
+}
+
 }
 
 #endif // INCLUDE_TENSOR_INLINE_HEADER

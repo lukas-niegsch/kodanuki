@@ -67,6 +67,27 @@ TEST_CASE("Tensor API usage example")
 	// they are no longer used.
 }
 
+TEST_CASE("setting values in a range works")
+{
+	VulkanDevice device = create_default_device();
+	VulkanPipelineOldCache cache;
+
+	VulkanTensor a = {{
+		.device = device,
+		.cache = cache,
+		.shape = {3, 4, 5},
+		.dtype = VulkanTensor::eFloat,
+		.dshare = VulkanTensor::eUnique
+	}};
+
+	vt::range_i(a, 5, 3);
+	a.with_maps<float>([](std::vector<float>& values) {
+		for (uint32_t i = 0; i < values.size(); i++) {
+			CHECK(values[i] - 5.0 == doctest::Approx(3 * i));
+		}
+	});
+}
+
 TEST_CASE("access and modification of tensor memory is possible")
 {
 	VulkanDevice device = create_default_device();

@@ -135,6 +135,7 @@ public:
 	static void copy_i(VulkanTensor tensorZ, VulkanTensor tensorA, bool update_descriptor = true);
 	static VulkanTensor linear(float alpha, VulkanTensor tensorA, float beta, VulkanTensor tensorB, bool update_descriptor = true);
 	static void linear_i(float alpha, VulkanTensor tensorZ, float beta, VulkanTensor tensorA, bool update_descriptor = true);
+	static void range_i(VulkanTensor tensorZ, float start = 0, float steps = 1, bool update_descriptor = true);
 
 	/**
 	 * Fills the given tensor with some value.

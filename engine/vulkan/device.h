@@ -20,7 +20,7 @@ namespace kodanuki
  * The user has a gpu with graphics compute capabilities.
  * The gpu has at least the selected amount of queue families.
  */
-struct ContextBuilder
+struct DeviceBuilder
 {
 	// Enables the given layers for the vulkan instance.
 	std::vector<const char*> instance_layers;
@@ -52,7 +52,7 @@ class VulkanDevice
 {
 public:
 	// Creates a new vulkan device from the given builder.
-	VulkanDevice(ContextBuilder builder);
+	VulkanDevice(DeviceBuilder builder);
 
 	// Returns the handle to the logical device.
 	operator VkDevice() const;
