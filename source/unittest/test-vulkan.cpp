@@ -34,7 +34,7 @@ TEST_CASE("Tensor API usage example")
 {
 	// Each vulkan tensor requires a vulkan device for executing commands.
 	VulkanDevice device = create_default_device();
-	VulkanPipelineOldCache cache;
+	VulkanPipelineCache cache;
 	
 	// Heres how to create some tensors allocating memory on the device.
 	VulkanTensor a = {{
@@ -70,7 +70,7 @@ TEST_CASE("Tensor API usage example")
 TEST_CASE("setting values in a range works")
 {
 	VulkanDevice device = create_default_device();
-	VulkanPipelineOldCache cache;
+	VulkanPipelineCache cache;
 
 	VulkanTensor a = {{
 		.device = device,
@@ -91,7 +91,7 @@ TEST_CASE("setting values in a range works")
 TEST_CASE("access and modification of tensor memory is possible")
 {
 	VulkanDevice device = create_default_device();
-	VulkanPipelineOldCache cache;
+	VulkanPipelineCache cache;
 
 	VulkanTensor a = {{
 		.device = device,
@@ -115,7 +115,7 @@ TEST_CASE("access and modification of tensor memory is possible")
 TEST_CASE("adding two tensors works")
 {
 	VulkanDevice device = create_default_device();
-	VulkanPipelineOldCache cache;
+	VulkanPipelineCache cache;
 	VulkanTensor a = {{
 		.device = device,
 		.cache = cache,
@@ -151,7 +151,7 @@ TEST_CASE("adding two tensors works")
 TEST_CASE("tensor operator overloading works")
 {
 	VulkanDevice device = create_default_device();
-	VulkanPipelineOldCache cache;
+	VulkanPipelineCache cache;
 	VulkanTensor a = {{
 		.device = device,
 		.cache = cache,

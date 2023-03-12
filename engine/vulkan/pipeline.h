@@ -107,17 +107,17 @@ struct ComputePipelineBuilder
  * Instances can be copied around freely and will release all
  * ressources once unused.
  */
-class VulkanPipelineOld
+class VulkanPipeline
 {
 public:
 	// Creates a new vulkan pipeline from the given builder.
-	VulkanPipelineOld(GraphicsPipelineBuilder builder);
+	VulkanPipeline(GraphicsPipelineBuilder builder);
 
 	// Creates a new vulkan pipeline from the given builder.
-	VulkanPipelineOld(ComputePipelineBuilder builder);
+	VulkanPipeline(ComputePipelineBuilder builder);
 
 	// Automatically creates a vulkan pipeline from the SPIRV file.
-	static VulkanPipelineOld from_comp_file(VulkanDevice device, std::string filename);
+	static VulkanPipeline from_comp_file(VulkanDevice device, std::string filename);
 
 	// Returns the handle to the native vulkan pipeline.
 	operator VkPipeline();
@@ -138,6 +138,6 @@ private:
 };
 
 // Caching that allows the pipelines to be stored for reuse.
-using VulkanPipelineOldCache = std::unordered_map<std::string, VulkanPipelineOld>;
+using VulkanPipelineCache = std::unordered_map<std::string, VulkanPipeline>;
 
 }

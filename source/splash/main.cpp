@@ -75,7 +75,7 @@ int main()
 		.fontsize = 18.0f
 	}};
 
-	VulkanPipelineOld render_fluid = create_render_fluid_pipeline(device, target);
+	VulkanPipeline render_fluid = create_render_fluid_pipeline(device, target);
 	ShaderBridge bridge = {{
 		.device = device,
 		.frame_count = target.get_frame_count(),

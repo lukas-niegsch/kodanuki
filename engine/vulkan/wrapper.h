@@ -1,7 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
-#include <memory>
 #include <functional>
+#include <memory>
 class GLFWwindow;
 
 namespace kodanuki
@@ -41,15 +41,7 @@ public:
 	/**
 	 * Dereferences and returns the underlying type.
 	 */
-	operator T&()
-	{
-		return *state;
-	}
-
-	/**
-	 * Dereferences and returns the underlying type.
-	 */
-	operator const T&() const
+	operator T&() const
 	{
 		return *state;
 	}

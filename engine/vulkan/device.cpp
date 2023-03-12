@@ -10,7 +10,6 @@ VkPhysicalDevice select_physical_device(VkInstance instance, std::function<int(V
 {
 	auto devices = vectorize<vkEnumeratePhysicalDevices>(instance);
 	auto compare = [&](auto a, auto b) { return gpu_score(a) < gpu_score(b); };
-	assert(devices.size() > 0); // No graphics card available!
 	return *std::max_element(devices.begin(), devices.end(), compare);
 }
 
@@ -19,15 +18,6 @@ uint32_t select_queue_family_index(VkPhysicalDevice device, std::function<int(Vk
 	auto queues = vectorize<vkGetPhysicalDeviceQueueFamilyProperties>(device);
 	auto compare = [&](auto a, auto b) { return queue_score(a) < queue_score(b); };
 	return std::distance(queues.begin(), std::max_element(queues.begin(), queues.end(), compare));
-}
-
-std::vector<VkQueue> get_queue_handles(VkDevice logical_device, uint32_t queue_family, uint32_t queue_count)
-{
-	std::vector<VkQueue> result(queue_count);
-	for (uint32_t i = 0; i < result.size(); i++) {
-		vkGetDeviceQueue(logical_device, queue_family, 0, &result[i]);
-	}
-	return result;
 }
 
 VulkanDevice::VulkanDevice(DeviceBuilder builder)
@@ -40,8 +30,7 @@ VulkanDevice::VulkanDevice(DeviceBuilder builder)
 	execute_buffer = create_command_buffer(logical_device, command_pool);
 	query_pool = create_query_pool(logical_device, 2);
 	descriptor_pool = create_default_descriptor_pool();
-	queues = get_queue_handles(logical_device, queue_family, builder.queue_priorities.size());
-	execute_queue = queues.back();
+	execute_queue = get_queue(builder.queue_priorities.size() - 1);
 }
 
 float VulkanDevice::execute(std::function<void(VkCommandBuffer)> command)
@@ -100,7 +89,6 @@ Wrapper<VkDescriptorPool> VulkanDevice::create_default_descriptor_pool()
 		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 30 },
 		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 30 }
 	};
-
 	return create_descriptor_pool(logical_device, pool_sizes);
 }
 
@@ -119,9 +107,11 @@ VkPhysicalDevice VulkanDevice::get_physical_device()
 	return physical_device;
 }
 
-std::vector<VkQueue> VulkanDevice::get_queues()
+VkQueue VulkanDevice::get_queue(uint32_t index)
 {
-	return queues;
+	VkQueue result;
+	vkGetDeviceQueue(logical_device, queue_family, index, &result);
+	return result;
 }
 
 uint32_t VulkanDevice::get_queue_family()

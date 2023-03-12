@@ -37,7 +37,7 @@ UserInterface::UserInterface(UserInterfaceBuilder builder)
 	init_info.PhysicalDevice = builder.device.get_physical_device();
 	init_info.Device = builder.device;
 	init_info.QueueFamily = builder.device.get_queue_family();
-	init_info.Queue = builder.device.get_queues()[1];
+	init_info.Queue = builder.device.get_queue(1);
 	init_info.DescriptorPool = builder.device.get_descriptor_pool();
 	init_info.MinImageCount = 2;
 	init_info.ImageCount = builder.target.get_frame_count();

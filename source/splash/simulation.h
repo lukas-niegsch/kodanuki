@@ -118,7 +118,7 @@ private:
 
 private:
 	VulkanDevice device;
-	VulkanPipelineOldCache cache;
+	VulkanPipelineCache cache;
 	uint32_t count_frame;
 	uint32_t count_particles;
 	UD parameters;

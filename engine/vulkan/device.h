@@ -63,8 +63,8 @@ public:
 	// Returns the handle to the physical device.
 	VkPhysicalDevice get_physical_device();
 
-	// Returns the handles to the queues.
-	std::vector<VkQueue> get_queues();
+	// Returns the handles to the queue.
+	VkQueue get_queue(uint32_t index);
 
 	// Returns the used queue family index.
 	uint32_t get_queue_family();
@@ -121,7 +121,6 @@ private:
 	Wrapper<VkQueryPool> query_pool;
 	Wrapper<VkDescriptorPool> descriptor_pool;
 	VkPhysicalDevice physical_device;
-	std::vector<VkQueue> queues;
 	VkQueue execute_queue;
 	uint32_t queue_family;
 };

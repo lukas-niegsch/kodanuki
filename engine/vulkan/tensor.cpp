@@ -12,7 +12,7 @@ namespace kodanuki
 struct TensorState
 {
 	VulkanDevice device;
-	VulkanPipelineOldCache& cache;
+	VulkanPipelineCache& cache;
 	std::vector<std::size_t> shape;
 	VulkanTensor::MemoryDataType dtype;
 	VulkanTensor::MemorySharing dshare;
@@ -299,7 +299,7 @@ void VulkanTensor::copy_buffer(VkBuffer source_buffer, VkBuffer target_buffer, V
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &transfer_buffer;
-	CHECK_VULKAN(vkQueueSubmit(state->device.get_queues()[0], 1, &submit_info, VK_NULL_HANDLE));
+	CHECK_VULKAN(vkQueueSubmit(state->device.get_queue(0), 1, &submit_info, VK_NULL_HANDLE));
 	CHECK_VULKAN(vkDeviceWaitIdle(state->device));
 }
 
@@ -333,9 +333,9 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 
 	if (!cache.contains(name)) {
 		std::string filename = std::string("assets/shaders/") + name + ".comp.spv";
-		cache.emplace(name, VulkanPipelineOld::from_comp_file(device, filename));
+		cache.emplace(name, VulkanPipeline::from_comp_file(device, filename));
 	}
-	VulkanPipelineOld shader = cache.at(name);
+	VulkanPipeline shader = cache.at(name);
 
 	// The last elements of each push_constant block will be the tensor shape.
 	uint32_t tensor_size = tensors[0].numel();
