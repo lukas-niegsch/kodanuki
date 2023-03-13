@@ -124,7 +124,7 @@ class ShadersTarget(Target):
 		with open(f'{args.src_dir}/assets/shaders/vt_op.comp.j2', 'r') as f:
 			template = Template(f.read())
 
-		with open(f'{args.src_dir}/assets/shaders/vt_{name}.comp', 'w') as f:
+		with open(f'{args.src_dir}/assets/shaders/vt_op_{name}.comp', 'w') as f:
 			f.write(template.render(**kwargs))
 
 	def make_compute_shader(self, args, name, operation):
@@ -139,27 +139,79 @@ class ShadersTarget(Target):
 			num_tensors = len(tensors), letters = list(tensors),
 			operation = operation)
 
+	def cycle_tensor_names(self, item):
+		item = item.group(0)
+		if item[0] == 'A':
+			return 'Z[]'
+		return chr(ord(item[0]) - 1) + item[1:]
+	
+	def append_inline_shaders(self, shaders):
+		for name, op in list(shaders.items()):
+			if not 'A[]' in op:
+				continue
+			inline_name = name + '_i'
+			inline_op = re.sub(r'([A-Z])\[\]', self.cycle_tensor_names, op)
+			shaders[inline_name] = inline_op
+		return shaders
+
+	def tensor_to_param(self, item):
+		item = item.group(0)
+		return f'params.const{item[0]}'
+
+	def append_constant_shaders(self, shaders):
+		for name, op in list(shaders.items()):
+			tensors = list(re.findall(r'(\w{1})\[\w*\]', op))
+			if len(tensors) <= 1:
+				continue
+			replace_names = ''.join(tensors[1:])
+			infix = '_' if not '_' in name else ''
+			constant_name = name + infix + 'c'
+			op = re.sub(rf'([{replace_names}])\[\]', self.tensor_to_param, op)
+			shaders[constant_name] = op
+		return shaders
+	
 	def validate(self, args):
 		super().validate(args)
 
 	def execute(self, args):
 		super().execute(args)
 
-		self.make_compute_shader(args, 'pow', 'pow(A[], params.exponent)')
-		self.make_compute_shader(args, 'pow_i', 'pow(Z[], params.exponent)')
-		self.make_compute_shader(args, 'mul', 'A[] * B[]')
-		self.make_compute_shader(args, 'mul_i', 'Z[] * B[]')
-		self.make_compute_shader(args, 'mul_c', 'A[] * params.alpha')
-		self.make_compute_shader(args, 'mul_ic', 'Z[] * params.alpha')
-		self.make_compute_shader(args, 'add', 'A[] + B[]')
-		self.make_compute_shader(args, 'add_i', 'Z[] + B[]')
-		self.make_compute_shader(args, 'add_c', 'A[] + params.alpha')
-		self.make_compute_shader(args, 'add_ic', 'Z[] + params.alpha')
-		self.make_compute_shader(args, 'fill', 'params.alpha')
-		self.make_compute_shader(args, 'copy', 'A[]')
-		self.make_compute_shader(args, 'linear', 'params.alpha * A[] + params.beta * B[]')
-		self.make_compute_shader(args, 'linear_i', 'params.alpha * Z[] + params.beta * A[]')
-		self.make_compute_shader(args, 'range_i', 'params.start + params.step * index')
+		shaders = dict(
+			mul    = 'A[] * B[]',
+			add    = 'A[] + B[]',
+			sub    = 'A[] - B[]',
+			div    = 'A[] / B[]',
+			eq     = 'float(abs(A[] - B[]) <= params.elipson)',
+			le     = 'float(A[] < B[])',
+			ge     = 'float(A[] > B[])',
+			leg    = 'float(A[] <= B[])',
+			geq    = 'float(A[] >= B[])',
+			pow    = 'pow(A[], B[])',
+			min    = 'min(A[], B[])',
+			max    = 'max(A[], B[])',
+			abs    = 'abs(A[])',
+			floor  = 'floor(A[])',
+			ceil   = 'ceil(A[])',
+			round  = 'round(A[])',
+			clamp  = 'clamp(A[], B[], C[])',
+			sin    = 'sin(A[])',
+			cos    = 'cos(A[])',
+			tan    = 'tan(A[])',
+			exp    = 'exp(A[])',
+			log    = 'log(A[])',
+			sign   = 'sign(A[])',
+			copy   = 'A[]',
+			linear = 'params.alpha * A[] + params.beta * B[]',
+			range  = 'params.start + params.step * index',
+			fill   = 'params.alpha'
+		)
+
+		shaders = self.append_inline_shaders(shaders)
+		shaders = self.append_constant_shaders(shaders)
+		shaders['id'] = shaders.pop('copy_i') # Inplace copy is identity!
+
+		for name, op in shaders.items():
+			self.make_compute_shader(args, name, op)
 
 		command = f'find {args.src_dir}/assets/shaders/ -regextype posix-extended -regex ".*\.(comp|frag|geom|tesc|tese|vert)" -exec glslc {{}} -o {{}}.spv \;'
 		subprocess.call(command, shell = True)

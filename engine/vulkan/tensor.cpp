@@ -371,90 +371,90 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_add", {tensorZ, tensorA, tensorB}, {}, update_descriptor);
+	execute("vt_op_add", {tensorZ, tensorA, tensorB}, {}, update_descriptor);
 	return tensorZ;
 }
 
 void VulkanTensor::add_i(VulkanTensor tensorZ, VulkanTensor tensorA, bool update_descriptor)
 {
-	execute("vt_add_i", {tensorZ, tensorA}, {}, update_descriptor);
+	execute("vt_op_add_i", {tensorZ, tensorA}, {}, update_descriptor);
 }
 
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, float scalar, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_add_c", {tensorZ, tensorA}, {scalar}, update_descriptor);
+	execute("vt_op_add_c", {tensorZ, tensorA}, {scalar}, update_descriptor);
 	return tensorZ;
 }
 
 void VulkanTensor::add_i(VulkanTensor tensorZ, float scalar, bool update_descriptor)
 {
-	execute("vt_add_ic", {tensorZ}, {scalar}, update_descriptor);
+	execute("vt_op_add_ic", {tensorZ}, {scalar}, update_descriptor);
 }
 
 VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, VulkanTensor tensorB, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_mul", {tensorZ, tensorA, tensorB}, {}, update_descriptor);
+	execute("vt_op_mul", {tensorZ, tensorA, tensorB}, {}, update_descriptor);
 	return tensorZ;
 }
 
 void VulkanTensor::mul_i(VulkanTensor tensorZ, VulkanTensor tensorA, bool update_descriptor)
 {
-	execute("vt_mul_i", {tensorZ, tensorA}, {}, update_descriptor);
+	execute("vt_op_mul_i", {tensorZ, tensorA}, {}, update_descriptor);
 }
 
 VulkanTensor VulkanTensor::mul(VulkanTensor tensorA, float scalar, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_mul_c", {tensorZ, tensorA}, {scalar}, update_descriptor);
+	execute("vt_op_mul_c", {tensorZ, tensorA}, {scalar}, update_descriptor);
 	return tensorZ;
 }
 
 void VulkanTensor::mul_i(VulkanTensor tensorZ, float scalar, bool update_descriptor)
 {
-	execute("vt_mul_ic", {tensorZ}, {scalar}, update_descriptor);
+	execute("vt_op_mul_ic", {tensorZ}, {scalar}, update_descriptor);
 }
 
 VulkanTensor VulkanTensor::pow(VulkanTensor tensorA, float exponent, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_pow", {tensorZ, tensorA}, {exponent}, update_descriptor);
+	execute("vt_op_pow_c", {tensorZ, tensorA}, {exponent}, update_descriptor);
 	return tensorZ;
 }
 
 void VulkanTensor::pow_i(VulkanTensor tensorZ, float exponent, bool update_descriptor)
 {
-	execute("vt_pow_i", {tensorZ}, {exponent}, update_descriptor);
+	execute("vt_op_pow_ic", {tensorZ}, {exponent}, update_descriptor);
 }
 
 VulkanTensor VulkanTensor::copy(VulkanTensor tensorA, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_copy", {tensorZ, tensorA}, {}, update_descriptor);
+	execute("vt_op_copy", {tensorZ, tensorA}, {}, update_descriptor);
 	return tensorZ;
 }
 
 void VulkanTensor::copy_i(VulkanTensor tensorZ, VulkanTensor tensorA, bool update_descriptor)
 {
-	execute("vt_copy", {tensorZ, tensorA}, {}, update_descriptor);
+	execute("vt_op_copy", {tensorZ, tensorA}, {}, update_descriptor);
 }
 
 VulkanTensor VulkanTensor::linear(float alpha, VulkanTensor tensorA, float beta, VulkanTensor tensorB, bool update_descriptor)
 {
 	VulkanTensor tensorZ(tensorA.get_builder());
-	execute("vt_linear", {tensorZ, tensorA, tensorB}, {alpha, beta}, update_descriptor);
+	execute("vt_op_linear", {tensorZ, tensorA, tensorB}, {alpha, beta}, update_descriptor);
 	return tensorZ;
 }
 
 void VulkanTensor::linear_i(float alpha, VulkanTensor tensorZ, float beta, VulkanTensor tensorA, bool update_descriptor)
 {
-	execute("vt_linear_i", {tensorZ, tensorA}, {alpha, beta}, update_descriptor);
+	execute("vt_op_linear_i", {tensorZ, tensorA}, {alpha, beta}, update_descriptor);
 }
 
-void VulkanTensor::range_i(VulkanTensor tensorZ, float start, float steps, bool update_descriptor)
+void VulkanTensor::range(VulkanTensor tensorZ, float start, float steps, bool update_descriptor)
 {
-	execute("vt_range_i", {tensorZ}, {start, steps}, update_descriptor);
+	execute("vt_op_range", {tensorZ}, {start, steps}, update_descriptor);
 }
 
 }

@@ -80,7 +80,7 @@ TEST_CASE("setting values in a range works")
 		.dshare = VulkanTensor::eUnique
 	}};
 
-	vt::range_i(a, 5, 3);
+	vt::range(a, 5, 3);
 	a.with_maps<float>([](std::vector<float>& values) {
 		for (uint32_t i = 0; i < values.size(); i++) {
 			CHECK(values[i] - 5.0 == doctest::Approx(3 * i));
