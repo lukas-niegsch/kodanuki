@@ -63,6 +63,12 @@ public:
 	 */
 	void tick_fluids(float delta_time);
 
+	/**
+	 * Recalculates the pressure approximation from the density.
+	 * This uses the algorithm described in equation 9.
+	 */
+	void update_pressure();
+
 public:
 	/**
 	 * Returns the mass tensor of the current frame.

@@ -255,6 +255,21 @@ public:
 	 */
 	void update_descriptor(VkDescriptorSet descriptor, VkDescriptorType type, uint32_t binding);
 
+	/**
+	 * Executes the given shader for the tensor and constant inputs.
+	 *
+	 * The order of the tensor must be the same as specified inside the shader.
+	 * Also, the number of tensors and constants must match exactly. Currently
+	 * only works for shaders where all tensors have the smae size. There must
+	 * be at least one tensor.
+	 *
+	 * @param name The name of the shader that will be executed.
+	 * @param tensors The arguments to the compute shader.
+	 * @param constants Some additional constants for the compute shader.
+	 * @param update_descriptor = true Should the descriptor be updated.
+	 */
+	static void execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants, bool update_descriptor = true);
+
 private:
 	/**
 	 * Creates the primary memory and primary buffer.
@@ -306,21 +321,6 @@ private:
 	 */
 	template <typename T>
 	void with_mapped_memory(std::function<void(T*)> callback, uint32_t offset = 0);
-
-	/**
-	 * Executes the given shader for the tensor and constant inputs.
-	 *
-	 * The order of the tensor must be the same as specified inside the shader.
-	 * Also, the number of tensors and constants must match exactly. Currently
-	 * only works for shaders where all tensors have the smae size. There must
-	 * be at least one tensor.
-	 *
-	 * @param name The name of the shader that will be executed.
-	 * @param tensors The arguments to the compute shader.
-	 * @param constants Some additional constants for the compute shader.
-	 * @param update_descriptor = true Should the descriptor be updated.
-	 */
-	static void execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants, bool update_descriptor = true);
 
 private:
 	// Shared state to automatically delete unused instances.

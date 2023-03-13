@@ -42,8 +42,17 @@ void Simulation::set_params(UD parameters)
 void Simulation::tick_fluids(float delta_time)
 {
 	// TODO: implement this method properly
-	vt::linear_i(1.0f, tensor_position, delta_time, tensor_velocity, update_descriptors);
-	update_descriptors = false;
+	vt::linear_i(1.0f, tensor_position, delta_time, tensor_velocity);
+	update_pressure();
+}
+
+void Simulation::update_pressure()
+{
+	vt::execute("vt_op_copy", {tensor_pressure, tensor_density}, {});
+	vt::execute("vt_op_div_ic", {tensor_pressure}, {parameters.rho_0});
+	vt::execute("vt_op_pow_ic", {tensor_pressure}, {7});
+	vt::execute("vt_op_sub_ic", {tensor_pressure}, {1});
+	vt::execute("vt_op_mul_ic", {tensor_pressure}, {parameters.stiffness});
 }
 
 VulkanTensor Simulation::get_mass()
