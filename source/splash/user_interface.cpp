@@ -1,19 +1,15 @@
 #include "source/splash/user_interface.h"
 #include "source/splash/user_interface_backend.h"
 #include "engine/vulkan/debug.h"
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
 namespace kodanuki
 {
 
-struct UserInterfaceState
-{
-	VulkanDevice device;
-	VulkanWindow window;
-	~UserInterfaceState();
-};
-
-UserInterfaceState::~UserInterfaceState()
+UserInterface::~UserInterface()
 {
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
@@ -21,8 +17,23 @@ UserInterfaceState::~UserInterfaceState()
 }
 
 UserInterface::UserInterface(UserInterfaceBuilder builder)
+: device(builder.device)
+, window(builder.window)
+, target(builder.target)
 {
-	state = std::make_shared<UserInterfaceState>(builder.device, builder.window);
+	window.set_cursor_movement_callback([&](float xoffset, float yoffset) {
+		if (ImGui::GetIO().WantCaptureMouse) {
+			return;
+		}
+		if (!window.is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
+			return;
+		}
+		camera.process_mouse_movement(xoffset, yoffset, true);
+	});
+	
+	window.set_cursor_scroll_callback([&](float yoffset) {
+		camera.process_mouse_scroll(yoffset);
+	});
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -33,17 +44,17 @@ UserInterface::UserInterface(UserInterfaceBuilder builder)
 	ImGui_ImplGlfw_InitForVulkan(builder.window, true);
 
 	ImGui_ImplVulkan_InitInfo init_info = {};
-	init_info.Instance = builder.device.get_instance();
-	init_info.PhysicalDevice = builder.device.get_physical_device();
-	init_info.Device = builder.device;
-	init_info.QueueFamily = builder.device.get_queue_family();
-	init_info.Queue = builder.device.get_queue(1);
-	init_info.DescriptorPool = builder.device.get_descriptor_pool();
+	init_info.Instance = device.get_instance();
+	init_info.PhysicalDevice = device.get_physical_device();
+	init_info.Device = device;
+	init_info.QueueFamily = device.get_queue_family();
+	init_info.Queue = device.get_queue(1);
+	init_info.DescriptorPool = device.get_descriptor_pool();
 	init_info.MinImageCount = 2;
-	init_info.ImageCount = builder.target.get_frame_count();
-	ImGui_ImplVulkan_Init(&init_info, builder.target.get_renderpass());
+	init_info.ImageCount = target.get_frame_count();
+	ImGui_ImplVulkan_Init(&init_info, target.get_renderpass());
 
-	builder.device.execute([&](VkCommandBuffer buffer) {
+	device.execute([&](VkCommandBuffer buffer) {
 		ImGui_ImplVulkan_CreateFontsTexture(buffer);
 	});
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
@@ -51,7 +62,7 @@ UserInterface::UserInterface(UserInterfaceBuilder builder)
 
 bool UserInterface::tick()
 {
-	if (!state->window.tick()) {
+	if (!window.tick()) {
 		return false;
 	}
 
@@ -68,28 +79,72 @@ void UserInterface::draw(VkCommandBuffer buffer)
 	ImGui_ImplVulkan_RenderDrawData(draw_data, buffer);
 }
 
-void show_config(Config& config, float delta_time)
+void UserInterface::handle_input(ShaderBridge& bridge, uint32_t frame, float delta_time_seconds)
 {
-	if (config.is_demo_open) {
-		ImGui::ShowDemoWindow(&config.is_demo_open);
+	camera.MovementSpeed = move_speed;
+	camera.MouseSensitivity = look_speed / 200;
+
+	if (window.is_key_pressed(GLFW_KEY_M)) {
+		is_demo_open = true;
+	}
+	if (window.is_key_pressed(GLFW_KEY_N)) {
+		is_demo_open = false;
+	}
+	if (window.is_key_pressed(GLFW_KEY_C)) {
+		is_menu_open = true;
+	}
+	if (window.is_key_pressed(GLFW_KEY_V)) {
+		is_menu_open = false;
+	}
+	if (window.is_key_pressed(GLFW_KEY_A)) {
+		camera.process_keyboard(Camera::LEFT, delta_time_seconds);
+	}
+	if (window.is_key_pressed(GLFW_KEY_S)) {
+		camera.process_keyboard(Camera::BACKWARD, delta_time_seconds);
+	}
+	if (window.is_key_pressed(GLFW_KEY_D)) {
+		camera.process_keyboard(Camera::RIGHT, delta_time_seconds);
+	}
+	if (window.is_key_pressed(GLFW_KEY_W)) {
+		camera.process_keyboard(Camera::FORWARD, delta_time_seconds);
+	}
+	if (window.is_key_pressed(GLFW_KEY_E)) {
+		camera.process_keyboard(Camera::DOWN, delta_time_seconds);
+	}
+	if (window.is_key_pressed(GLFW_KEY_Q)) {
+		camera.process_keyboard(Camera::UP, delta_time_seconds);
 	}
 
-	if (config.dts.size() >= config.max_dts_size) {
-		config.dts.erase(config.dts.begin());
-	}
-	config.dts.push_back(delta_time * 1000);
+	auto extent = target.get_surface_extent();
+	MVP new_mvp;
+	new_mvp.model = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(1.0f, 0.0f, 1.0f));
+	new_mvp.view = camera.get_view_matrix();
+	new_mvp.projection = camera.get_projection_matrix(extent.width, extent.height, render_distance);
+	bridge.update_mvp(new_mvp, frame);
+}
 
-	if (config.is_menu_open) {
+void UserInterface::show_menu(float delta_time_seconds)
+{
+	if (is_demo_open) {
+		ImGui::ShowDemoWindow(&is_demo_open);
+	}
+
+	if (dts.size() >= max_dts_size) {
+		dts.erase(dts.begin());
+	}
+	dts.push_back(delta_time_seconds * 1000);
+
+	if (is_menu_open) {
 		ImGuiWindowFlags window_flags = 0;
 		window_flags |= ImGuiWindowFlags_NoTitleBar;
 		std::string frame_time = std::string("FPS: ")
-			+ std::to_string(delta_time * 1000)
+			+ std::to_string(delta_time_seconds * 1000)
 			+ " ms";
 		ImGui::Begin("Configuration", nullptr, window_flags);
-		ImGui::PlotHistogram(frame_time.c_str(), config.dts.data(), config.dts.size(), 0, NULL, 0.0f, 60.0f);
-		ImGui::SliderFloat("Render Distance", &config.render_distance, 10.0f, 300.0f);
-		ImGui::SliderFloat("Movement Speed", &config.move_speed, 10.0f, 300.0f);
-		ImGui::SliderFloat("Camera Speed", &config.look_speed, 10.0f, 300.0f);
+		ImGui::PlotHistogram(frame_time.c_str(), dts.data(), dts.size(), 0, NULL, 0.0f, 60.0f);
+		ImGui::SliderFloat("Render Distance", &render_distance, 10.0f, 300.0f);
+		ImGui::SliderFloat("Movement Speed", &move_speed, 10.0f, 300.0f);
+		ImGui::SliderFloat("Camera Speed", &look_speed, 10.0f, 300.0f);
 
 		ImGui::End();
 	}

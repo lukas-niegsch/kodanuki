@@ -1,4 +1,6 @@
 #pragma once
+#include "source/splash/shader_bridge.h"
+#include "source/splash/camera.h"
 #include "engine/vulkan/device.h"
 #include "engine/vulkan/target.h"
 #include "engine/vulkan/window.h"
@@ -21,7 +23,11 @@ struct UserInterfaceBuilder
 class UserInterface
 {
 public:
+	// Creates the user interface using imgui.
 	UserInterface(UserInterfaceBuilder builder);
+
+	// Deletes the user interface and frees the imgui context.
+	~UserInterface();
 
 	// Sleeps until the game loop should run again.
 	bool tick();
@@ -29,14 +35,17 @@ public:
 	// Draws the interface to the given command buffer.
 	void draw(VkCommandBuffer buffer);
 
+	// Handles the camera movement based on the user input.
+	void handle_input(ShaderBridge& bridge, uint32_t frame, float delta_time_seconds);
+
+	// Shows the menu from the user interface.
+	void show_menu(float delta_time_seconds);
+
 private:
-	// The abstract pointer to the implementation.
-	std::shared_ptr<struct UserInterfaceState> state;
-};
-
-
-struct Config
-{
+	VulkanDevice device;
+	VulkanWindow window;
+	VulkanTarget target;
+	Camera camera;
 	bool is_demo_open = false;
 	bool is_menu_open = false;
 	float render_distance = 150.0f;
@@ -45,7 +54,5 @@ struct Config
 	uint32_t max_dts_size = 60;
 	std::vector<float> dts = std::vector<float>(max_dts_size, 0.0f);
 };
-
-void show_config(Config& config, float delta_time);
 
 }

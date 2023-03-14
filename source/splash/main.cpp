@@ -1,4 +1,4 @@
-#include "source/splash/pipelines.h"
+#include "source/splash/vulkan_config.h"
 #include "source/splash/user_interface.h"
 #include "source/splash/shader_bridge.h"
 #include "engine/vulkan/debug.h"
@@ -11,7 +11,6 @@
 #include "source/splash/camera.h"
 #include "engine/utility/alignment.h"
 #include "extern/imgui/imgui.h"
-#include "refactor_later.h"
 using namespace kodanuki;
 
 #define GLFW_INCLUDE_VULKAN
@@ -53,20 +52,6 @@ int main()
 		.clear_color = {0.52941f, 0.80784f, 0.92157f, 1.0f}
 	}};
 
-	Camera camera;
-	window.set_cursor_movement_callback([&](float xoffset, float yoffset) {
-		if (ImGui::GetIO().WantCaptureMouse) {
-			return;
-		}
-		if (!window.is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
-			return;
-		}
-		camera.process_mouse_movement(xoffset, yoffset, true);
-	});
-	window.set_cursor_scroll_callback([&](float yoffset) {
-		camera.process_mouse_scroll(yoffset);
-	});
-
 	UserInterface interface = {{
 		.device = device,
 		.target = target,
@@ -83,7 +68,6 @@ int main()
 		.render_pipeline = render_fluid
 	}};
 
-	Config config;
 	Simulation simulation(device);
 	simulation.load_scene(load_csv_scene("assets/models/debug.csv"));
 	uint32_t index_count = bridge.get_index_count();
@@ -93,9 +77,8 @@ int main()
 	{
 		float dts = window.get_delta_time_seconds();
 		uint32_t frame = renderer.aquire_frame();
-		handle_user_inputs(config, dts, frame, window, target, bridge, camera);
-		
-		show_config(config, dts);
+		interface.handle_input(bridge, frame, dts);
+		interface.show_menu(dts);
 		simulation.tick_fluids(dts);
 
 		renderer.draw_command([&](VkCommandBuffer buffer) {
