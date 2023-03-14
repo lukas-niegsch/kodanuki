@@ -18,11 +18,6 @@ namespace kodanuki
  * can be copied freely and will be deleted once it is no longer used. This
  * will also free any allocated memory. Currently all tensor operation will be
  * executed synchronously and wait for completion.
- *
- * TODO: Implement vulkan operators using GPU shaders.
- * Vulkan operations are currently executed very very inefficiently. I just
- * want to do some fluid simulation but implementing GPU shaders for each of
- * them will take some more time.
  */
 class VulkanTensor
 {
