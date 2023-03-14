@@ -1,20 +1,15 @@
 #include "source/splash/vulkan_config.h"
 #include "source/splash/user_interface.h"
 #include "source/splash/shader_bridge.h"
-#include "engine/vulkan/debug.h"
+#include "source/splash/model.h"
+#include "source/splash/scene.h"
+#include "source/splash/camera.h"
 #include "engine/vulkan/device.h"
 #include "engine/vulkan/window.h"
 #include "engine/vulkan/target.h"
 #include "engine/vulkan/renderer.h"
-#include "source/splash/model.h"
-#include "source/splash/scene.h"
-#include "source/splash/camera.h"
 #include "engine/utility/alignment.h"
-#include "extern/imgui/imgui.h"
 using namespace kodanuki;
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 
 int main()
 {
