@@ -43,16 +43,33 @@ void Simulation::tick_fluids(float delta_time)
 {
 	// TODO: implement this method properly
 	vt::linear_i(1.0f, tensor_position, delta_time, tensor_velocity);
+	update_density();
 	update_pressure();
+}
+
+void Simulation::update_density()
+{
+	/**
+	 * We implement this whole operation in GLSL. The reason being that we
+	 * don't have to store the kernel W_ij from equation 5. Storing this might
+	 * be faster but requires O(N^2) space where N is the number of particles.
+	 */
+	float time_ns = vt::execute("splash_density",
+		{tensor_density, tensor_position, tensor_mass},
+		{parameters.kernel_size}
+	);
+	std::cout << "update_density: " << time_ns / 1000000 << "ms" << '\n';
 }
 
 void Simulation::update_pressure()
 {
-	vt::execute("vt_op_copy", {tensor_pressure, tensor_density}, {});
-	vt::execute("vt_op_div_ic", {tensor_pressure}, {parameters.rho_0});
-	vt::execute("vt_op_pow_ic", {tensor_pressure}, {7});
-	vt::execute("vt_op_sub_ic", {tensor_pressure}, {1});
-	vt::execute("vt_op_mul_ic", {tensor_pressure}, {parameters.stiffness});
+	float time_ns = 0.0;
+	time_ns += vt::execute("vt_op_copy", {tensor_pressure, tensor_density}, {});
+	time_ns += vt::execute("vt_op_div_ic", {tensor_pressure}, {parameters.rho_0});
+	time_ns += vt::execute("vt_op_pow_ic", {tensor_pressure}, {7});
+	time_ns += vt::execute("vt_op_sub_ic", {tensor_pressure}, {1});
+	time_ns += vt::execute("vt_op_mul_ic", {tensor_pressure}, {parameters.stiffness});
+	std::cout << "update_pressure: " << time_ns / 1000000 << "ms" << '\n';
 }
 
 VulkanTensor Simulation::get_mass()

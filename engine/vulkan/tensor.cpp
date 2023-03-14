@@ -325,7 +325,7 @@ void VulkanTensor::update_descriptor(VkDescriptorSet descriptor, VkDescriptorTyp
 	vkUpdateDescriptorSets(state->device, 1, &descriptor_write, 0, nullptr);
 }
 
-void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants, bool update_descriptor)
+float VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants, bool update_descriptor)
 {
 	assert(!tensors.empty());
 	auto& device = tensors[0].state->device;
@@ -363,9 +363,7 @@ void VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors, 
 		vkCmdDispatch(buffer, (tensors[0].numel() + 63) / 64, 1, 1);
 		vkCmdPipelineBarrier(buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 0, nullptr);
 	});
-
-	(void) elapsed_nanoseconds;
-	// std::cout << "VT " << name << " elapsed time: " << elapsed_nanoseconds << "ns" << '\n';
+	return elapsed_nanoseconds;
 }
 
 VulkanTensor VulkanTensor::add(VulkanTensor tensorA, VulkanTensor tensorB, bool update_descriptor)

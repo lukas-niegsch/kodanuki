@@ -267,8 +267,9 @@ public:
 	 * @param tensors The arguments to the compute shader.
 	 * @param constants Some additional constants for the compute shader.
 	 * @param update_descriptor = true Should the descriptor be updated.
+	 * @return The time this operation took in nanoseconds.
 	 */
-	static void execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants, bool update_descriptor = true);
+	static float execute(std::string name, std::vector<VulkanTensor> tensors, std::vector<float> constants, bool update_descriptor = true);
 
 private:
 	/**

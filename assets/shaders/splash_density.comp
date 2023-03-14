@@ -1,0 +1,48 @@
+#version 460
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout (push_constant) uniform Params {
+	float kernel_size;
+	uint tensor_size;
+	uint dimension;
+	uint shape[];
+} params;
+
+layout (std430, binding = 0) writeonly buffer tensorZ { float outDensity[]; };
+layout (std430, binding = 1) readonly buffer tensorA { vec3 inPosition[]; };
+layout (std430, binding = 2) readonly buffer tensorB { float inMass[]; };
+
+float cubic_spline_kernel(float q)
+{
+	float cases;
+
+	if (q >= 2) {
+		cases = 0.0;
+	} else if (q < 1) {
+		cases = (2.0 / 3.0 - pow(q, 2) + pow(q, 3) / 2.0);
+	} else {
+		cases = pow(2 - q, 3) / 6.0;
+	}
+
+	const float pi = 3.14159265358979323846;
+	return 3.0 * cases / (2 * pi);
+}
+
+void main()
+{
+	uint index = gl_GlobalInvocationID.x;
+
+	if (index >= params.tensor_size) {
+		return;
+	}
+
+	float density = 0.0;
+
+	for (uint i = 0; i < params.tensor_size; i++) {
+		const float d = length(inPosition[i] - inPosition[index]);
+		const float q = d / pow(params.kernel_size, 4);
+		density += inMass[i] * cubic_spline_kernel(q);
+	}
+
+	outDensity[index] = density;
+}

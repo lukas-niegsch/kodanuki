@@ -64,6 +64,12 @@ public:
 	void tick_fluids(float delta_time);
 
 	/**
+	 * Recalculates the density approximation using cubic spline kernels.
+	 * This uses the algorithm described in equations 5 and 5.
+	 */
+	void update_density();
+
+	/**
 	 * Recalculates the pressure approximation from the density.
 	 * This uses the algorithm described in equation 9.
 	 */
