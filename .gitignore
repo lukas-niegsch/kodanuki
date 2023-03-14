@@ -12,6 +12,6 @@
 **/*.snm
 **/*.nav
 assets/shaders/vt_op_*
-assets/splashdoc/_minted-*
+assets/splashdoc
 imgui.ini
 todo.txt

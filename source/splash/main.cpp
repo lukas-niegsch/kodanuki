@@ -8,7 +8,6 @@
 #include "engine/vulkan/window.h"
 #include "engine/vulkan/target.h"
 #include "engine/vulkan/renderer.h"
-#include "engine/utility/alignment.h"
 using namespace kodanuki;
 
 int main()
