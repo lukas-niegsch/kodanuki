@@ -50,7 +50,7 @@ int main()
 		.device = device,
 		.target = target,
 		.window = window,
-		.fontfile = "/usr/local/share/fonts/c/ComicMono.ttf",
+		.fontfile = "../config/ComicMono.ttf",
 		.fontsize = 18.0f
 	}};
 
