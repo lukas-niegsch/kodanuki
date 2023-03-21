@@ -10,3 +10,6 @@
 [submodule "extern/SPIRV-Reflect"]
 	path = extern/SPIRV-Reflect
 	url = https://github.com/KhronosGroup/SPIRV-Reflect.git
+[submodule "extern/shaderc"]
+	path = extern/shaderc
+	url = https://github.com/google/shaderc.git
