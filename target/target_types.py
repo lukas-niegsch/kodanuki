@@ -252,14 +252,3 @@ class ValgrindTarget(CompileTarget):
 		# command = f'valgrind --tool=cachegrind {args.out_dir}/{args.project}'
 		# command = f'valgrind ---leak-check=full --show-leak-kinds=all --log-file="valgrind.out" {args.out_dir}/{args.project}'
 		subprocess.call(command, shell = True)
-
-
-class SplashdocTarget(Target):
-	''' Generate the splash seminar thesis using latex. '''
-
-	def validate(self, args):
-		super().validate(args)
-
-	def execute(self, args):
-		super().execute(args)
-		subprocess.call(f'{args.src_dir}/target/splashdoc.sh', shell = True)
