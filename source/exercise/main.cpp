@@ -1,7 +1,8 @@
-#include <iostream>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
+#include <bits/stdc++.h>
 
-int main()
+TEST_CASE("playground")
 {
-	std::cout << "Hello, World!" << '\n';
-	return 0;
+
 }
