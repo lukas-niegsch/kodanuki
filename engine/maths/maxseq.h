@@ -4,8 +4,6 @@
 #include <limits>
 #include <vector>
 
-#include <iostream>
-
 namespace kodanuki
 {
 
