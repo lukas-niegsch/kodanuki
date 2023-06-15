@@ -20,7 +20,7 @@ namespace kodanuki::algo
  *     - insert() / remove()
  *     - contains()
  * 
- * The vebtree has good performance on all operations but requires exponential
+ * The vebtree has good performance on all operations but requires linear
  * space. It can store any type which can be mapped uniquely to integer types.
  * Ensure that the size of the vebtree is not too large. The required storage
  * is given by O(sizeof(T) * size).
