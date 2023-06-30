@@ -27,9 +27,3 @@ description = "The splash side project for SPH fluid simulation."
 path        = "source/splash/"
 depends     = ["kodanuki.engine", "vulkan", "glfw"]
 library     = false
-
-[exercise]
-description = "The exercises for the lecture on algorithms."
-path        = "source/exercise/"
-depends     = []
-library     = false
