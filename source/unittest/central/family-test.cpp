@@ -9,8 +9,6 @@ TEST_CASE("family tests")
 	SUBCASE("isolation")
 	{
 		Entity entity = ECS::create();
-		update_family(entity);
-
 		Family& family = ECS::get<Family>(entity);
 		CHECK(family.root == entity);
 		CHECK(family.parent == invalid);
@@ -22,13 +20,9 @@ TEST_CASE("family tests")
 	SUBCASE("children")
 	{
 		Entity parent = ECS::create();
-		Entity entity = ECS::create();
-		Entity childA = ECS::create();
-		Entity childB = ECS::create();
-		update_family(parent);
-		update_family(entity, parent);
-		update_family(childA, entity);
-		update_family(childB, entity);
+		Entity entity = ECS::create(parent);
+		Entity childA = ECS::create(entity);
+		Entity childB = ECS::create(entity);
 
 		Family& parentFamily = ECS::get<Family>(parent);
 		CHECK(parentFamily.root == parent);

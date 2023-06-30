@@ -51,11 +51,11 @@ TEST_CASE("basic entity tests")
 		CHECK(another == invalid);
 	}
 
-	SUBCASE("new entities only have entity component")
+	SUBCASE("new entities only have two entity components")
 	{
 		CHECK(ECS::has<Position>(entity) == false);
 		CHECK(ECS::has<Quaternion>(entity) == false);
-		CHECK(ECS::has<Family>(entity) == false);
+		CHECK(ECS::has<Family>(entity) == true);
 		CHECK(ECS::has<Entity>(entity) == true);
 		CHECK(ECS::get<Entity>(entity) == entity);
 	}
