@@ -1,222 +1,72 @@
 #pragma once
-#include "engine/utility/signature.h"
-#include "engine/utility/type_name.h"
-#include "engine/vulkan/wrapper.h"
+#include "engine/utility/debug.h"
 #include "extern/SPIRV-Reflect/spirv_reflect.h"
 #include <vulkan/vulkan.h>
-#include <iostream>
-#include <stdexcept>
-#include <sstream>
-#include <vector>
-#define LINE_LENGTH 80
 
-#define ERROR(reason)									\
-	do {												\
-		std::stringstream err;							\
-		err << reason << '\n';							\
-		err << "File: " << __FILE__ << '\n';			\
-		err << "Line: " << __LINE__ << '\n';			\
-		std::cout << err.str();							\
-		std::terminate(); 								\
-	} while (false)
-
-#define CHECK_RESULT(result, value)						\
-	do {												\
-		auto return_type = result;						\
-		if (return_type != value) {						\
-			ERROR(vulkan_debug(return_type));			\
-		}												\
-	} while (false)
-
-#define CHECK_VULKAN(result)							\
+#define CHECK_VULKAN(result) 				\
 	CHECK_RESULT(result, VK_SUCCESS)
 
-#define CHECK_SPIRV(result)								\
+#define CHECK_SPIRV(result)					\
 	CHECK_RESULT(result, SPV_REFLECT_RESULT_SUCCESS)
-
 
 namespace kodanuki
 {
 
-/**
- * Prints the values of the given structure.
- * 
- * This function will always throw a compiler error
- * unless it is specialized for the given type.
- * 
- * @param info The structure that should be converted to a string.
- */
-template <typename T>
-std::string vulkan_debug(T info) = delete; // No debug info supported!
-
-/**
- * Prints the values of the given structure.
- * 
- * This function will always throw a compiler error
- * unless it is specialized for the given type.
- * 
- * @param infos The structures that should be converted to a string.
- */
-template <typename T>
-std::string vulkan_debug(std::vector<T> infos)
-{
-	std::stringstream ss;
-	for (T info : infos) {
-		ss << vulkan_debug<T>(info) << '\n';
-	}
-	return ss.str();
-}
-
-/**
- * Prints the values of the given structure.
- * 
- * This function will always throw a compiler error
- * unless it is specialized for the given type.
- * 
- * @param info The structure that should be printed.
- */
-template <typename T>
-void print_vulkan_struct(T info)
-{
-	std::cout << vulkan_debug<T>(info);
-}
-
-/**
- * Prints the values from the given structure and
- * surrounds it with some formatting.
- * 
- * @param info The structure that should be printed.
- */
-template <typename T>
-void print_vulkan_info(T info)
-{
-	std::cout << "[Info] " << kodanuki::type_name<T>() << '\n';
-	std::cout << std::string(LINE_LENGTH, '=') << '\n';
-	print_vulkan_struct<T>(info);
-	std::cout << std::string(LINE_LENGTH, '=') << '\n';
-	std::cout << std::endl;
-}
-
-/**
- * Prints the values from the given structure and
- * surrounds it with some formatting.
- * 
- * @param info The structure that should be printed.
- */
-template <typename T>
-void print_vulkan_info(std::vector<T> info)
-{
-	std::cout << "[Info] Vector of " << kodanuki::type_name<T>() << '\n';
-	std::cout << std::string(LINE_LENGTH, '=') << '\n';
-	for (int i = 0; i < (int) info.size(); i++) {
-		if (i != 0) {
-			std::cout << std::string(LINE_LENGTH, '-') << '\n';
-		}
-		print_vulkan_struct<T>(info[i]);
-	}
-	std::cout << std::string(LINE_LENGTH, '=') << '\n';
-	std::cout << std::endl;
-}
-
-/**
- * Vectorizes properties that can be enumerated using vulkan.
- * 
- * This essentially only is a wrapper around vulkan's enumerate
- * pattern. Instead of having to calling these functions twice
- * (first to get the count, then to get the values), we return
- * a vector containing all the values instead.
- * 
- * usage:
- * vectorize<vkEnumerateInstanceExtensionProperties>(nullptr);
- */
-template <auto Function, typename ... Args>
-auto vectorize(Args ... args)
-{
-	using T = std::remove_pointer_t<reverse_signature_t<0, Function>>;
-	uint32_t size;
-	Function(args... , &size, nullptr);
-	std::vector<T> result(size);
-	Function(args... , &size, result.data());
-	return result;
-}
-
-/**
- * Creates a wrapper around vulkan's create/destroy pattern.
- *
- * The resulting wrapper will call the create method with the given
- * arguments and will automatically call the destroy method once
- * the object is no longer used.
- *
- * usage:
- * create_wrapper<vkCreateBuffer, vkDestroyBuffer>(...);
- */
-template <auto CreateFunction, auto DestroyFunction, typename ... Args>
-auto create_wrapper(std::remove_pointer_t<reverse_signature_t<2, CreateFunction>> arg0, Args ... args)
-{
-	using T = std::remove_pointer_t<reverse_signature_t<0, CreateFunction>>;
-	T* output = new T();
-	CHECK_VULKAN(CreateFunction(args..., &arg0, nullptr, output));
-	auto destroy = [=](T* ptr) {
-		DestroyFunction(args..., *ptr, nullptr);
-	};
-	return Wrapper<T>(output, destroy);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////// Specializations ///////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
 template <>
-std::string vulkan_debug(VkResult info);
+std::string stringify(VkBool32 info);
 
 template <>
-std::string vulkan_debug(SpvReflectResult info);
+std::string stringify(VkResult info);
 
 template <>
-std::string vulkan_debug(VkExtensionProperties info);
+std::string stringify(VkFormat info);
 
 template <>
-std::string vulkan_debug(VkLayerProperties info);
+std::string stringify(VkFlags info);
 
 template <>
-std::string vulkan_debug(VkPhysicalDeviceProperties info);
+std::string stringify(VkLayerProperties info);
 
 template <>
-std::string vulkan_debug(VkQueueFamilyProperties info);
+std::string stringify(VkExtensionProperties info);
 
 template <>
-std::string vulkan_debug(VkPhysicalDeviceFeatures info);
+std::string stringify(VkPhysicalDeviceType info);
 
 template <>
-std::string vulkan_debug(VkSurfaceFormatKHR info);
+std::string stringify(VkPhysicalDeviceFeatures info);
 
 template <>
-std::string vulkan_debug(VkPresentModeKHR info);
+std::string stringify(VkPhysicalDeviceProperties info);
 
 template <>
-std::string vulkan_debug(VkSurfaceCapabilitiesKHR info);
+std::string stringify(VkPhysicalDeviceMemoryProperties info);
 
 template <>
-std::string vulkan_debug(VkPhysicalDeviceMemoryProperties info);
+std::string stringify(VkPhysicalDeviceSubgroupProperties info);
 
 template <>
-std::string vulkan_debug(VkMemoryHeap info);
+std::string stringify(VkQueueFamilyProperties info);
 
 template <>
-std::string vulkan_debug(VkMemoryType info);
+std::string stringify(VkSurfaceFormatKHR info);
 
 template <>
-std::string vulkan_debug(VkFormat info);
+std::string stringify(VkPresentModeKHR info);
 
 template <>
-std::string vulkan_debug(VkVertexInputAttributeDescription info);
+std::string stringify(VkSurfaceCapabilitiesKHR info);
 
 template <>
-std::string vulkan_debug(VkPhysicalDeviceSubgroupProperties info);
+std::string stringify(VkVertexInputAttributeDescription info);
 
 template <>
-std::string vulkan_debug(VkFlags info);
+std::string stringify(VkMemoryHeap info);
 
 template <>
-std::string vulkan_debug(VkPhysicalDeviceType info);
+std::string stringify(VkMemoryType info);
+
+template <>
+std::string stringify(SpvReflectResult info);
 
 }

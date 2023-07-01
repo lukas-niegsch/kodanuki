@@ -1,5 +1,7 @@
 #include "engine/vulkan/debug.h"
 
+#define LINE_LENGTH 80
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include "extern/SPIRV-Reflect/spirv_reflect.c"
@@ -30,7 +32,13 @@ void append_extent(std::stringstream& ss, std::string name, VkExtent2D extent)
 }
 
 template <>
-std::string vulkan_debug(VkExtensionProperties info)
+std::string stringify(VkBool32 info)
+{
+	return info ? "VK_TRUE" : "VK_FALSE";
+}
+
+template <>
+std::string stringify(VkExtensionProperties info)
 {
 	std::stringstream ss;
 	ss << "extensionName: " << info.extensionName << '\n';
@@ -39,7 +47,7 @@ std::string vulkan_debug(VkExtensionProperties info)
 }
 
 template <>
-std::string vulkan_debug(VkLayerProperties info)
+std::string stringify(VkLayerProperties info)
 {
 	std::stringstream ss;
 	ss << "layerName: " << info.layerName << '\n';
@@ -50,14 +58,14 @@ std::string vulkan_debug(VkLayerProperties info)
 }
 
 template <>
-std::string vulkan_debug(VkPhysicalDeviceProperties info)
+std::string stringify(VkPhysicalDeviceProperties info)
 {
 	std::stringstream ss;
 	append_version(ss, "apiVersion", info.apiVersion);
 	append_version(ss, "driverVersion", info.driverVersion);
 	ss << "vendorID: " << info.vendorID << '\n';
 	ss << "deviceID: " << info.deviceID << '\n';
-	ss << "deviceType: " << vulkan_debug(info.deviceType);
+	ss << "deviceType: " << stringify(info.deviceType);
 	ss << "deviceName: " << info.deviceName << '\n';
 	ss << "pipelineCacheUUID:";
 	for (uint32_t i = 0; i < VK_UUID_SIZE; i++) {
@@ -68,7 +76,7 @@ std::string vulkan_debug(VkPhysicalDeviceProperties info)
 }
 
 template <>
-std::string vulkan_debug(VkQueueFamilyProperties info)
+std::string stringify(VkQueueFamilyProperties info)
 {
 	std::stringstream ss;
 
@@ -94,7 +102,7 @@ std::string vulkan_debug(VkQueueFamilyProperties info)
 }
 
 template <>
-std::string vulkan_debug(VkSurfaceFormatKHR info)
+std::string stringify(VkSurfaceFormatKHR info)
 {
 	std::stringstream ss;
 	ss << "format: " << info.format << '\n';
@@ -103,7 +111,7 @@ std::string vulkan_debug(VkSurfaceFormatKHR info)
 }
 
 template <>
-std::string vulkan_debug(VkSurfaceCapabilitiesKHR info)
+std::string stringify(VkSurfaceCapabilitiesKHR info)
 {
 	std::stringstream ss;
 	ss << "minImageCount: " << info.minImageCount << '\n';
@@ -120,21 +128,21 @@ std::string vulkan_debug(VkSurfaceCapabilitiesKHR info)
 }
 
 template <>
-std::string vulkan_debug(VkPhysicalDeviceMemoryProperties info)
+std::string stringify(VkPhysicalDeviceMemoryProperties info)
 {
 	std::stringstream ss;
 	ss << "memoryTypeCount: " << info.memoryTypeCount << '\n';
 	std::vector<VkMemoryType> types(info.memoryTypes, info.memoryTypes + info.memoryTypeCount);
-	ss << vulkan_debug(types);
+	ss << stringify(types);
 	ss << std::string(LINE_LENGTH, '-') << '\n';
 	ss << "memoryHeapCount: " << info.memoryHeapCount << '\n';
 	std::vector<VkMemoryHeap> heaps(info.memoryHeaps, info.memoryHeaps + info.memoryHeapCount);
-	ss << vulkan_debug(heaps);
+	ss << stringify(heaps);
 	return ss.str();
 }
 
 template <>
-std::string vulkan_debug(VkMemoryHeap info)
+std::string stringify(VkMemoryHeap info)
 {
 	std::stringstream ss;
 	ss << "size: " << info.size / (1024 * 1024) << " MiB" << '\n';
@@ -145,7 +153,7 @@ std::string vulkan_debug(VkMemoryHeap info)
 }
 
 template <>
-std::string vulkan_debug(VkMemoryType info)
+std::string stringify(VkMemoryType info)
 {
 	std::stringstream ss;
 	ss << "heapIndex: " << info.heapIndex << '\n';
@@ -160,18 +168,18 @@ std::string vulkan_debug(VkMemoryType info)
 }
 
 template <>
-std::string vulkan_debug(VkVertexInputAttributeDescription info)
+std::string stringify(VkVertexInputAttributeDescription info)
 {
 	std::stringstream ss;
 	ss << "location: " << info.location << '\n';
 	ss << "binding: " << info.binding << '\n';
-	ss << "format: " << vulkan_debug(info.format);
+	ss << "format: " << stringify(info.format);
 	ss << "offset: " << info.offset << '\n';
 	return ss.str();
 }
 
 template <>
-std::string vulkan_debug(VkPhysicalDeviceSubgroupProperties info)
+std::string stringify(VkPhysicalDeviceSubgroupProperties info)
 {
 	std::stringstream ss;
 	ss << "subgroupSize: " << info.subgroupSize << '\n';
@@ -210,7 +218,7 @@ std::string vulkan_debug(VkPhysicalDeviceSubgroupProperties info)
 }
 
 template <>
-std::string vulkan_debug(VkResult info)
+std::string stringify(VkResult info)
 {
 	std::stringstream ss;
 	switch (info) {
@@ -240,7 +248,7 @@ std::string vulkan_debug(VkResult info)
 }
 
 template <>
-std::string vulkan_debug(SpvReflectResult info)
+std::string stringify(SpvReflectResult info)
 {
 	std::stringstream ss;
 	switch (info) {
@@ -272,7 +280,7 @@ std::string vulkan_debug(SpvReflectResult info)
 }
 
 template <>
-std::string vulkan_debug(VkFormat info)
+std::string stringify(VkFormat info)
 {
 	std::stringstream ss;
 	switch (info) {
@@ -468,7 +476,7 @@ std::string vulkan_debug(VkFormat info)
 }
 
 template <>
-std::string vulkan_debug(VkPresentModeKHR info)
+std::string stringify(VkPresentModeKHR info)
 {
 	std::stringstream ss;
 	switch (info) {
@@ -485,7 +493,7 @@ std::string vulkan_debug(VkPresentModeKHR info)
 }
 
 template <>
-std::string vulkan_debug(VkPhysicalDeviceType info)
+std::string stringify(VkPhysicalDeviceType info)
 {
 	std::stringstream ss;
 	switch(info) {
@@ -501,7 +509,7 @@ std::string vulkan_debug(VkPhysicalDeviceType info)
 }
 
 template <>
-std::string vulkan_debug(VkPhysicalDeviceFeatures info)
+std::string stringify(VkPhysicalDeviceFeatures info)
 {
 	std::stringstream ss;
 	APPEND_BOOLEAN_FIELD(robustBufferAccess);

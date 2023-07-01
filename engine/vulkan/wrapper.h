@@ -1,4 +1,6 @@
 #pragma once
+#include "engine/utility/signature.h"
+#include "engine/vulkan/debug.h"
 #include <vulkan/vulkan.h>
 #include <functional>
 #include <memory>
@@ -6,6 +8,28 @@ class GLFWwindow;
 
 namespace kodanuki
 {
+
+/**
+ * Vectorizes properties that can be enumerated using vulkan.
+ * 
+ * This essentially only is a wrapper around vulkan's enumerate
+ * pattern. Instead of having to calling these functions twice
+ * (first to get the count, then to get the values), we return
+ * a vector containing all the values instead.
+ * 
+ * usage:
+ * vectorize<vkEnumerateInstanceExtensionProperties>(nullptr);
+ */
+template <auto Function, typename ... Args>
+auto vectorize(Args ... args)
+{
+	using T = std::remove_pointer_t<reverse_signature_t<0, Function>>;
+	uint32_t size;
+	Function(args... , &size, nullptr);
+	std::vector<T> result(size);
+	Function(args... , &size, result.data());
+	return result;
+}
 
 /**
  * Shared wrapper around some given vulkan type.
@@ -52,6 +76,28 @@ public:
 private:
 	std::shared_ptr<T> state;
 };
+
+/**
+ * Creates a wrapper around vulkan's create/destroy pattern.
+ *
+ * The resulting wrapper will call the create method with the given
+ * arguments and will automatically call the destroy method once
+ * the object is no longer used.
+ *
+ * usage:
+ * create_wrapper<vkCreateBuffer, vkDestroyBuffer>(...);
+ */
+template <auto CreateFunction, auto DestroyFunction, typename ... Args>
+auto create_wrapper(std::remove_pointer_t<reverse_signature_t<2, CreateFunction>> arg0, Args ... args)
+{
+	using T = std::remove_pointer_t<reverse_signature_t<0, CreateFunction>>;
+	T* output = new T();
+	CHECK_VULKAN(CreateFunction(args..., &arg0, nullptr, output));
+	auto destroy = [=](T* ptr) {
+		DestroyFunction(args..., *ptr, nullptr);
+	};
+	return Wrapper<T>(output, destroy);
+}
 
 /**
  * Vulkan instances hold the context of the application.
