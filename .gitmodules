@@ -13,3 +13,6 @@
 [submodule "extern/shaderc"]
 	path = extern/shaderc
 	url = https://github.com/google/shaderc.git
+[submodule "extern/stb"]
+	path = extern/stb
+	url = https://github.com/nothings/stb.git
