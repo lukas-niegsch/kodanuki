@@ -13,5 +13,6 @@
 **/*.nav
 assets/shaders/vt_op_*
 assets/splashdoc
+assets/images/*
 imgui.ini
 todo.txt
