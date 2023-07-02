@@ -1,6 +1,8 @@
 #include "engine/utility/file.h"
 #include <stdexcept>
 #include <fstream>
+#define STB_IMAGE_IMPLEMENTATION
+#include "extern/stb/stb_image.h"
 
 namespace kodanuki
 {
