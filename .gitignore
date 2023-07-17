@@ -16,3 +16,4 @@ assets/splashdoc
 assets/images/*
 imgui.ini
 todo.txt
+callgrind*

@@ -248,7 +248,17 @@ class ValgrindTarget(CompileTarget):
 	def execute(self, args):
 		super().execute(args)
 		# command = f'valgrind --tool=massif {args.out_dir}/{args.project}'
-		command = f'valgrind --tool=callgrind {args.out_dir}/{args.project}'
+		command = f'valgrind --tool=callgrind --dump-instr=yes --simulate-cache=yes --collect-jumps=yes {args.out_dir}/{args.project}'
 		# command = f'valgrind --tool=cachegrind {args.out_dir}/{args.project}'
 		# command = f'valgrind ---leak-check=full --show-leak-kinds=all --log-file="valgrind.out" {args.out_dir}/{args.project}'
 		subprocess.call(command, shell = True)
+
+class ProfilerTarget(RunTarget):
+	''' Profiles the executed code using gprof. '''
+
+	def validate(self, args):
+		super().validate(args)
+
+	def execute(self, args):
+		super().execute(args)
+		subprocess.call(f'gprof {args.out_dir}/{args.project}', shell = True)

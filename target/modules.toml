@@ -16,6 +16,12 @@ path        = "source/unittest/"
 depends     = ["kodanuki.engine", "vulkan"]
 library     = false
 
+[perftest]
+description = "Performance tests for the kodanuki engine."
+path        = "source/perftest/"
+depends     = ["kodanuki.engine", "vulkan"]
+library     = false
+
 [tetris]
 description = "The tetris side project for the multiboard tetris game."
 path        = "source/tetris/"

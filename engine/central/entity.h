@@ -33,7 +33,7 @@ public:
 	template <typename T>
 	static void update(Entity entity, T component = {})
 	{
-		storage<T>()->update(entity.value(), component);
+		mapping.get<T>().update(entity.value(), component);
 	}
 
 	// Removes the given component from the entity.
@@ -43,7 +43,7 @@ public:
 		if constexpr (std::is_same<T, Entity>()) {
 			clear(entity);
 		} else {
-			storage<T>()->remove(entity.value());
+			mapping.get<T>().remove(entity.value());
 		}
 	}
 
@@ -51,43 +51,60 @@ public:
 	template <typename T>
 	static bool has(Entity entity)
 	{
-		return storage<T>()->contains(entity.value());
+		return mapping.get<T>().contains(entity.value());
 	}
 
 	// Returns the reference to the component.
 	template <typename T>
 	static T& get(Entity entity)
 	{
-		std::any& component = storage<T>()->get(entity.value());
-		return std::any_cast<T&>(component);
+		return mapping.get<T>()[entity.value()];
 	}
 
 	// Copies the component from the source entity to the target entity.
 	template <typename T>
 	static void copy(Entity source, Entity target)
 	{
-		storage<T>()->copy(source.value(), target.value());
+		if (!has<T>(source)) {
+			return;
+		}
+		update<T>(target, get<T>(source));
 	}
 
 	// Moves the component from the source entity to the target entity.
 	template <typename T>
 	static void move(Entity source, Entity target)
 	{
-		storage<T>()->move(source.value(), target.value());
+		if (!has<T>(source)) {
+			return;
+		}
+		copy<T>(source, target);
+		remove<T>(source);
 	}
 
 	// Swaps the component from the source entity with the target entity.
 	template <typename T>
 	static void swap(Entity source, Entity target)
 	{
-		storage<T>()->swap(source.value(), target.value());
+		if (!has<T>(source)) {
+			move<T>(target, source);
+			return;
+		}
+		if (!has<T>(target)) {
+			move<T>(source, target);
+			return;
+		}
+		auto source_value = get<T>(source);
+		auto target_value = get<T>(target);
+		update<T>(target, source_value);
+		update<T>(source, target_value);
 	}
 
 	// Binds the component from the source entity to the target entity.
 	template <typename T>
 	static void bind(Entity source, Entity target)
 	{
-		storage<T>()->bind(source.value(), target.value());
+		mapping.get<T>().bind(source.value(), target.value());
 	}
 
 	// Iterates over entities with the given archetype.
@@ -100,22 +117,9 @@ public:
 private:
 	// Strips the entity from all its components.
 	static void clear(Entity entity);
-	
-	// Returns the correct entity storage for the given type.
-	template <typename T>
-	static EntityStorage* storage()
-	{
-		auto type = std::type_index(typeid(T));
-		if (mapping.count(type) == 0) {
-			mapping[type] = std::make_unique<EntityStorage>();
-		}
-		return mapping[type].get();
-	}
 
 private:
-	using Storage = std::unique_ptr<EntityStorage>;
-	using Mapping = std::unordered_map<std::type_index, Storage>;
-	static inline Mapping mapping;
+	static inline EntityMapping mapping;
 };
 
 }

@@ -1,24 +1,75 @@
-#include "engine/central/entity.h"
 #include "engine/central/archetype.h"
+#include "engine/central/entity.h"
 #include "engine/display/layout.h"
-#include <GLFW/glfw3.h>	
-#include <vector>
-#include <cstdint>
-#include <cstring>
-#include <iostream>
+#include <GLFW/glfw3.h>
 using namespace kodanuki;
 
-void render_layouts(uint32_t width, uint32_t height)
+class DebugSystem
+{
+public:
+	DebugSystem();
+
+public:
+	void game_loop();
+
+private:
+	void create_debug_layout();
+	void render_debug_layout();
+
+private:
+	uint32_t width;
+	uint32_t height;
+	Entity root;
+
+	LayoutSystem layouts;
+};
+
+int main()
+{
+	DebugSystem system;
+	system.game_loop();
+	return 0;
+}
+
+DebugSystem::DebugSystem() : width(600), height(600), root(ECS::create())
+{
+	layouts = LayoutSystem::create({
+		.owner = root
+	});
+
+	create_debug_layout();
+}
+
+void DebugSystem::game_loop()
+{
+	layouts.tick();
+	render_debug_layout();
+}
+
+void DebugSystem::create_debug_layout()
+{
+	Entity entityA = ECS::create(root);
+	Entity entityB = ECS::create(root);
+	Entity entityC = ECS::create(root);
+
+	// The root must have a predefined render layout!
+	ECS::update<RenderLayout>(root, {
+		.xpos = 10,
+		.ypos = 10,
+		.width = width - 20,
+		.height = height - 20
+	});
+	
+	ECS::update<IsLayoutFlag>(root);
+	ECS::update<RenderLayout>(entityA, {10, 10, 100, 50});
+	ECS::update<RenderLayout>(entityB, {50, 70, 80, 100});
+	ECS::update<RenderLayout>(entityC, {20, 30, 60, 120});
+}
+
+void DebugSystem::render_debug_layout()
 {
 	glfwInit();
-
 	GLFWwindow* window = glfwCreateWindow(width, height, "Render Layouts", nullptr, nullptr);
-	if (window == nullptr)
-	{
-		glfwTerminate();
-		return;
-	}
-
 	glfwMakeContextCurrent(window);
 
 	while (!glfwWindowShouldClose(window))
@@ -54,22 +105,4 @@ void render_layouts(uint32_t width, uint32_t height)
 	}
 
 	glfwTerminate();
-}
-
-int main()
-{
-	Entity root = ECS::create(); (void) root;
-
-	Entity entityA = ECS::create();
-	Entity entityB = ECS::create();
-	Entity entityC = ECS::create();
-
-	ECS::update<RenderLayout>(entityA, {0, 10, 10, 100, 50});
-	ECS::update<RenderLayout>(entityB, {0, 50, 70, 80, 100});
-	ECS::update<RenderLayout>(entityC, {0, 20, 30, 60, 120});
-
-	// ECS::update<RenderLayout>(root, {0, 10, 10, 580, 580});
-	render_layouts(600, 600);
-
-	return 0;
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/central/toolbox.h"
 #include "engine/central/storage.h"
-#include "engine/utility/type_union.h"
+#include "engine/central/utility/type_union.h"
 #include <tuple>
 #include <vector>
 
@@ -17,7 +17,7 @@ struct Archetype
 	using consume_types = type_union_t<typename Predicates::consume_types...>;
 	using produce_types = type_union_t<typename Predicates::produce_types...>;
 
-	static auto iterate(Mapping& mapping)
+	static auto iterate(EntityMapping& mapping)
 	{
 		std::vector<Entity> includes = search_entities<include_types>(mapping);
 		std::vector<Entity> excludes = search_entities<exclude_types>(mapping);

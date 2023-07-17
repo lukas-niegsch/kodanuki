@@ -1,6 +1,6 @@
 #include "engine/central/entity.h"
 #include "engine/central/family.h"
-#include "engine/utility/counter.h"
+#include "engine/central/utility/counter.h"
 
 namespace kodanuki
 {
@@ -16,10 +16,12 @@ Entity ECS::create(Entity parent)
 
 void ECS::clear(Entity entity)
 {
-	for (auto& pair : mapping) {
-		pair.second->remove(entity.value());
-	}
 	update_family(entity, std::nullopt);
+	std::set<Entity> children = ECS::get<Family>(entity).children;
+	for (Entity child : children) {
+		ECS::clear(child);
+	}
+	mapping.remove(entity.value());
 }
 
 }

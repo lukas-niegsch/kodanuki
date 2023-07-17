@@ -1,38 +1,36 @@
 #pragma once
 #include "engine/central/entity.h"
 #include "engine/central/storage.h"
-#include "engine/utility/sorted_intersection.h"
+#include "engine/central/utility/sorted_intersection.h"
 
 namespace kodanuki
 {
 
 template <typename ... T>
-std::vector<Entity> search_entities(Mapping& mapping,
-	std::type_identity<std::tuple<T...>>)
+std::vector<Entity> search_entities(EntityMapping& mapping, std::type_identity<std::tuple<T...>>)
 {
 	std::vector<Entity> intersection;
-	sorted_intersection(std::back_inserter(intersection),
-		getStorage<T>(mapping)->identifiers()...);
+	sorted_intersection(std::back_inserter(intersection), mapping.get<T>().keys()...);
 	return intersection;
 }
 
 template <typename T>
-std::vector<Entity> search_entities(Mapping& mapping)
+std::vector<Entity> search_entities(EntityMapping& mapping)
 {
 	return search_entities(mapping, std::type_identity<typename T::tuple>());
 }
 
 template <typename ... T>
-std::tuple<T&...> get_component_reference_tuple(Mapping& mapping, int& id,
+std::tuple<T&...> get_component_reference_tuple(EntityMapping& mapping, int& id,
 	std::type_identity<std::tuple<T...>>)
 {
-	return std::tie(std::any_cast<T&>(getStorage<T>(mapping)->get(id))...);
+	return std::tie(mapping.get<T>()[id]...);
 }
 
 template <typename iterate_types>
 struct EntityIterator
 {
-	EntityIterator(Mapping& mapping, std::vector<Entity> entities, int position)
+	EntityIterator(EntityMapping& mapping, std::vector<Entity> entities, int position)
 		: mapping(mapping), entities(entities), position(position) {}
 		
 	EntityIterator begin()
@@ -63,7 +61,7 @@ struct EntityIterator
 	}
 
 private:
-	Mapping& mapping;
+	EntityMapping& mapping;
 	std::vector<Entity> entities;
 	int position;
 };

@@ -1,8 +1,8 @@
 #include "source/splash/vulkan_config.h"
 #include "source/splash/model.h"
 #include "engine/vulkan/debug.h"
-#include "engine/utility/file.h"
-#include "engine/utility/alignment.h"
+#include "engine/central/utility/file.h"
+#include "engine/central/utility/alignment.h"
 
 namespace kodanuki
 {
