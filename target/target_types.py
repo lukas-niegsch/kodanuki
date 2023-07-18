@@ -262,3 +262,15 @@ class ProfilerTarget(RunTarget):
 	def execute(self, args):
 		super().execute(args)
 		subprocess.call(f'gprof {args.out_dir}/{args.project}', shell = True)
+
+class SphinxTarget(Target):
+	''' Builds the documentation using sphinx. '''
+
+	def validate(self, args):
+		super().validate(args)
+
+	def execute(self, args):
+		super().execute(args)
+		my_env = os.environ.copy()
+		my_env['LC_ALL'] = 'en_GB.UTF-8'
+		subprocess.call(f'make -C {args.src_dir}/assets/sphinx html', shell = True, env = my_env) 

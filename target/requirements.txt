@@ -1,3 +1,12 @@
 tomli
-jinja2
+
+# Only for target 'docs'
+sphinx
+sphinx-copybutton
+sphinx-rtd-theme
+
+# Only for target 'stats'
 pygount
+
+# Only for target 'shaders'
+jinja2

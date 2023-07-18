@@ -15,6 +15,7 @@ if __name__ == '__main__':
 	targets = TargetGraph()
 	targets.add_target('help', HelpTarget(targets))
 	targets.add_target('list', ListTarget())
+	targets.add_target('docs', SphinxTarget())
 	targets.add_target('stats', StatsTarget())
 	targets.add_target('clean', CleanTarget())
 	targets.add_target('ninja', NinjaTarget())
