@@ -4,6 +4,7 @@ tomli
 sphinx
 sphinx-copybutton
 sphinx-rtd-theme
+Pygments
 
 # Only for target 'stats'
 pygount
