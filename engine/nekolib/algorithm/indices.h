@@ -13,7 +13,7 @@ namespace kodanuki
  * @return The smallest index of an element below some threshold.
  */
 template <typename T>
-std::size_t get_smallest_index_below(std::vector<T> elements, T threshold)
+std::size_t get_smallest_index_below(const std::vector<T>& elements, const T& threshold)
 {
 	for (std::size_t i = 0; i < elements.size(); i++) {
 		if (elements[i] <= threshold) {

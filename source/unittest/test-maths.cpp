@@ -1,5 +1,5 @@
-#include "engine/maths/indices.h"
-#include "engine/maths/maxseq.h"
+#include "engine/nekolib/algorithm/indices.h"
+#include "engine/nekolib/algorithm/maxseq.h"
 #include <doctest/doctest.h>
 using namespace kodanuki;
 

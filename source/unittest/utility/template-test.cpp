@@ -1,6 +1,6 @@
-#include "engine/central/utility/signature.h"
-#include "engine/central/utility/type_name.h"
-#include "engine/central/utility/type_union.h"
+#include "engine/nekolib/templates/signature.h"
+#include "engine/nekolib/templates/type_name.h"
+#include "engine/nekolib/templates/type_union.h"
 #include <doctest/doctest.h>
 using namespace kodanuki;
 

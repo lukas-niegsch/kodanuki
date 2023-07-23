@@ -1,4 +1,5 @@
-#include "engine/algo/vebtree.h"
+#include "engine/nekolib/container/vebtree.h"
+#include "engine/nekolib/algorithm/vebsort.h"
 #include <doctest/doctest.h>
 #include <bits/stdc++.h>
 using namespace kodanuki;
@@ -7,7 +8,7 @@ TEST_CASE("Vebtree Tests")
 {
     SUBCASE("Van Emde Boas Tree API usage with Integers")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         CHECK(tree.get_min() == std::nullopt);
 
         tree.insert(32);
@@ -75,7 +76,7 @@ TEST_CASE("Vebtree Tests")
         
         // The tree uses this order to compare the custom type.
         constexpr uint64_t size = 1ULL << (8 * sizeof(char) * max_string_size);
-        algo::Vebtree<std::string, size, string_order> tree;
+        Vebtree<std::string, size, string_order> tree;
 
         // Afterward, we can use the Vebtree normally!
         CHECK(tree.get_min() == std::nullopt);
@@ -114,27 +115,27 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("new trees are empty")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         CHECK(tree.get_min() == std::nullopt);
     }
 
     SUBCASE("after one insert tree is not empty")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(0);
         CHECK(tree.get_min() != std::nullopt);
     }
 
     SUBCASE("tree contains inserted elements")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(123);
         CHECK(tree.contains(123) == true);
     }
 
     SUBCASE("inserting multiple elements works")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(5);
         tree.insert(123);
         tree.insert(56);
@@ -145,7 +146,7 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("tree does not contain elements which have not been inserted")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         CHECK(tree.contains(0) == false);
         CHECK(tree.contains(421) == false);
         CHECK(tree.contains(40) == false);
@@ -153,14 +154,14 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("empty tree does not contain min and max values")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         CHECK(tree.get_min() == std::nullopt);
         CHECK(tree.get_max() == std::nullopt);
     }
 
     SUBCASE("min and max value are equal inside a single element tree")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(15);
         CHECK(tree.get_min() == 15);
         CHECK(tree.get_max() == 15);
@@ -168,7 +169,7 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("min and max values are updated on insertion")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(123);
         CHECK(tree.get_min() == 123);
         CHECK(tree.get_max() == 123);
@@ -188,7 +189,7 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("after one insert and one remove tree is empty")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(215);
         tree.remove(215);
         CHECK(tree.get_min() == std::nullopt);
@@ -196,7 +197,7 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("removing twice is possible")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(67);
         tree.remove(67);
         tree.remove(67);
@@ -205,7 +206,7 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("inserting twice is possible")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(67);
         tree.insert(67);
         tree.remove(67);
@@ -214,7 +215,7 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("removing one elements does not affect another")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(67);
         tree.insert(49);
         tree.remove(67);
@@ -224,7 +225,7 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("min and max are updated after removing elements")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(24);
         tree.insert(36);
         tree.insert(47);
@@ -251,21 +252,21 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("next value is empty for empty tree")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         CHECK(tree.get_next(17) == std::nullopt);
         CHECK(tree.get_next(42) == std::nullopt);
     }
 
     SUBCASE("prev value is empty for empty tree")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         CHECK(tree.get_prev(17) == std::nullopt);
         CHECK(tree.get_prev(42) == std::nullopt);
     }
 
     SUBCASE("next value works with single element trees")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(64);
         CHECK(tree.get_next(17) == 64);
         CHECK(tree.get_next(63) == 64);
@@ -276,7 +277,7 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("prev value works with single element trees")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(64);
         CHECK(tree.get_prev(17) == std::nullopt);
         CHECK(tree.get_prev(63) == std::nullopt);
@@ -287,7 +288,7 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("next value works with multiple element trees")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(24);
         tree.insert(36);
         tree.insert(47);
@@ -304,7 +305,7 @@ TEST_CASE("Vebtree Tests")
 
     SUBCASE("prev value works with multiple element trees")
     {
-        algo::Vebtree<uint16_t, 256> tree;
+        Vebtree<uint16_t, 256> tree;
         tree.insert(24);
         tree.insert(36);
         tree.insert(47);
@@ -324,7 +325,7 @@ TEST_CASE("Vebtree Tests")
         std::vector<uint16_t> values = {
             4, 7, 12, 3, 96, 77, 88, 34, 52
         };
-        algo::vebsort<256>(values);
+        vebsort<256>(values);
         REQUIRE(values.size() == 9);
         CHECK(values[0] == 3);
         CHECK(values[1] == 4);

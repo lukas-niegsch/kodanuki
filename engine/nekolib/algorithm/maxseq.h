@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/maths/indices.h"
+#include "engine/nekolib/algorithm/indices.h"
 #include <algorithm>
 #include <limits>
 #include <vector>
@@ -14,7 +14,7 @@ namespace kodanuki
  * @return The largest sum of all subarrays.
  */
 template <typename T>
-T kadane_maxsum(std::vector<T> elements)
+T kadane_maxsum(const std::vector<T>& elements)
 {
 	T sum_max = 0;
 	T sum_tmp = 0;
@@ -33,7 +33,7 @@ T kadane_maxsum(std::vector<T> elements)
  * @return The length of the largest increasing subsequence.
  */
 template <typename T>
-int young_maxseq(std::vector<T> elements)
+int young_maxseq(const std::vector<T>& elements)
 {
 	std::vector<T> endings;
 	for (auto& element : elements) {

@@ -1,38 +1,13 @@
 #pragma once
-#include "engine/central/utility/type_name.h"
-#include <iterator>
-#include <iostream>
+#include "engine/nekolib/templates/type_name.h"
+#include "engine/nekolib/templates/iterable.h"
+#include "engine/nekolib/templates/printable.h"
 #include <sstream>
-#include <stdexcept>
-
-#define ERROR(reason)									\
-	do {												\
-		std::stringstream err;							\
-		err << reason << '\n';							\
-		err << "File: " << __FILE__ << '\n';			\
-		err << "Line: " << __LINE__ << '\n';			\
-		std::cout << err.str();							\
-		std::terminate(); 								\
-	} while (false)
-
-
-#define CHECK_RESULT(result, value)						\
-	do {												\
-		auto return_type = result;						\
-		if (return_type != value) {						\
-			ERROR(stringify(return_type));			    \
-		}												\
-	} while (false)
+#include <string>
 
 
 namespace kodanuki
 {
-
-template <typename T>
-concept printable = requires (T v, std::ostream& os) { os << v; };
-
-template <typename T>
-concept iterable = requires (T v) { std::begin(v); std::end(v); };
 
 /**
  * Converts the given structure to its string representation.

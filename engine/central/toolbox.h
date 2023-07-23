@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/central/entity.h"
 #include "engine/central/storage.h"
-#include "engine/central/utility/sorted_intersection.h"
+#include "engine/nekolib/algorithm/sorted_intersection.h"
 
 namespace kodanuki
 {

@@ -5,6 +5,7 @@
 #include "engine/central/entity.h"
 #include "engine/central/archetype.h"
 #include <ncurses.h>
+#include <string>
 using namespace kodanuki;
 
 void initialize_ncurses()

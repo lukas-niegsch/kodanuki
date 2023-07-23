@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/central/utility/debug.h"
+#include "engine/nekolib/debug.h"
 #include "extern/SPIRV-Reflect/spirv_reflect.h"
 #include <vulkan/vulkan.h>
 
