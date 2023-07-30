@@ -1,7 +1,6 @@
 #pragma once
 #include "engine/nekolib/templates/type_name.h"
-#include "engine/nekolib/templates/iterable.h"
-#include "engine/nekolib/templates/printable.h"
+#include "engine/nekolib/templates/concepts.h"
 #include <sstream>
 #include <string>
 
