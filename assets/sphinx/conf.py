@@ -17,10 +17,14 @@ copyright = '2023, Lukas Niegsch'
 author = 'Lukas Niegsch'
 
 extensions = [
-    'sphinx_rtd_theme',
-    'sphinx_copybutton'
+	'sphinx_rtd_theme',
+	'sphinx_copybutton'
 ]
 
 html_theme = 'sphinx_rtd_theme'
 pygments_style = 'manni'
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+html_theme_options = {
+	"collapse_navigation" : False
+}
