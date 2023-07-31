@@ -1,63 +1,55 @@
 Central Module
 ==============
 
-This module contains the entity component system. Each entity is just
-some id and components are arbitrary types. It also provides methods
-for manipulating and iterating over components.
+This module contains the entity component system. Each entity is
+an integer ID and components are arbitrary types. It provides methods
+for manipulating the components of each entity. Systems iterate over
+archetypes which are collections of multiple components. It allows the
+systems to modify all entities which have the required components.
 
 Overview
 ~~~~~~~~
 
-All methods start with the ``ECS`` prefix. For example you can create
-some new entity with
+The following UML class diagram shows an overview of the entity component
+system (`ECS <https://en.wikipedia.org/wiki/Entity_component_system>`_).
 
-.. code-block:: cpp
+.. image:: ../../images/central_overview.svg
+	:align: center
 
-	Entity entity = ECS::create();
+|
 
-This is the prefered way to create entities. The method generates unique
-ids for each entity (thread-safe). While possible, this id should never
-change, as it is used to identify components.
+The class ``ECS`` provides the main interface for this module. It provides
+methods for creating entities, and updating or removing components. There
+is one ``storage`` class for each component type which stores them in
+contiguous memory. The ECS maps the ``entity`` keys to positions inside
+the storage. Each ``archetype`` can iterate over multiple storage types.
 
-Each entity contains multiple components added with the update method.
+This software pattern splits the responsibilities of data and behavior
+between entities and systems. Entities only define which components they
+have which are usually only data classes with utility methods. Systems
+define the logic between components belonging to specific archetypes. Thus,
+this pattern favors composition and the reusability of components.
 
-.. code-block:: cpp
+For example consider a player inside some game. This player can have some
+position and velocity.
 
-	ECS::update<Position>(entity, position);
-	ECS::update<Velocity>(entity, velocity);
+.. code-block::
 
-Each unique type yields a different components. Calling this method twice
-with the same type overwrites the previous value. The reverse operation is
-given by the remove method.
+	Entity player = ECS::create();
+	ECS::update<Position>(player, position);
+	ECS::update<Velocity>(player, velocity);
 
-.. code-block:: cpp
+Then, the player moves by iterating over all entities with the position and
+velocity components.
 
-	ECS::remove<Position>(entity);
-	ECS::remove<velocity>(entity);
+.. code-block::
 
-All components are stored in contiguous memory for each unqiue type. So all
-positions are next to each other, but not velocities. This makes this
-pattern cache friendly.
+	using MoveSystem = Archetype<Iterate<Position, Velocity>>;
+	for (auto[pos, vel] : ECS::iterate<MoveSystem>()) {
+		pos += delta_time * velocity;
+	}
 
-The last important concepts are archetypes. These combine multiple components
-are are used for iteration. We rely heavily on templates to define these.
-
-.. code-block:: cpp
-
-	using System = Archetype<Iterate<Position, Velocity>>;
-	for (auto[pos, vel] : ECS::iterate<System>()) {}
-
-Here we iterate over all entities that have both the position and velocity
-component. This might be used in some physics system to update the position
-based on their velocity.
-
-.. note::
-
-	These are only the most important methods, there are others that will
-	be explained later.
-
-Interface
-~~~~~~~~~
-
-Archetype
-~~~~~~~~~
+An enemy entity could also have both components and thus is also affected
+by the movement system. But a tree entity which probably has no velocity
+would not be affected. We will cover all methods inside the ECS in the
+following chapters.
