@@ -812,10 +812,10 @@ controlflow {
 <ref refid="76ff6678-2f31-11ee-bc20-3ca0676b98f1"/>
 </association>
 <lowerValue>
-<val>0</val>
+<val>1</val>
 </lowerValue>
 <lowerValue>
-<val>0</val>
+<val>1</val>
 </lowerValue>
 <owningAssociation>
 <ref refid="76ff6678-2f31-11ee-bc20-3ca0676b98f1"/>

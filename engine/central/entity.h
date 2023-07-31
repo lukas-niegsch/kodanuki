@@ -26,7 +26,11 @@ typedef std::optional<uint64_t> Entity;
 class ECS
 {
 public:
-	// Creates a new entity with a unique identifier.
+	/**
+	 * Creates a new entity with a unique identifier.
+	 *
+	 * @param parent The potential parent for this entity.
+	 */
 	static Entity create(Entity parent = std::nullopt);
 
 	// Updates the given component inside the entity.

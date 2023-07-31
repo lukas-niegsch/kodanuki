@@ -7,4 +7,3 @@ Welcome to Kodanuki's documentation!
 	chapters/intro.rst
 	chapters/target.rst
 	chapters/module.rst
-	_build/api/api.rst

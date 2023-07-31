@@ -22,7 +22,8 @@ The class ``ECS`` provides the main interface for this module. It provides
 methods for creating entities, and updating or removing components. There
 is one ``storage`` class for each component type which stores them in
 contiguous memory. The ECS maps the ``entity`` keys to positions inside
-the storage. Each ``archetype`` can iterate over multiple storage types.
+the storage based on component types. Each ``archetype`` can iterate over
+multiple storage types.
 
 This software pattern splits the responsibilities of data and behavior
 between entities and systems. Entities only define which components they
@@ -30,8 +31,11 @@ have which are usually only data classes with utility methods. Systems
 define the logic between components belonging to specific archetypes. Thus,
 this pattern favors composition and the reusability of components.
 
-For example consider a player inside some game. This player can have some
-position and velocity.
+Example
+~~~~~~~
+
+Consider a player entity inside some game. This player can have position and
+velocity components.
 
 .. code-block::
 
@@ -39,8 +43,9 @@ position and velocity.
 	ECS::update<Position>(player, position);
 	ECS::update<Velocity>(player, velocity);
 
-Then, the player moves by iterating over all entities with the position and
-velocity components.
+The update method adds or updates the component of the entity depending on
+whether the method has been called previously. Afterward, the player moves
+by iterating over all entities with the position and velocity components.
 
 .. code-block::
 
@@ -51,5 +56,25 @@ velocity components.
 
 An enemy entity could also have both components and thus is also affected
 by the movement system. But a tree entity which probably has no velocity
-would not be affected. We will cover all methods inside the ECS in the
-following chapters.
+would not be affected. Components can be changed dynamically:
+
+.. code-block::
+
+	if (ECS::has<Position>(player)) {
+		Position& position = ECS::get<Position>(player);
+		position.x += 20;
+	}
+	ECS::remove<Velocity>(player);
+
+Here, we teleported the player 20 units in x-direction. We also removed
+the velocity. The player would also freeze since it no longer satisfies
+the requirements of the movement system.
+
+Details
+~~~~~~~
+
+.. toctree::
+	
+	central/archetype.rst
+	central/entity.rst
+	central/storage.rst

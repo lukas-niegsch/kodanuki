@@ -19,8 +19,7 @@ author = 'Lukas Niegsch'
 extensions = [
 	'sphinx_rtd_theme',
 	'sphinx_copybutton',
-	'breathe',
-	'exhale'
+	'breathe'
 ]
 
 html_theme = 'sphinx_rtd_theme'
@@ -36,13 +35,6 @@ breathe_projects = {
 }
 breathe_default_project = 'engine'
 
-exhale_args = {
-	"containmentFolder":     "_build/api",
-	"rootFileName":          "api.rst",
-	"rootFileTitle":         "Engine API reference",
-	"doxygenStripFromPath":  "..",
-	"createTreeView":        True,
-}
-
 primary_domain = 'cpp'
 highlight_language = 'cpp'
+html_show_sphinx = False
