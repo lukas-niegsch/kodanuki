@@ -181,7 +181,7 @@ class ShadersTarget(Target):
 			add    = 'A[] + B[]',
 			sub    = 'A[] - B[]',
 			div    = 'A[] / B[]',
-			eq     = 'float(abs(A[] - B[]) <= params.elipson)',
+			eq     = 'float(abs(A[] - B[]) <= params.epsilon)',
 			le     = 'float(A[] < B[])',
 			ge     = 'float(A[] > B[])',
 			leg    = 'float(A[] <= B[])',
@@ -253,15 +253,6 @@ class ValgrindTarget(CompileTarget):
 		# command = f'valgrind ---leak-check=full --show-leak-kinds=all --log-file="valgrind.out" {args.out_dir}/{args.project}'
 		subprocess.call(command, shell = True)
 
-class ProfilerTarget(RunTarget):
-	''' Profiles the executed code using gprof. '''
-
-	def validate(self, args):
-		super().validate(args)
-
-	def execute(self, args):
-		super().execute(args)
-		subprocess.call(f'gprof {args.out_dir}/{args.project}', shell = True)
 
 class SphinxTarget(Target):
 	''' Builds the documentation using sphinx. '''
