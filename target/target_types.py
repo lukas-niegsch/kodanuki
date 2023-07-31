@@ -273,4 +273,6 @@ class SphinxTarget(Target):
 		super().execute(args)
 		my_env = os.environ.copy()
 		my_env['LC_ALL'] = 'en_GB.UTF-8'
+		subprocess.call(f'mkdir -p {args.src_dir}/assets/sphinx/_build', shell = True)
+		subprocess.call(f'doxygen {args.src_dir}/assets/sphinx/doxygen.cfg', shell = True)
 		subprocess.call(f'make -C {args.src_dir}/assets/sphinx html', shell = True, env = my_env) 

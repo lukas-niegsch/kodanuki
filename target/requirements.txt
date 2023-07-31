@@ -5,6 +5,8 @@ sphinx
 sphinx-copybutton
 sphinx-rtd-theme
 Pygments
+breathe
+exhale
 
 # Only for target 'stats'
 pygount

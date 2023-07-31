@@ -18,13 +18,31 @@ author = 'Lukas Niegsch'
 
 extensions = [
 	'sphinx_rtd_theme',
-	'sphinx_copybutton'
+	'sphinx_copybutton',
+	'breathe',
+	'exhale'
 ]
 
 html_theme = 'sphinx_rtd_theme'
 pygments_style = 'manni'
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['Thumbs.db', '.DS_Store']
 
 html_theme_options = {
 	"collapse_navigation" : False
 }
+
+breathe_projects = {
+	'engine': '_build/doxygen/xml'
+}
+breathe_default_project = 'engine'
+
+exhale_args = {
+	"containmentFolder":     "_build/api",
+	"rootFileName":          "api.rst",
+	"rootFileTitle":         "Engine API reference",
+	"doxygenStripFromPath":  "..",
+	"createTreeView":        True,
+}
+
+primary_domain = 'cpp'
+highlight_language = 'cpp'
