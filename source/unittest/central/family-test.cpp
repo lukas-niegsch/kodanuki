@@ -10,11 +10,10 @@ TEST_CASE("family tests")
 	{
 		Entity entity = ECS::create();
 		Family& family = ECS::get<Family>(entity);
-		CHECK(family.root == entity);
-		CHECK(family.parent == invalid);
-		CHECK(family.itself == entity);
-		CHECK(family.siblings.size() == 0);
-		CHECK(family.children.size() == 0);
+		CHECK(family.get_root() == entity);
+		CHECK(family.get_parent() == invalid);
+		CHECK(family.get_siblings().size() == 0);
+		CHECK(family.get_children().size() == 0);
 	}
 
 	SUBCASE("children")
@@ -25,31 +24,27 @@ TEST_CASE("family tests")
 		Entity childB = ECS::create(entity);
 
 		Family& parentFamily = ECS::get<Family>(parent);
-		CHECK(parentFamily.root == parent);
-		CHECK(parentFamily.parent == invalid);
-		CHECK(parentFamily.itself == parent);
-		CHECK(parentFamily.siblings.size() == 0);
-		CHECK(parentFamily.children.size() == 1);
+		CHECK(parentFamily.get_root() == parent);
+		CHECK(parentFamily.get_parent() == invalid);
+		CHECK(parentFamily.get_siblings().size() == 0);
+		CHECK(parentFamily.get_children().size() == 1);
 
 		Family& entityFamily = ECS::get<Family>(entity);
-		CHECK(entityFamily.root == parent);
-		CHECK(entityFamily.parent == parent);
-		CHECK(entityFamily.itself == entity);
-		CHECK(entityFamily.siblings.size() == 0);
-		CHECK(entityFamily.children.size() == 2);
+		CHECK(entityFamily.get_root() == parent);
+		CHECK(entityFamily.get_parent() == parent);
+		CHECK(entityFamily.get_siblings().size() == 0);
+		CHECK(entityFamily.get_children().size() == 2);
 	
 		Family& childFamilyA = ECS::get<Family>(childA);
-		CHECK(childFamilyA.root == parent);
-		CHECK(childFamilyA.parent == entity);
-		CHECK(childFamilyA.itself == childA);
-		CHECK(childFamilyA.siblings.size() == 1);
-		CHECK(childFamilyA.children.size() == 0);
+		CHECK(childFamilyA.get_root() == parent);
+		CHECK(childFamilyA.get_parent() == entity);
+		CHECK(childFamilyA.get_siblings().size() == 1);
+		CHECK(childFamilyA.get_children().size() == 0);
 
 		Family& childFamilyB = ECS::get<Family>(childB);
-		CHECK(childFamilyB.root == parent);
-		CHECK(childFamilyB.parent == entity);
-		CHECK(childFamilyB.itself == childB);
-		CHECK(childFamilyB.siblings.size() == 1);
-		CHECK(childFamilyB.children.size() == 0);
+		CHECK(childFamilyB.get_root() == parent);
+		CHECK(childFamilyB.get_parent() == entity);
+		CHECK(childFamilyB.get_siblings().size() == 1);
+		CHECK(childFamilyB.get_children().size() == 0);
 	}
 };

@@ -3,107 +3,48 @@
 #include "engine/central/family.h"
 #include <cassert>
 
-namespace kodanuki {
-
-void ExitLocalFamily(Family& family, Entity oldParent)
+namespace kodanuki
 {
-	family.parent = {};
-	Family& parentFamily = ECS::get<Family>(oldParent);
-	parentFamily.children.erase(family.itself);
 
-	for (Entity sibling : family.siblings)
-	{
-		Family& siblingFamily = ECS::get<Family>(sibling);
-		siblingFamily.siblings.erase(family.itself);
-	}
-
-	family.siblings.clear();
-}
-
-void EnterLocalFamily(Family& family, Entity newParent)
+Family::Family(Entity entity, Entity parent) noexcept
 {
-	family.parent = newParent;
-	Family& parentFamily = ECS::get<Family>(newParent);
+	this->itself = entity;
+	this->parent = parent;
 	
-	for (Entity sibling : parentFamily.children)
-	{
-		Family& siblingFamily = ECS::get<Family>(sibling);
-		siblingFamily.siblings.insert(family.itself);
-		family.siblings.insert(sibling);
+	if (parent) {
+		ECS::get<Family>(parent).children.insert(entity);
 	}
-
-	parentFamily.children.insert(family.itself);
 }
 
-void UpdateRootRecursive(Family& family, Entity newRoot)
+void Family::set_parent(Entity parent) noexcept
 {
-	family.root = newRoot;
-
-	for (Entity child : family.children)
-	{
-		Family& childFamily = ECS::get<Family>(child);
-		UpdateRootRecursive(childFamily, newRoot);
-	}
+	this->parent = parent;
 }
 
-// GCC Bugzilla #104606: remove pragmas once the bug is fixed
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-void UpdateRoot(Family& family, Entity oldParent, Entity newParent)
-{	
-	Entity oldRoot = oldParent ? ECS::get<Family>(oldParent).root : std::nullopt;
-	Entity newRoot = newParent ? ECS::get<Family>(newParent).root : std::nullopt;
-	
-	if (oldRoot == newRoot)
-	{
-		return;
-	}
-
-	UpdateRootRecursive(family, newRoot ? newRoot : family.itself);
-}
-#pragma GCC diagnostic pop
-
-void UpdateLocalFamily(Entity entity, Entity newParent)
+Entity Family::get_root() const noexcept
 {
-	Family& family = ECS::get<Family>(entity);
-	Entity oldParent = family.parent;
-
-	if (oldParent == newParent)
-	{
-		return;
-	}
-
-	if (oldParent)
-	{
-		ExitLocalFamily(family, oldParent);
-	}
-
-	if (newParent)
-	{
-		EnterLocalFamily(family, newParent);
-	}
-
-	UpdateRoot(family, oldParent, newParent);
+	return parent ? ECS::get<Family>(parent).get_root() : itself;
 }
 
-void UpdateDefaultFamily(Entity entity)
+Entity Family::get_parent() const noexcept
 {
-	ECS::update<Family>(entity, {});
-	ECS::get<Family>(entity).itself = entity;
-	ECS::get<Family>(entity).root = entity;
+	return parent;
 }
 
-void update_family(Entity entity, Entity newParent)
+std::unordered_set<Entity> Family::get_siblings() const noexcept
 {
-	assert(entity);
-	assert(!newParent || ECS::has<Family>(newParent));
-
-	if (!ECS::has<Family>(entity))
-	{
-		UpdateDefaultFamily(entity);
+	if (!parent) {
+		return {};
 	}
+	Family& parent_family = ECS::get<Family>(parent);
+	std::unordered_set<Entity> siblings = parent_family.children;
+	siblings.erase(itself);
+	return siblings;
+}
 
-	UpdateLocalFamily(entity, newParent);
+std::unordered_set<Entity> Family::get_children() const noexcept
+{
+	return children;
 }
 
 }

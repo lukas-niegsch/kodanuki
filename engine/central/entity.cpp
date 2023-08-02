@@ -7,19 +7,23 @@ namespace kodanuki
 
 Entity ECS::create(Entity parent)
 {
-	uint64_t id = count();
-	Entity entity = std::make_optional<uint64_t>(id);
+	Entity entity = std::make_optional<uint64_t>(count());
 	ECS::update<Entity>(entity, entity);
-	update_family(entity, parent);
+	ECS::update<Family>(entity, {entity, parent});
 	return entity;
 }
 
-void ECS::clear(Entity entity)
+void ECS::clear(Entity entity, bool initial)
 {
-	update_family(entity, std::nullopt);
-	std::set<Entity> children = ECS::get<Family>(entity).children;
-	for (Entity child : children) {
-		ECS::clear(child);
+	if (!ECS::has<Entity>(entity)) {
+		return;
+	}
+	Family& family = ECS::get<Family>(entity);
+	if (initial) {
+		family.set_parent(std::nullopt);
+	}
+	for (Entity child : family.get_children()) {
+		ECS::clear(child, false);
 	}
 	mapping.remove(entity.value());
 }

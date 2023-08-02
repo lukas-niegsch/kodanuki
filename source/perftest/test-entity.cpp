@@ -30,7 +30,7 @@ TEST_CASE("example usage")
                 CHECK(ECS::has<B>(grandchild));
                 CHECK(ECS::has<C>(grandchild));
 
-                CHECK(ECS::get<Family>(grandchild).root == root);
+                CHECK(ECS::get<Family>(grandchild).get_root() == root);
             }
 
             ECS::remove<A>(child);

@@ -70,7 +70,7 @@ public:
 			return;
 		}
 		bindings_count.erase(sid);
-		dense.remove(key);
+		dense.remove(sid);
 	}
 
 	/**
