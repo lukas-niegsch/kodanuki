@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/central/utility/counter.h"
+#include "engine/nekolib/container/dense_map.h"
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -69,14 +70,7 @@ public:
 			return;
 		}
 		bindings_count.erase(sid);
-		uint64_t this_position = sparse_forward[sid];
-		uint64_t last_position = dense.size() - 1;
-		dense[this_position] = std::move(dense.back());
-		dense.pop_back();
-		std::swap(sparse_inverse[this_position], sparse_inverse[last_position]);
-		sparse_forward[sparse_inverse[this_position]] = this_position;
-		sparse_forward.erase(sparse_inverse[last_position]);
-		sparse_inverse.erase(last_position);
+		dense.remove(key);
 	}
 
 	/**
@@ -107,7 +101,7 @@ public:
 	T& operator[](uint64_t key)
 	{
 		assert(contains(key));
-		return dense[sparse_forward[bindings[key]]];
+		return dense[bindings[key]];
 	}
 
 	/**
@@ -148,21 +142,16 @@ public:
 private:
 	void insert(uint64_t key, T value)
 	{
-		dense.push_back(value);
 		uint64_t sid = count();
-		uint64_t pos = dense.size() - 1;
 		bindings[key] = sid;
-		sparse_forward[sid] = pos;
-		sparse_inverse[pos] = sid;
 		bindings_count[sid] = 1;
+		dense.update(sid, value);
 	}
 
 private:
 	std::unordered_map<uint64_t, uint64_t> bindings;
 	std::unordered_map<uint64_t, uint64_t> bindings_count;
-	std::unordered_map<uint64_t, uint64_t> sparse_forward;
-	std::unordered_map<uint64_t, uint64_t> sparse_inverse;
-	std::vector<T> dense;
+	DenseMap<uint64_t, T> dense;
 };
 
 /**
@@ -203,6 +192,5 @@ private:
 	static inline Mapping mapping;
 	static inline Remover remover;
 };
-
 
 }
