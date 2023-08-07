@@ -145,18 +145,12 @@ public:
 	template <typename T>
 	static void swap(Entity source, Entity target)
 	{
-		if (!has<T>(source)) {
-			move<T>(target, source);
+		if (has<T>(source) && has<T>(target)) {
+			std::swap(get<T>(source), get<T>(target));
 			return;
 		}
-		if (!has<T>(target)) {
-			move<T>(source, target);
-			return;
-		}
-		auto source_value = get<T>(source);
-		auto target_value = get<T>(target);
-		update<T>(target, source_value);
-		update<T>(source, target_value);
+		move<T>(target, source);
+		move<T>(source, target);
 	}
 
 	/**
