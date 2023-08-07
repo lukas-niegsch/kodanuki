@@ -294,4 +294,28 @@ Wrapper<VkImage> create_image(VkDevice device, VkImageCreateInfo info)
 	);
 }
 
+Wrapper<VkDescriptorSetLayout> create_descriptor_layout(VkDevice device, SpvReflectShaderModule shader_module)
+{
+	auto reflect_bindings = vectorize<spvReflectEnumerateDescriptorBindings>(&shader_module);
+
+	std::vector<VkDescriptorSetLayoutBinding> bindings(reflect_bindings.size());
+	for (uint32_t i = 0; i < bindings.size(); i++) {
+		bindings[i] = {
+			.binding = reflect_bindings[i]->binding,
+			.descriptorType = static_cast<VkDescriptorType>(reflect_bindings[i]->descriptor_type),
+			.descriptorCount = reflect_bindings[i]->count,
+			.stageFlags = shader_module.shader_stage,
+			.pImmutableSamplers = nullptr
+		};
+	}
+
+	return create_wrapper<vkCreateDescriptorSetLayout, vkDestroyDescriptorSetLayout>({
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.bindingCount = static_cast<uint32_t>(bindings.size()),
+		.pBindings = bindings.data()
+	}, device);
+}
+
 }

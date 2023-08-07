@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/nekolib/templates/signature.h"
 #include "engine/vulkan/debug.h"
+#include "extern/SPIRV-Reflect/spirv_reflect.h"
 #include <vulkan/vulkan.h>
 #include <functional>
 #include <memory>
@@ -286,5 +287,15 @@ Wrapper<VkRenderPass> create_renderpass(VkDevice device, std::function<void(VkDe
  * @return The wrapper around the vulkan image.
  */
 Wrapper<VkImage> create_image(VkDevice device, VkImageCreateInfo info);
+
+/**
+ * Descriptor layout holds information about shader descriptor
+ * bindings such as size, offset, access fequency.
+ *
+ * @param device The device that stores the descriptor layout.
+ * @param shader_module The parser that retrieves the information.
+ * @return The wrapper around the descriptor layout.
+ */
+Wrapper<VkDescriptorSetLayout> create_descriptor_layout(VkDevice device, SpvReflectShaderModule shader_module);
 
 }
