@@ -333,7 +333,7 @@ float VulkanTensor::execute(std::string name, std::vector<VulkanTensor> tensors,
 
 	if (!cache.contains(name)) {
 		std::string filename = std::string("assets/shaders/") + name + ".comp.spv";
-		cache.emplace(name, VulkanPipeline::from_comp_file(device, filename));
+		cache.emplace(name, VulkanPipeline(device, VulkanShader(device, filename.c_str())));
 	}
 	VulkanPipeline shader = cache.at(name);
 

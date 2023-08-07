@@ -7,7 +7,7 @@
 namespace kodanuki
 {
 
-VkPipelineShaderStageCreateInfo create_shader_stage(Wrapper<VkShaderModule> shader, VkShaderStageFlagBits bit)
+VkPipelineShaderStageCreateInfo create_shader_stage(VkShaderModule shader, VkShaderStageFlagBits bit)
 {
 	VkPipelineShaderStageCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -73,6 +73,7 @@ struct PipelineState
 	VkPipeline pipeline;
 	VkPipelineLayout layout;
 	VkDescriptorSetLayout descriptor;
+	Wrapper<VkDescriptorSetLayout> descriptor2;
 	Wrapper<VkDescriptorSet> descriptor_set;
 	~PipelineState();
 };
@@ -97,77 +98,35 @@ VulkanPipeline::VulkanPipeline(GraphicsPipelineBuilder builder)
 		pimpl->device.get_descriptor_pool(), pimpl->descriptor);
 }
 
-VulkanPipeline::VulkanPipeline(ComputePipelineBuilder builder)
+VulkanPipeline::VulkanPipeline(VulkanDevice device, VulkanShader shader)
 {
-	pimpl = std::make_shared<PipelineState>(builder.device);
-	
-	VkDescriptorSetLayoutCreateInfo descriptor_layout_info = {};
-	descriptor_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	descriptor_layout_info.bindingCount = static_cast<uint32_t>(builder.bindings.size());
-	descriptor_layout_info.pBindings = builder.bindings.data();
-	CHECK_VULKAN(vkCreateDescriptorSetLayout(builder.device, &descriptor_layout_info, nullptr, &pimpl->descriptor));
-
-	VkPushConstantRange push_constant_range = {};
-	push_constant_range.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-	push_constant_range.offset = 0;
-	push_constant_range.size = builder.push_constant_byte_size;
+	pimpl = std::make_shared<PipelineState>(device);
+	VkDescriptorSetLayout layout = pimpl->descriptor2 = shader.get_descriptor_layout();
+	VkPushConstantRange push_constant_range = shader.get_push_constant_range();
 
 	VkPipelineLayoutCreateInfo layout_info = {};
-    layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    layout_info.pNext = nullptr;
-    layout_info.flags = 0;
-    layout_info.setLayoutCount = 1;
-    layout_info.pSetLayouts = &pimpl->descriptor;
-    layout_info.pushConstantRangeCount = 1;
-    layout_info.pPushConstantRanges = &push_constant_range;
-	CHECK_VULKAN(vkCreatePipelineLayout(builder.device, &layout_info, nullptr, &pimpl->layout));
+	layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	layout_info.pNext = nullptr;
+	layout_info.flags = 0;
+	layout_info.setLayoutCount = 1;
+	layout_info.pSetLayouts = &layout;
+	layout_info.pushConstantRangeCount = 1;
+	layout_info.pPushConstantRanges = &push_constant_range;
+	CHECK_VULKAN(vkCreatePipelineLayout(device, &layout_info, nullptr, &pimpl->layout));
 
 	VkComputePipelineCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
 	info.pNext = nullptr;
 	info.flags = 0;
-	info.stage = create_shader_stage(builder.compute_shader, VK_SHADER_STAGE_COMPUTE_BIT);
+	info.stage = create_shader_stage(shader, shader.get_stage());
 	info.layout = pimpl->layout;
 	info.basePipelineHandle = VK_NULL_HANDLE;
 	info.basePipelineIndex = -1;
-	CHECK_VULKAN(vkCreateComputePipelines(builder.device, VK_NULL_HANDLE, 1, &info, nullptr, &pimpl->pipeline));
+	CHECK_VULKAN(vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &info, nullptr, &pimpl->pipeline));
 	
-	pimpl->descriptor_set = create_descriptor_set(pimpl->device,
-		pimpl->device.get_descriptor_pool(),
-		pimpl->descriptor);
-}
-
-VulkanPipeline VulkanPipeline::from_comp_file(VulkanDevice device, std::string filename)
-{
-	std::vector<char> code = read_file_into_buffer(filename);
-	
-	SpvReflectShaderModule reflect_module;
-	CHECK_SPIRV(spvReflectCreateShaderModule(code.size(), code.data(), &reflect_module));
-
-	auto reflect_bindings = vectorize<spvReflectEnumerateDescriptorBindings>(&reflect_module);
-	std::vector<VkDescriptorSetLayoutBinding> bindings(reflect_bindings.size());
-	for (uint32_t i = 0; i < bindings.size(); i++) {
-		const SpvReflectDescriptorBinding* spv_binding = reflect_bindings[i];
-		VkDescriptorSetLayoutBinding& binding = bindings[i];
-		binding.binding = spv_binding->binding;
-		binding.descriptorType = static_cast<VkDescriptorType>(spv_binding->descriptor_type);
-		binding.descriptorCount = spv_binding->count;
-		binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-		binding.pImmutableSamplers = nullptr;
-	}
-
-	auto push_constants = vectorize<spvReflectEnumeratePushConstantBlocks>(&reflect_module);
-	assert(push_constants.size() == 1); // Only one push constant block allowed!
-
-	ComputePipelineBuilder builder = {
-		.device = device,
-		.compute_shader = create_shader_module(device, code),
-		.push_constant_byte_size = 128,
-		.bindings = bindings
-	};
-
-	spvReflectDestroyShaderModule(&reflect_module);
-	return VulkanPipeline(builder);
+	pimpl->descriptor_set = create_descriptor_set(device,
+		device.get_descriptor_pool(),
+		pimpl->descriptor2);
 }
 
 VulkanPipeline::operator VkPipeline()

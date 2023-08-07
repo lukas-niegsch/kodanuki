@@ -56,6 +56,9 @@ public:
 	Wrapper<VkDescriptorSetLayout> get_descriptor_layout() const;
 
 	/**
+	 * Currently assumes that there exist at most one push constant
+	 * block for each shader! The size is at most 128 bytes.
+	 *
 	 * @return The push constant range of the shader.
 	 */
 	VkPushConstantRange get_push_constant_range() const;

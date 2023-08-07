@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/vulkan/device.h"
 #include "engine/vulkan/target.h"
+#include "engine/vulkan/shader.h"
 #include "engine/vulkan/debug.h"
 #include "engine/vulkan/wrapper.h"
 #include <vulkan/vulkan.h>
@@ -72,32 +73,6 @@ struct GraphicsPipelineBuilder
 };
 
 /**
- * Contains all the configurable information for creating a compute pipeline.
- *
- * These values will be considered as much as possible when creating
- * the compute pipeline. The caller has to make sure that the provided
- * values make sense.
- *
- * Example:
- * The compute shader must be formatted correctly.
- * Descriptor sets must match the bindings in the compute shader.
- */
-struct ComputePipelineBuilder
-{
-	// The vulkan device for which the pipeline is created.
-	VulkanDevice device;
-
-	// The handle to the compute shader module.
-	Wrapper<VkShaderModule> compute_shader;
-
-	// The number of bytes inside the push_constant field.
-	uint32_t push_constant_byte_size;
-
-	// The bindings that the pipeline has.
-	std::vector<VkDescriptorSetLayoutBinding> bindings;
-};
-
-/**
  * The vulkan pipeline is a wrapper around the pipeline and render pass.
  *
  * Each vulkan pipeline creates a pipeline and render pass from the given
@@ -113,11 +88,8 @@ public:
 	// Creates a new vulkan pipeline from the given builder.
 	VulkanPipeline(GraphicsPipelineBuilder builder);
 
-	// Creates a new vulkan pipeline from the given builder.
-	VulkanPipeline(ComputePipelineBuilder builder);
-
-	// Automatically creates a vulkan pipeline from the SPIRV file.
-	static VulkanPipeline from_comp_file(VulkanDevice device, std::string filename);
+	// Creates a new vulkan pipeline from the given shader.
+	VulkanPipeline(VulkanDevice device, VulkanShader shader);
 
 	// Returns the handle to the native vulkan pipeline.
 	operator VkPipeline();

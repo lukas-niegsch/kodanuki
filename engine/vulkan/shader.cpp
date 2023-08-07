@@ -2,6 +2,7 @@
 #include "engine/vulkan/debug.h"
 #include "engine/central/utility/file.h"
 #include "extern/SPIRV-Reflect/spirv_reflect.h"
+#include <cassert>
 
 namespace kodanuki
 {
@@ -36,8 +37,13 @@ Wrapper<VkDescriptorSetLayout> VulkanShader::get_descriptor_layout() const
 
 VkPushConstantRange VulkanShader::get_push_constant_range() const
 {
-	// TODO: implement this method !!
-	return {};
+	// TODO: remove default values
+	VkPushConstantRange range = {
+		.stageFlags = get_stage(),
+		.offset = 0,
+		.size = 128
+	};
+	return range;
 }
 
 }
