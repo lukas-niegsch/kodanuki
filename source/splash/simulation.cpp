@@ -58,7 +58,7 @@ void Simulation::update_density()
 		{tensor_density, tensor_position, tensor_mass},
 		{parameters.kernel_size}
 	);
-	std::cout << "update_density: " << time_ns / 1000000 << "ms" << '\n';
+	(void) time_ns; // std::cout << "update_density: " << time_ns / 1000000 << "ms" << '\n';
 }
 
 void Simulation::update_pressure()
@@ -69,7 +69,7 @@ void Simulation::update_pressure()
 	time_ns += vt::execute("vt_op_pow_ic", {tensor_pressure}, {7});
 	time_ns += vt::execute("vt_op_sub_ic", {tensor_pressure}, {1});
 	time_ns += vt::execute("vt_op_mul_ic", {tensor_pressure}, {parameters.stiffness});
-	std::cout << "update_pressure: " << time_ns / 1000000 << "ms" << '\n';
+	(void) time_ns; // std::cout << "update_pressure: " << time_ns / 1000000 << "ms" << '\n';
 }
 
 VulkanTensor Simulation::get_mass()
