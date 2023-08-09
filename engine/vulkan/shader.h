@@ -63,6 +63,11 @@ public:
 	 */
 	VkPushConstantRange get_push_constant_range() const;
 
+	/**
+	 * @return The stage create info for this shader.
+	 */
+	VkPipelineShaderStageCreateInfo get_stage_create_info() const;
+
 private:
 	VulkanDevice device;
 	Wrapper<VkShaderModule> shader_module;

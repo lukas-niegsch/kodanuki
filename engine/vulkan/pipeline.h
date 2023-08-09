@@ -32,18 +32,6 @@ struct GraphicsPipelineBuilder
 	// The layout of the pipeline.
 	VkPipelineLayoutCreateInfo layout_info;
 
-	// The handle to the vertex shader module.
-	std::optional<Wrapper<VkShaderModule>> vertex_shader;
-
-	// The handle to the tesselation shader module.
-	std::optional<Wrapper<VkShaderModule>> tesselation;
-
-	// The handle to the geometry shader module.
-	std::optional<Wrapper<VkShaderModule>> geometry_shader;
-
-	// The handle to the fragment shader module.
-	std::optional<Wrapper<VkShaderModule>> fragment_shader;
-
 	// The configuration of the dynamic state.
 	VkPipelineDynamicStateCreateInfo dynamic_state;
 
@@ -70,6 +58,9 @@ struct GraphicsPipelineBuilder
 
 	// The owned descriptor sets that the pipeline owns.
 	std::vector<VkDescriptorSetLayout> descriptor_sets;
+
+	// The shaders for the various stages.
+	std::vector<VulkanShader> shaders;
 };
 
 /**

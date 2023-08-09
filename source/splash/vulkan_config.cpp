@@ -275,10 +275,6 @@ VulkanPipeline create_render_fluid_pipeline(VulkanDevice device, VulkanTarget ta
 		.device = device,
 		.target = target,
 		.layout_info = layout_info,
-		.vertex_shader = create_shader_module(device, read_file_into_buffer("assets/shaders/fluid.vert.spv")),
-		.tesselation = {},
-		.geometry_shader = {},
-		.fragment_shader = create_shader_module(device, read_file_into_buffer("assets/shaders/fluid.frag.spv")),
 		.dynamic_state = dynamic_state,
 		.vertex_input = vertex_input,
 		.input_assembly = input_assembly,
@@ -287,7 +283,11 @@ VulkanPipeline create_render_fluid_pipeline(VulkanDevice device, VulkanTarget ta
 		.viewport = viewport_info,
 		.multisample = multisample,
 		.depth_stencil = depth_stencil,
-		.descriptor_sets = {mvp_descriptor}
+		.descriptor_sets = {mvp_descriptor},
+		.shaders = {
+			VulkanShader(device, "assets/shaders/fluid.vert.spv"),
+			VulkanShader(device, "assets/shaders/fluid.frag.spv")
+		}
 	};
 
 	return VulkanPipeline(builder);

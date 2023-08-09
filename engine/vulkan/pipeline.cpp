@@ -7,30 +7,11 @@
 namespace kodanuki
 {
 
-VkPipelineShaderStageCreateInfo create_shader_stage(VkShaderModule shader, VkShaderStageFlagBits bit)
-{
-	VkPipelineShaderStageCreateInfo info = {};
-	info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	info.pNext = nullptr;
-	info.stage = bit;
-	info.module = shader;
-	info.pName = "main";
-	info.pSpecializationInfo = nullptr;
-	return info;
-}
-
 void fill_shader_stages(std::vector<VkPipelineShaderStageCreateInfo>& stages, GraphicsPipelineBuilder& builder)
 {
-	auto append_stage = [&](std::optional<Wrapper<VkShaderModule>> shader, VkShaderStageFlagBits bit) {
-		if (shader) {
-			stages.push_back(create_shader_stage(shader.value(), bit));
-		}
-	};
-
-	append_stage(builder.vertex_shader, VK_SHADER_STAGE_VERTEX_BIT);
-	append_stage(builder.tesselation, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
-	append_stage(builder.geometry_shader, VK_SHADER_STAGE_GEOMETRY_BIT);
-	append_stage(builder.fragment_shader, VK_SHADER_STAGE_FRAGMENT_BIT);
+	for (VulkanShader shader : builder.shaders) {
+		stages.push_back(shader.get_stage_create_info());
+	}
 }
 
 std::pair<VkPipeline, VkPipelineLayout> create_graphics_pipeline(GraphicsPipelineBuilder builder)
@@ -118,7 +99,7 @@ VulkanPipeline::VulkanPipeline(VulkanDevice device, VulkanShader shader)
 	info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
 	info.pNext = nullptr;
 	info.flags = 0;
-	info.stage = create_shader_stage(shader, shader.get_stage());
+	info.stage = shader.get_stage_create_info();
 	info.layout = pimpl->layout;
 	info.basePipelineHandle = VK_NULL_HANDLE;
 	info.basePipelineIndex = -1;

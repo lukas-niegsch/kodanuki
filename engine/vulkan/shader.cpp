@@ -46,4 +46,17 @@ VkPushConstantRange VulkanShader::get_push_constant_range() const
 	return range;
 }
 
+VkPipelineShaderStageCreateInfo VulkanShader::get_stage_create_info() const
+{
+	return {
+		.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+		.pNext  = nullptr,
+		.flags  = 0,
+		.stage  = get_stage(),
+		.module = shader_module,
+		.pName  = "main",
+		.pSpecializationInfo = nullptr
+	};
+}
+
 }
