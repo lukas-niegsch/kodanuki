@@ -1,5 +1,4 @@
 #pragma once
-#include "engine/central/utility/counter.h"
 #include "engine/nekolib/container/dense_map.h"
 #include <algorithm>
 #include <any>
@@ -142,8 +141,8 @@ public:
 private:
 	void insert(uint64_t key, T value)
 	{
-		uint64_t sid = count();
-		bindings[key] = sid;
+		static uint64_t sid = 0;
+		bindings[key] = ++sid;
 		bindings_count[sid] = 1;
 		dense.update(sid, value);
 	}

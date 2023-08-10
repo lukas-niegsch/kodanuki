@@ -87,7 +87,7 @@ void VulkanTensor::fill(VulkanTensor& tensor, const T& value)
 
 #else // INCLUDE_TENSOR_INLINE_HEADER
 #include "engine/vulkan/tensor.h"
-#include "engine/central/utility/alignment.h"
+#include "engine/nekolib/algorithm/alignment.h"
 
 namespace kodanuki
 {

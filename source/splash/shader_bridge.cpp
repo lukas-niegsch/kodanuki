@@ -1,5 +1,5 @@
 #include "source/splash/shader_bridge.h"
-#include "engine/central/utility/alignment.h"
+#include "engine/nekolib/algorithm/alignment.h"
 
 namespace kodanuki
 {

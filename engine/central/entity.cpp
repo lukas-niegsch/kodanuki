@@ -1,13 +1,13 @@
 #include "engine/central/entity.h"
 #include "engine/central/family.h"
-#include "engine/central/utility/counter.h"
 
 namespace kodanuki
 {
 
 Entity ECS::create(Entity parent)
 {
-	Entity entity = std::make_optional<uint64_t>(count());
+	static uint64_t sid = 0;
+	Entity entity = std::make_optional<uint64_t>(++sid);
 	ECS::update<Entity>(entity, entity);
 	ECS::update<Family>(entity, {entity, parent});
 	return entity;

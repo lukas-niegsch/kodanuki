@@ -2,7 +2,7 @@
 #include "source/splash/scene.h"
 #include "source/splash/model.h"
 #include "source/splash/simulation.h"
-#include "engine/central/utility/alignment.h"
+#include "engine/nekolib/algorithm/alignment.h"
 #include "engine/vulkan/device.h"
 #include "engine/vulkan/pipeline.h"
 #include "engine/vulkan/tensor.h"

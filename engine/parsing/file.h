@@ -14,4 +14,3 @@ namespace kodanuki
 std::vector<char> read_file_into_buffer(std::string path);
 
 }
-

@@ -15,10 +15,10 @@ namespace kodanuki
 template <typename T, std::size_t modulus>
 struct alignas(modulus) align : T
 {
-    static_assert(std::copyable<T>, "T must be copyable");
-    static_assert(std::movable<T>, "T must be movable");
+	static_assert(std::copyable<T>, "T must be copyable");
+	static_assert(std::movable<T>, "T must be movable");
 	using T::T;
-    using T::operator=;
+	using T::operator=;
 	static constexpr std::size_t size = sizeof(align<T, modulus>);
 };
 
@@ -29,6 +29,9 @@ struct alignas(modulus) align : T
  * @param mod The given modulos for the alignment.
  * @return The next multiple of mode bigger than value.
  */
-uint32_t align_modulo(uint32_t value, uint32_t mod);
+inline uint32_t align_modulo(uint32_t value, uint32_t mod)
+{
+	return (value / mod + (value % mod != 0)) * mod;
+}
 
 }
