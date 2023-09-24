@@ -214,6 +214,7 @@ Wrapper<VkDeviceMemory> create_device_memory(VkDevice device, VkPhysicalDevice p
 			continue;
 		}
 		type_index = i;
+		break; // TODO: further filtering/selection required
 	}
 	if (!type_index) {
 		ERROR("Failed to find suitable memory type!");
