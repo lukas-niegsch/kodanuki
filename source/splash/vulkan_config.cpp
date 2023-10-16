@@ -40,7 +40,7 @@ void create_simple_renderpass(VkDevice device, VkRenderPass& renderpass)
 
 	// And additional an depth value for each pixel for depth testing.
 	VkAttachmentDescription depth_attachment = {};
-	depth_attachment.format = VK_FORMAT_D24_UNORM_S8_UINT;
+	depth_attachment.format = VK_FORMAT_D32_SFLOAT_S8_UINT;
 	depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;

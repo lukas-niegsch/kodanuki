@@ -27,7 +27,7 @@ int main()
 		.device_extensions = {"VK_KHR_swapchain"},
 		.gpu_score = &score_physical_device,
 		.queue_score = &score_queue_family,
-		.queue_priorities = {0.2f, 0.2f, 1.0f}
+		.queue_priorities = {1.0f}
 	}};
 
 	VulkanTarget target = {{
@@ -35,9 +35,9 @@ int main()
 		.window = window,
 		.create_renderpass = &create_simple_renderpass,
 		.surface_format = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
-		.depth_image_format = VK_FORMAT_D24_UNORM_S8_UINT,
+		.depth_image_format = VK_FORMAT_D32_SFLOAT_S8_UINT,
 		.present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR,
-		.frame_count = 3,
+		.frame_count = 2,
 	}};
 
 	VulkanRenderer renderer = {{
