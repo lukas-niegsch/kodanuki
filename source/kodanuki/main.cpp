@@ -1,9 +1,7 @@
-#include "engine/display/client.h"
-#include "engine/display/server.h"
-using namespace kodanuki;
+#include <iostream>
 
 int main()
 {
+	std::cout << "Hello, World!" << '\n';
 	return 0;
 }
-
