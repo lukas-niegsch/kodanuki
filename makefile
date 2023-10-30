@@ -1,7 +1,7 @@
 SRC_DIR := $(CURDIR)
 OUT_DIR := /var/tmp/kodanuki
 BIN_DIR := $(OUT_DIR)/build
-PROJECT := unittest
+PROJECT := torus
 
 help:
 %:

@@ -33,3 +33,9 @@ description = "The splash side project for SPH fluid simulation."
 path        = "source/splash/"
 depends     = ["kodanuki.engine", "vulkan", "glfw"]
 library     = false
+
+[torus]
+description = "Standalone torus application that runs without the engine."
+path        = "source/torus"
+depends     = ["vulkan", "sfml-window", "sfml-system"]
+library     = false

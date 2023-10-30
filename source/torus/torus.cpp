@@ -2,11 +2,10 @@
 //*/ls > /dev/null && DLIBS="-lvulkan -lsfml-window -lsfml-system"
 //usr/bin/cat $0 | g++ $FLAGS $DLIBS -o torus -x c++ - && ./torus
 //usr/bin/rm -f torus && exit
-
 /*******************************************************************************
 The code below renders a rotating torus with some basic point lights. You
-can move through the world and look at it from different angles. On linux
-you can execute this file directly, or compile it normally (see above).
+can move through the world and look at it from different angles (wip). On
+linux you can execute this file directly, or compile it normally (see above).
 It requires the path to matching vertex and fragment shaders.
 
 It is an example on how verbose the vulkan API is. However, it does allow
@@ -16,31 +15,8 @@ code. This inherently makes writing wrappers difficult because you probably
 loose many features. It is completely independent from the engine and can
 be compiled as a standalone (just for testing stuff).
 *******************************************************************************/
-
-/*******************************************************************************
-MIT License
-
-Copyright (c) 2023 Lukas Niegsch
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*******************************************************************************/
 #include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
 #include <SFML/Window.hpp>
 #include <bits/stdc++.h>
 
@@ -232,24 +208,26 @@ using params_signature_t = function_traits<decltype(Func)>::params_type;
 namespace vktype
 {
 
-using instance_t        = shared_wrapper_t<VkInstance>;
-using device_t          = shared_wrapper_t<VkDevice>;
-using shader_t          = shared_wrapper_t<VkShaderModule>;
-using fence_t           = shared_wrapper_t<VkFence>;
-using semaphore_t       = shared_wrapper_t<VkSemaphore>;
-using command_pool_t    = shared_wrapper_t<VkCommandPool>;
-using command_buffer_t  = shared_wrapper_t<VkCommandBuffer>;
-using renderpass_t      = shared_wrapper_t<VkRenderPass>;
-using pipeline_t        = shared_wrapper_t<VkPipeline>;
-using pipeline_layout_t = shared_wrapper_t<VkPipelineLayout>;
-using surface_t         = shared_wrapper_t<VkSurfaceKHR>;
-using swapchain_t       = shared_wrapper_t<VkSwapchainKHR>;
-using framebuffer_t     = shared_wrapper_t<VkFramebuffer>;
-using buffer_t          = shared_wrapper_t<VkBuffer>;
-using image_t           = shared_wrapper_t<VkImage>;
-using image_view_t      = shared_wrapper_t<VkImageView>;
-using memory_t          = shared_wrapper_t<VkDeviceMemory>;
-using descriptor_pool_t = shared_wrapper_t<VkDescriptorPool>;
+using instance_t          = shared_wrapper_t<VkInstance>;
+using device_t            = shared_wrapper_t<VkDevice>;
+using shader_t            = shared_wrapper_t<VkShaderModule>;
+using fence_t             = shared_wrapper_t<VkFence>;
+using semaphore_t         = shared_wrapper_t<VkSemaphore>;
+using command_pool_t      = shared_wrapper_t<VkCommandPool>;
+using command_buffer_t    = shared_wrapper_t<VkCommandBuffer>;
+using renderpass_t        = shared_wrapper_t<VkRenderPass>;
+using pipeline_t          = shared_wrapper_t<VkPipeline>;
+using pipeline_layout_t   = shared_wrapper_t<VkPipelineLayout>;
+using surface_t           = shared_wrapper_t<VkSurfaceKHR>;
+using swapchain_t         = shared_wrapper_t<VkSwapchainKHR>;
+using framebuffer_t       = shared_wrapper_t<VkFramebuffer>;
+using buffer_t            = shared_wrapper_t<VkBuffer>;
+using image_t             = shared_wrapper_t<VkImage>;
+using image_view_t        = shared_wrapper_t<VkImageView>;
+using memory_t            = shared_wrapper_t<VkDeviceMemory>;
+using descriptor_pool_t   = shared_wrapper_t<VkDescriptorPool>;
+using descriptor_layout_t = shared_wrapper_t<VkDescriptorSetLayout>;
+using descriptor_set_t    = shared_wrapper_t<VkDescriptorSet>;
 
 /**
  * The underlying vulkan type for the wrapper.
@@ -739,6 +717,49 @@ vktype::descriptor_pool_t descriptor_pool(
 }
 
 /**
+ * Vulkan descriptor set layout describe how descriptor sets can be bound
+ * during the different pipeline stages.
+ *
+ * @param device The device that stores the layouts.
+ * @param bindings The binding information for the layouts.
+ */
+vktype::descriptor_layout_t descriptor_layout(
+	vktype::device_t                          device,
+	std::vector<VkDescriptorSetLayoutBinding> bindings)
+{
+	return vkutil::autowrapper<vkCreateDescriptorSetLayout, vkDestroyDescriptorSetLayout>({
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.bindingCount = static_cast<uint32_t>(bindings.size()),
+		.pBindings = bindings.data(),
+	}, device);
+}
+
+/**
+ * Vulkan descriptor sets store information about ressources bound during
+ * the pipeline stages, e.g. uniform buffers.
+ *
+ * @param device The device that stores the descriptor set.
+ * @param pool The descriptor pool from which the set is allocated.
+ * @param layout The layout for the descriptor set.
+ */
+vktype::descriptor_set_t descriptor_set(
+	vktype::device_t            device,
+	vktype::descriptor_pool_t   pool,
+	vktype::descriptor_layout_t layout)
+{
+	VkDescriptorSetLayout native_layout = layout;
+	return vkutil::autowrapper<vkAllocateDescriptorSets, vkFreeDescriptorSets>({
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+		.pNext = nullptr,
+		.descriptorPool = pool,
+		.descriptorSetCount = 1,
+		.pSetLayouts = &native_layout
+	}, device, pool);
+}
+
+/**
  * Vulkan shader modules hold the SPIR-V shader code for compilation.
  *
  * @param device The device that stores the shader.
@@ -998,6 +1019,193 @@ vktype::target_t target(
 	return result;
 }
 
+/**
+ * Vulkan pipeline layout describe how ressources like descriptor sets can
+ * be bound during the different stages.
+ *
+ * @param device The device that stores the pipeline layout.
+ * @param layouts The descriptor set layouts that can be bound.
+ * @param constants The push constants that can be bound. 
+ */
+vktype::pipeline_layout_t pipeline_layout(
+	vktype::device_t                         device,
+	std::vector<vktype::descriptor_layout_t> layouts,
+	std::vector<VkPushConstantRange>         constants = {})
+{
+	std::vector<VkDescriptorSetLayout> native_layouts(layouts.begin(), layouts.end());
+	return vkutil::autowrapper<vkCreatePipelineLayout, vkDestroyPipelineLayout>({
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.setLayoutCount = static_cast<uint32_t>(native_layouts.size()),
+		.pSetLayouts = native_layouts.data(),
+		.pushConstantRangeCount = static_cast<uint32_t>(constants.size()),
+		.pPushConstantRanges = constants.data(),
+	}, device);
+}
+
+/**
+ * Vulkan graphics pipeline consists of multiple stages that transforms
+ * vertex data into images. It has fixed function stages and programmable
+ * stages.
+ *
+ * We create a very simple pipeline here. It only has two programmable stages,
+ * the vertex and fragment shaders. It renders the whole image, does depth
+ * testing, simple color blending, no multisampling and no tesselation.
+ *
+ * @param device The device that stores and compiles the pipeline.
+ * @param renderpass The renderpass inside which the pipeline runs.
+ * @param layout The layout of the pipeline.
+ * @param vertex_shader The vertex shader.
+ * @param fragment_shader The fragment shader.
+ * @param viewport_extent The extent of the view, e.g. the whole window.
+ * @param input_topology The input tology, e.g. triangle lists.
+ * @param input_bindings The description on how often inputs are bound and their size.
+ * @param input_attributes The description for the different binding attributes.
+ */
+vktype::pipeline_t graphics_pipeline(
+	vktype::device_t                               device,
+	vktype::renderpass_t                           renderpass,
+	vktype::pipeline_layout_t                      layout,
+	vktype::shader_t                               vertex_shader,
+	vktype::shader_t                               fragment_shader,
+	VkExtent2D                                     viewport_extent,
+	VkPrimitiveTopology                            input_topology,
+	std::vector<VkVertexInputBindingDescription>   input_bindings,
+	std::vector<VkVertexInputAttributeDescription> input_attributes)
+{
+	std::array<VkPipelineShaderStageCreateInfo, 2> shader_stages;
+	for (auto& stage : shader_stages) {
+    	stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    	stage.pNext = nullptr;
+    	stage.flags = 0;
+    	stage.pName = "main";
+    	stage.pSpecializationInfo = nullptr;
+	}
+	shader_stages[0].module = vertex_shader;
+	shader_stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+	shader_stages[1].module = fragment_shader;
+	shader_stages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	VkPipelineVertexInputStateCreateInfo vertex_input = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.vertexBindingDescriptionCount = static_cast<uint32_t>(input_bindings.size()),
+		.pVertexBindingDescriptions = input_bindings.data(),
+		.vertexAttributeDescriptionCount = static_cast<uint32_t>(input_attributes.size()),
+		.pVertexAttributeDescriptions = input_attributes.data(),
+	};
+	VkPipelineInputAssemblyStateCreateInfo input_assembly = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.topology = input_topology,
+		.primitiveRestartEnable = VK_FALSE,
+	};
+	VkViewport keep_everything_viewport = {
+		.x = 0.0f,
+		.y = 0.0f,
+		.width = static_cast<float>(viewport_extent.width),
+		.height = static_cast<float>(viewport_extent.height),
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f,
+	};
+	VkRect2D keep_everything_scissor = {
+		.offset = {0, 0},
+		.extent = viewport_extent,
+	};
+	VkPipelineViewportStateCreateInfo viewport = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.viewportCount = 1,
+		.pViewports = &keep_everything_viewport,
+		.scissorCount = 1,
+		.pScissors = &keep_everything_scissor,
+	};
+	VkPipelineRasterizationStateCreateInfo resterization = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.depthClampEnable = VK_FALSE,
+		.rasterizerDiscardEnable = VK_FALSE,
+		.polygonMode = VK_POLYGON_MODE_FILL,
+		.cullMode = VK_CULL_MODE_BACK_BIT,
+		.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+		.depthBiasEnable = VK_FALSE,
+		.depthBiasConstantFactor = 0.0f,
+		.depthBiasClamp = 0.0f,
+		.depthBiasSlopeFactor = 0.0f,
+		.lineWidth = 1.0f,
+	};
+	VkPipelineMultisampleStateCreateInfo multisample = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
+		.sampleShadingEnable = VK_FALSE,
+		.minSampleShading = 1.0f,
+		.pSampleMask = nullptr,
+		.alphaToCoverageEnable = VK_FALSE,
+		.alphaToOneEnable = VK_FALSE,
+	};
+	VkPipelineDepthStencilStateCreateInfo depth_stencil = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.depthTestEnable = VK_TRUE,
+		.depthWriteEnable = VK_TRUE,
+		.depthCompareOp = VK_COMPARE_OP_LESS,
+		.depthBoundsTestEnable = VK_FALSE,
+		.stencilTestEnable = VK_FALSE,
+		.front = {},
+		.back = {},
+		.minDepthBounds = 0.0f,
+		.maxDepthBounds = 1.0f,		
+	};
+	VkPipelineColorBlendAttachmentState color_blend_attachment = {
+		.blendEnable = VK_TRUE,
+		.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+		.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+		.colorBlendOp = VK_BLEND_OP_ADD,
+		.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+		.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+		.alphaBlendOp = VK_BLEND_OP_ADD,
+		.colorWriteMask = VK_COLOR_COMPONENT_A_BIT | VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT,
+	};
+	VkPipelineColorBlendStateCreateInfo color_blend = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.logicOpEnable = VK_FALSE,
+		.logicOp = VK_LOGIC_OP_NO_OP,
+		.attachmentCount = 1,
+		.pAttachments = &color_blend_attachment,
+		.blendConstants = {0.0f, 0.0f, 0.0f, 0.0f},
+	};
+	return vkutil::autowrapper<vkCreateGraphicsPipelines, vkDestroyPipeline>({
+		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.stageCount = shader_stages.size(),
+		.pStages = shader_stages.data(),
+		.pVertexInputState = &vertex_input,
+		.pInputAssemblyState = &input_assembly,
+		.pTessellationState = nullptr,
+		.pViewportState = &viewport,
+		.pRasterizationState = &resterization,
+		.pMultisampleState = &multisample,
+		.pDepthStencilState = &depth_stencil,
+		.pColorBlendState = &color_blend,
+		.pDynamicState = nullptr,
+		.layout = layout,
+		.renderPass = renderpass,
+		.subpass = 0,
+		.basePipelineHandle = VK_NULL_HANDLE,
+		.basePipelineIndex = -1,
+	}, device);
+}
+
 }
 
 
@@ -1177,6 +1385,23 @@ VkExtent2D get_window_extent(sf::WindowBase& window)
 	return extent;
 }
 
+struct Vertex
+{
+	glm::vec3 position;
+	glm::vec3 color;
+	glm::vec3 normal;
+	glm::vec2 uv;
+
+	bool operator==(const Vertex& other) const;
+};
+
+struct MVP
+{
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 projection;
+};
+
 int main()
 {
 	sf::WindowBase window(sf::VideoMode(1950, 1200), "Torus");
@@ -1210,6 +1435,42 @@ int main()
 	vktype::target_t target = vkinit::target(
 		device, renderpass, gpu_specs, img_specs, surface, extent);
 
+	vktype::descriptor_layout_t UBO_descriptor_layout = vkinit::descriptor_layout(
+		device, {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1,
+		VK_SHADER_STAGE_VERTEX_BIT, nullptr}});
+
+	vktype::pipeline_layout_t pipeline_layout = vkinit::pipeline_layout(
+		device, {UBO_descriptor_layout});
+
+	vktype::shader_t vertex_shader = vkinit::shader(
+		device, "assets/shaders/fluid.vert.spv");
+	
+	vktype::shader_t fragment_shader = vkinit::shader(
+		device, "assets/shaders/fluid.frag.spv");
+
+	std::vector<VkVertexInputBindingDescription> input_bindings = {
+		{0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX},
+		{1, sizeof(glm::vec3), VK_VERTEX_INPUT_RATE_INSTANCE},
+	};
+
+	std::vector<VkVertexInputAttributeDescription> input_attributes = {
+		{0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position)},
+		{1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color)},
+		{2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal)},
+		{3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv)},
+		{4, 1, VK_FORMAT_R32G32B32_SFLOAT, 0},
+	};
+
+	vktype::pipeline_t pipeline = vkinit::graphics_pipeline(
+		device, renderpass, pipeline_layout, vertex_shader, fragment_shader,
+		get_window_extent(window), VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+		input_bindings, input_attributes);
+	
+	vktype::descriptor_pool_t descriptor_pool = vkinit::descriptor_pool(
+		device, 1, 1);
+
+	vktype::descriptor_set_t MPV_descriptor = vkinit::descriptor_set(
+		device, descriptor_pool, UBO_descriptor_layout);
 
 	while (window.isOpen()) {
 		sf::Event event;
@@ -1221,7 +1482,7 @@ int main()
 
 		// if (!vkdraw::aquire_frame(device, target)) {
 		// 	target = vkinit::target(device, renderpass, gpu_specs,
-		//		img_specs, surface, get_window_extent(window));
+		// 		img_specs, surface, get_window_extent(window));
 		// 	continue;
 		// }
 	}
