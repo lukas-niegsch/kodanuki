@@ -14,6 +14,12 @@ and extensible. But even for simple applications it requires way too much
 code. This inherently makes writing wrappers difficult because you probably
 loose many features. It is completely independent from the engine and can
 be compiled as a standalone (just for testing stuff).
+
+TODO: Swapchain recreation sometimes throws a validation error because the
+	  framebuffer is too small. Only happens when the window size increases
+	  and not always. Error happens one frame after resize, works fine after
+	  the next frame. Application does not seem to be affected except for
+	  error messages.
 *******************************************************************************/
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
@@ -384,6 +390,20 @@ auto autowrapper(
         CHECK_VULKAN(fn_create(args..., &config, nullptr, output));
     }
 	return shared_wrapper_t<T>(output, destroy);
+}
+
+/**
+ * Returns the current surface extent.
+ *
+ * @param gpu_specs The properties of the physical device.
+ * @param surface The surface of the window.
+ */
+VkExtent2D get_surface_extent(vktype::gpu_specs_t gpu_specs, vktype::surface_t surface)
+{
+	VkSurfaceCapabilitiesKHR capabilities;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+		gpu_specs.physical_device, surface, &capabilities);
+	return capabilities.currentExtent;
 }
 
 }
@@ -964,24 +984,24 @@ vktype::framebuffer_t framebuffer(
  * @param gpu_specs The configuration of the device.
  * @param img_specs The configuration for the image.
  * @param surface The surface on which to render.
- * @param surface_extent The current extent of the surface.
  */
 vktype::target_t target(
 	vktype::device_t     device,
 	vktype::renderpass_t renderpass,
 	vktype::gpu_specs_t  gpu_specs,
 	vktype::img_specs_t  img_specs,
-	vktype::surface_t    surface,
-	VkExtent2D           surface_extent)
+	vktype::surface_t    surface)
 {
+	VkExtent2D extent = vkutil::get_surface_extent(gpu_specs, surface);
+
 	vktype::swapchain_t swapchain = vkinit::swapchain(
-		device, surface, img_specs, surface_extent);
+		device, surface, img_specs, extent);
 
 	vktype::command_pool_t command_pool = vkinit::command_pool(
 		device, gpu_specs.queue_family_index);
 
 	vktype::image_t depth_image = vkinit::image(
-		device, img_specs.depth_format, surface_extent,
+		device, img_specs.depth_format, extent,
 		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
 	VkMemoryRequirements memory_requirements;
@@ -1012,7 +1032,7 @@ vktype::target_t target(
 		frame.render_finished_semaphore = vkinit::semaphore(device);
 		frame.aquire_frame_fence = vkinit::fence(device, VK_FENCE_CREATE_SIGNALED_BIT);
 		frame.command_buffer = vkinit::command_buffer(device, command_pool);
-		frame.framebuffer = vkinit::framebuffer(device, renderpass, surface_extent, {frame.render_image, depth_image_view});
+		frame.framebuffer = vkinit::framebuffer(device, renderpass, extent, {frame.render_image, depth_image_view});
 		result.frames.push_back(frame);
 	}
 
@@ -1285,7 +1305,7 @@ void submit_frame(
 	VkRenderPassBeginInfo renderpass_info = {};
 	renderpass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderpass_info.renderPass = renderpass;
-	renderpass_info.framebuffer = frame.framebuffer;
+	renderpass_info.framebuffer = target.frames[target.render_frame].framebuffer;
 	renderpass_info.renderArea.offset = {0, 0};
 	renderpass_info.renderArea.extent = surface_extent;
 	renderpass_info.clearValueCount = clear_values.size();
@@ -1315,7 +1335,6 @@ void submit_frame(
 	info.signalSemaphoreCount = 1;
 	info.pSignalSemaphores = &render_finished;
 	CHECK_VULKAN(vkQueueSubmit(submit_queue, 1, &info, aquire_frame));
-	target.submit_frame = (target.submit_frame + 1) % target.max_frame;
 }
 
 /**
@@ -1329,7 +1348,7 @@ bool render_frame(
 	vktype::target_t& target,
 	VkQueue           render_queue)
 {
-	vktype::frame_t& frame = target.frames[target.render_frame];
+	vktype::frame_t& frame = target.frames[target.submit_frame];
 	VkSwapchainKHR swapchain = target.swapchain;
 	VkSemaphore render_finished = frame.render_finished_semaphore;
 	
@@ -1341,6 +1360,7 @@ bool render_frame(
 	info.pSwapchains = &swapchain;
 	info.pImageIndices = &target.render_frame;
 	auto result = vkQueuePresentKHR(render_queue, &info);
+	target.submit_frame = (target.submit_frame + 1) % target.max_frame;
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		return false;
@@ -1371,20 +1391,6 @@ int score_device(vktype::gpu_specs_t specs)
 	return score;
 }
 
-/**
- * Returns the current window extent.
- *
- * @param window The reference to the SFML window.
- */
-VkExtent2D get_window_extent(sf::WindowBase& window)
-{
-	sf::Vector2u size = window.getSize();
-	VkExtent2D extent;
-	extent.width = static_cast<uint32_t>(size.x);
-	extent.height = static_cast<uint32_t>(size.y);
-	return extent;
-}
-
 struct Vertex
 {
 	glm::vec3 position;
@@ -1405,7 +1411,6 @@ struct MVP
 int main()
 {
 	sf::WindowBase window(sf::VideoMode(1950, 1200), "Torus");
-	VkExtent2D extent = get_window_extent(window);
 
 	vktype::instance_t instance = vkinit::instance(
 		{"VK_LAYER_KHRONOS_validation"},
@@ -1417,9 +1422,8 @@ int main()
 	vktype::device_t device = vkinit::device(
 		gpu_specs, {"VK_KHR_swapchain"}, {1.0f});
 
-	vktype::surface_t surface = vkinit::surface(
-		instance, [&](VkInstance instance, VkSurfaceKHR& surface) {
-			window.createVulkanSurface(instance, surface); });
+	VkQueue graphics_queue;
+	vkGetDeviceQueue(device, gpu_specs.queue_family_index, 0, &graphics_queue);
 
 	vktype::img_specs_t img_specs = {
 		.depth_format = VK_FORMAT_D32_SFLOAT_S8_UINT,
@@ -1431,9 +1435,6 @@ int main()
 
 	vktype::renderpass_t renderpass = vkinit::renderpass(
 		device, img_specs);
-
-	vktype::target_t target = vkinit::target(
-		device, renderpass, gpu_specs, img_specs, surface, extent);
 
 	vktype::descriptor_layout_t UBO_descriptor_layout = vkinit::descriptor_layout(
 		device, {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1,
@@ -1461,31 +1462,65 @@ int main()
 		{4, 1, VK_FORMAT_R32G32B32_SFLOAT, 0},
 	};
 
-	vktype::pipeline_t pipeline = vkinit::graphics_pipeline(
-		device, renderpass, pipeline_layout, vertex_shader, fragment_shader,
-		get_window_extent(window), VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-		input_bindings, input_attributes);
-	
 	vktype::descriptor_pool_t descriptor_pool = vkinit::descriptor_pool(
 		device, 1, 1);
 
 	vktype::descriptor_set_t MPV_descriptor = vkinit::descriptor_set(
 		device, descriptor_pool, UBO_descriptor_layout);
 
-	while (window.isOpen()) {
+	vktype::surface_t surface;
+	vktype::target_t target;
+	vktype::pipeline_t pipeline;
+	
+	auto recreate_renderer = [&]() {
+		CHECK_VULKAN(vkDeviceWaitIdle(device));
+
+		vktype::surface_t new_surface = vkinit::surface(
+			instance, [&](VkInstance instance, VkSurfaceKHR& surface) {
+				window.createVulkanSurface(instance, surface); });
+
+		target = vkinit::target(
+			device, renderpass, gpu_specs, img_specs, new_surface);
+		
+		// prevent deletion of surface before target's swapchain
+		surface = new_surface;
+
+		pipeline = vkinit::graphics_pipeline(
+			device, renderpass, pipeline_layout, vertex_shader,
+			fragment_shader, vkutil::get_surface_extent(gpu_specs, surface),
+			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, input_bindings,
+			input_attributes);
+	};
+	recreate_renderer();
+
+	bool running = true;
+
+	while (running) {
 		sf::Event event;
 		while (window.pollEvent(event)) {
 			if (event.type == sf::Event::Closed) {
-				window.close();
+				running = false;
+			} else if (event.type == sf::Event::Resized) {
+				recreate_renderer();
 			}
 		}
 
-		// if (!vkdraw::aquire_frame(device, target)) {
-		// 	target = vkinit::target(device, renderpass, gpu_specs,
-		// 		img_specs, surface, get_window_extent(window));
-		// 	continue;
-		// }
+		if (!vkdraw::aquire_frame(device, target)) {
+			recreate_renderer();
+			continue;
+		}
+
+		std::vector<std::function<void(VkCommandBuffer)>> commands;
+
+		vkdraw::submit_frame(target, renderpass, pipeline,
+			vkutil::get_surface_extent(gpu_specs, surface), graphics_queue,
+			commands);
+
+		if (!vkdraw::render_frame(target, graphics_queue)) {
+			recreate_renderer();
+		}
 	}
 
+	CHECK_VULKAN(vkDeviceWaitIdle(device));
 	return 0;
 }
