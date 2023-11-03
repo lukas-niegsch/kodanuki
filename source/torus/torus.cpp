@@ -82,6 +82,18 @@ std::vector<char> read_file_into_buffer(std::string path)
 }
 
 /**
+ * Returns the smallest integer bigger than the value with zero modulos.
+ *
+ * @param value The given lower bound for the result.
+ * @param mod The given modulos for the alignment.
+ * @return The next multiple of mode bigger than value.
+ */
+uint32_t align_modulo(uint32_t value, uint32_t mod)
+{
+	return (value / mod + (value % mod != 0)) * mod;
+}
+
+/**
  * Prints the name of the template type.
  * https://stackoverflow.com/questions/81870
  */
@@ -309,6 +321,17 @@ struct target_t
 	uint32_t submit_frame;
 	uint32_t render_frame;
 	uint32_t max_frame;
+};
+
+struct tensor_t
+{
+	vktype::buffer_t primary_buffer;
+	vktype::buffer_t staging_buffer;
+	vktype::memory_t primary_memory;
+	vktype::memory_t staging_memory;
+	std::vector<std::size_t> shape;
+	uint32_t element_size;
+	uint32_t element_count;
 };
 
 }
@@ -833,6 +856,27 @@ vktype::image_t image(
 }
 
 /**
+ * TODO
+ */
+vktype::buffer_t buffer(
+	vktype::device_t   device,
+	VkBufferUsageFlags usage_flags,
+	uint32_t           element_size,
+	uint32_t           element_count)
+{
+	return vkutil::autowrapper<vkCreateBuffer, vkDestroyBuffer>({
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.size = align_modulo(element_size * element_count, 256),
+		.usage = usage_flags,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		.queueFamilyIndexCount = 0,
+		.pQueueFamilyIndices = nullptr,
+	}, device);
+}
+
+/**
  * Vulkan device memory is actual memory on the GPU (device) or CPU (host).
  *
  * @param device The device that stores handles (and maybe actual memory).
@@ -1226,6 +1270,71 @@ vktype::pipeline_t graphics_pipeline(
 	}, device);
 }
 
+/**
+ * TODO
+ */
+vktype::tensor_t tensor(
+	vktype::device_t         device,
+	vktype::gpu_specs_t      gpu_specs,
+	std::vector<std::size_t> shape,
+	uint32_t                 element_size)
+{
+	vktype::tensor_t tensor;
+
+	std::size_t element_count = 1;
+	for (auto dimension : shape) {
+		element_count *= dimension;
+	}
+	tensor.shape = shape;
+	tensor.element_size = element_size;
+	tensor.element_count = element_count;
+
+	VkBufferUsageFlags primary_usage_flags = 0;
+	primary_usage_flags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	primary_usage_flags |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT; 
+	primary_usage_flags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	primary_usage_flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	primary_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	primary_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	tensor.primary_buffer = vkinit::buffer(
+		device,
+		primary_usage_flags,
+		element_count,
+		element_size);
+
+	VkBufferUsageFlags staging_usage_flags = 0;
+	staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	tensor.staging_buffer = vkinit::buffer(
+		device,
+		staging_usage_flags,
+		element_count,
+		element_size);
+
+	VkMemoryPropertyFlags primary_property_flags = 0;
+	primary_property_flags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	VkMemoryRequirements primary_memory_requirements;
+	vkGetBufferMemoryRequirements(device, tensor.primary_buffer, &primary_memory_requirements);
+	tensor.primary_memory = vkinit::memory(
+		device,
+		gpu_specs,
+		primary_memory_requirements,
+		primary_property_flags);
+
+	VkMemoryPropertyFlags staging_property_flags = 0;
+	staging_property_flags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+	staging_property_flags |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	VkMemoryRequirements staging_memory_requirements;
+	vkGetBufferMemoryRequirements(device, tensor.staging_buffer, &staging_memory_requirements);
+	tensor.primary_memory = vkinit::memory(
+		device,
+		gpu_specs,
+		staging_memory_requirements,
+		staging_property_flags);
+
+	return tensor;
+}
+
 }
 
 
@@ -1375,6 +1484,32 @@ bool render_frame(
 
 }
 
+
+namespace vkmath
+{
+
+void load_asnyc(vktype::command_buffer_t buffer, vktype::tensor_t tensor)
+{
+	VkBufferCopy config = {
+		.srcOffset = 0,
+		.dstOffset = 0,
+		.size = tensor.element_size * tensor.element_count
+	};
+	vkCmdCopyBuffer(buffer, tensor.primary_buffer, tensor.staging_buffer, 1, &config);
+}
+
+void save_asnyc(vktype::command_buffer_t buffer, vktype::tensor_t tensor)
+{
+	VkBufferCopy config = {
+		.srcOffset = 0,
+		.dstOffset = 0,
+		.size = tensor.element_size * tensor.element_count
+	};
+	vkCmdCopyBuffer(buffer, tensor.staging_buffer, tensor.primary_buffer, 1, &config);
+}
+
+}
+
 /**
  * Most people don't have multiple discrete GPU's so we provide a simple
  * method that picks one of them. The devices must have at least one queue
@@ -1492,6 +1627,9 @@ int main()
 			input_attributes);
 	};
 	recreate_renderer();
+
+	vktype::tensor_t models = vkinit::tensor(
+		device, gpu_specs, {3, 100}, sizeof(float));
 
 	bool running = true;
 
