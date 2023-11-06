@@ -55,6 +55,7 @@ static constexpr bool ENABLE_AUTOWRAPPER_PRINTING = false;
 		}										\
 	} while (false)
 
+
 /**
  * Reads the complete file into the buffer.
  *
@@ -427,6 +428,20 @@ VkExtent2D get_surface_extent(vktype::gpu_specs_t gpu_specs, vktype::surface_t s
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
 		gpu_specs.physical_device, surface, &capabilities);
 	return capabilities.currentExtent;
+}
+
+void record_command(vktype::command_buffer_t buffer, std::function<void()> callback)
+{
+	VkCommandBufferBeginInfo buffer_info = {
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.pInheritanceInfo = nullptr
+	};
+	CHECK_VULKAN(vkResetCommandBuffer(buffer, 0));
+	CHECK_VULKAN(vkBeginCommandBuffer(buffer, &buffer_info));
+	callback();
+	CHECK_VULKAN(vkEndCommandBuffer(buffer));
 }
 
 }
@@ -1326,12 +1341,14 @@ vktype::tensor_t tensor(
 	staging_property_flags |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 	VkMemoryRequirements staging_memory_requirements;
 	vkGetBufferMemoryRequirements(device, tensor.staging_buffer, &staging_memory_requirements);
-	tensor.primary_memory = vkinit::memory(
+	tensor.staging_memory = vkinit::memory(
 		device,
 		gpu_specs,
 		staging_memory_requirements,
 		staging_property_flags);
 
+	vkBindBufferMemory(device, tensor.primary_buffer, tensor.primary_memory, 0);
+	vkBindBufferMemory(device, tensor.staging_buffer, tensor.staging_memory, 0);
 	return tensor;
 }
 
@@ -1398,36 +1415,28 @@ void submit_frame(
 	vktype::frame_t& frame = target.frames[target.submit_frame];
 	VkCommandBuffer buffer = frame.command_buffer;
 
-	VkCommandBufferBeginInfo buffer_info = {
-		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-		.pNext = nullptr,
-		.flags = 0,
-		.pInheritanceInfo = nullptr
-	};
-	CHECK_VULKAN(vkResetCommandBuffer(buffer, 0));
-	CHECK_VULKAN(vkBeginCommandBuffer(buffer, &buffer_info));
-
 	std::array<VkClearValue, 2> clear_values = {};
 	clear_values[0].color = {0.53f, 0.81f, 0.92f};
 	clear_values[1].depthStencil = {1.0f, 0};
 
-	VkRenderPassBeginInfo renderpass_info = {};
-	renderpass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderpass_info.renderPass = renderpass;
-	renderpass_info.framebuffer = target.frames[target.render_frame].framebuffer;
-	renderpass_info.renderArea.offset = {0, 0};
-	renderpass_info.renderArea.extent = surface_extent;
-	renderpass_info.clearValueCount = clear_values.size();
-	renderpass_info.pClearValues = clear_values.data();
-	vkCmdBeginRenderPass(buffer, &renderpass_info, VK_SUBPASS_CONTENTS_INLINE);
-	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+	vkutil::record_command(frame.command_buffer, [&]() {
+		VkRenderPassBeginInfo renderpass_info = {};
+		renderpass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderpass_info.renderPass = renderpass;
+		renderpass_info.framebuffer = target.frames[target.render_frame].framebuffer;
+		renderpass_info.renderArea.offset = {0, 0};
+		renderpass_info.renderArea.extent = surface_extent;
+		renderpass_info.clearValueCount = clear_values.size();
+		renderpass_info.pClearValues = clear_values.data();
+		vkCmdBeginRenderPass(buffer, &renderpass_info, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-	for (auto command_callback : commands) {
-		command_callback(buffer);
-	}
-	
-	vkCmdEndRenderPass(buffer);
-	CHECK_VULKAN(vkEndCommandBuffer(buffer));
+		for (auto command_callback : commands) {
+			command_callback(buffer);
+		}
+		
+		vkCmdEndRenderPass(buffer);
+	});
 
 	VkSemaphore image_available = frame.image_available_semaphore;
 	VkSemaphore render_finished = frame.render_finished_semaphore;
@@ -1488,7 +1497,7 @@ bool render_frame(
 namespace vkmath
 {
 
-void load_asnyc(vktype::command_buffer_t buffer, vktype::tensor_t tensor)
+void load_asnyc(VkCommandBuffer buffer, vktype::tensor_t tensor)
 {
 	VkBufferCopy config = {
 		.srcOffset = 0,
@@ -1498,7 +1507,7 @@ void load_asnyc(vktype::command_buffer_t buffer, vktype::tensor_t tensor)
 	vkCmdCopyBuffer(buffer, tensor.primary_buffer, tensor.staging_buffer, 1, &config);
 }
 
-void save_asnyc(vktype::command_buffer_t buffer, vktype::tensor_t tensor)
+void save_asnyc(VkCommandBuffer buffer, vktype::tensor_t tensor)
 {
 	VkBufferCopy config = {
 		.srcOffset = 0,
@@ -1543,13 +1552,31 @@ struct MVP
     glm::mat4 projection;
 };
 
+template <typename T>
+T* tensor_mapping(vktype::device_t device, vktype::tensor_t tensor)
+{
+	T* data;
+	CHECK_VULKAN(vkMapMemory(device, tensor.staging_memory,
+		0, tensor.element_size * tensor.element_count,
+		0, (void**) &data));
+	return data;
+}
+
+std::vector<const char*> get_instance_extensions()
+{
+	std::vector<const char*> extensions
+		= sf::Vulkan::getGraphicsRequiredInstanceExtensions();
+	extensions.push_back("VK_EXT_debug_utils");
+	return extensions;
+}
+
 int main()
 {
 	sf::WindowBase window(sf::VideoMode(1950, 1200), "Torus");
 
 	vktype::instance_t instance = vkinit::instance(
 		{"VK_LAYER_KHRONOS_validation"},
-		sf::Vulkan::getGraphicsRequiredInstanceExtensions());
+		get_instance_extensions());
 
 	vktype::gpu_specs_t gpu_specs = vkinit::select_physical_device(
 		instance, &score_device);
@@ -1628,8 +1655,43 @@ int main()
 	};
 	recreate_renderer();
 
-	vktype::tensor_t models = vkinit::tensor(
-		device, gpu_specs, {3, 100}, sizeof(float));
+	vktype::command_buffer_t staging_command_buffer = vkinit::command_buffer(
+		device, target.command_pool);
+
+	vktype::tensor_t vertex_tensor = vkinit::tensor(
+		device, gpu_specs, {3}, sizeof(Vertex));
+
+	Vertex* vertex_data = tensor_mapping<Vertex>(device, vertex_tensor);
+	vertex_data[0].position = {0, 0, 0};
+	vertex_data[1].position = {0, 1, 0};
+	vertex_data[2].position = {0, 0, 1};
+
+	vktype::tensor_t instance_tensor = vkinit::tensor(
+		device, gpu_specs, {1}, sizeof(glm::vec3));
+
+	glm::vec3* instance_data = tensor_mapping<glm::vec3>(device, instance_tensor);
+	instance_data[0] = {0, 0, 0};
+
+	vktype::tensor_t index_tensor = vkinit::tensor(
+		device, gpu_specs, {3}, sizeof(uint32_t));
+
+	uint32_t* index_data = tensor_mapping<uint32_t>(device, index_tensor);
+	index_data[0] = 0;
+	index_data[1] = 1;
+	index_data[2] = 2;
+
+	vkutil::record_command(staging_command_buffer, [&](){
+		vkmath::save_asnyc(staging_command_buffer, vertex_tensor);
+		vkmath::save_asnyc(staging_command_buffer, instance_tensor);
+		vkmath::save_asnyc(staging_command_buffer, index_tensor);
+	});
+	VkCommandBuffer native_staging_command_buffer = staging_command_buffer;
+	VkSubmitInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	info.commandBufferCount = 1;
+	info.pCommandBuffers = &native_staging_command_buffer;
+	CHECK_VULKAN(vkQueueSubmit(graphics_queue, 1, &info, VK_NULL_HANDLE));
+	CHECK_VULKAN(vkDeviceWaitIdle(device));
 
 	bool running = true;
 
@@ -1649,6 +1711,9 @@ int main()
 		}
 
 		std::vector<std::function<void(VkCommandBuffer)>> commands;
+		commands.push_back([=](VkCommandBuffer buffer) {
+			(void) buffer;
+		});
 
 		vkdraw::submit_frame(target, renderpass, pipeline,
 			vkutil::get_surface_extent(gpu_specs, surface), graphics_queue,
