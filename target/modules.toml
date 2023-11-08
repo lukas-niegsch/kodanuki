@@ -37,5 +37,5 @@ library     = false
 [torus]
 description = "Standalone torus application that runs without the engine."
 path        = "source/torus"
-depends     = ["vulkan", "sfml-window", "sfml-system"]
+depends     = ["kodanuki.engine", "vulkan", "sfml-window", "sfml-system"]
 library     = false
