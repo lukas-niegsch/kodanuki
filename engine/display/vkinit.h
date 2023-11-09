@@ -135,11 +135,6 @@ struct VulkanTensor
 
 };
 
-struct VulkanShader
-{
-
-};
-
 
 namespace vkinit
 {
@@ -181,6 +176,12 @@ struct VulkanTargetBuilder
 };
 OptionalWrapper<VulkanTarget> target(const VulkanTargetBuilder& builder, VulkanDevice device, VulkanWindow window);
 
+
+struct VulkanTensorBuilder
+{
+
+};
+OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanDevice device);
 
 }
 

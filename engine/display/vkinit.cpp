@@ -1014,6 +1014,16 @@ OptionalWrapper<VulkanTarget> target(const VulkanTargetBuilder& builder, VulkanD
 	return {target, "", ""};
 }
 
+OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanDevice device)
+{
+	VulkanTensor tensor;
+
+	(void) builder;
+	(void) device;
+
+	return {tensor, "", ""};
+}
+
 }
 
 namespace kodanuki
