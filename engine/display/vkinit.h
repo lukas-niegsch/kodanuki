@@ -2,7 +2,6 @@
 #include "engine/nekolib/templates/shared_wrapper.h"
 #include "engine/nekolib/templates/optional_wrapper.h"
 #include <vulkan/vulkan.h>
-#include <vulkan/vk_enum_string_helper.h>
 #include <vk_mem_alloc.h>
 #include <SFML/Window.hpp>
 #include <vector>
@@ -32,11 +31,10 @@
 		}										\
 	} while (false)
 
-inline std::ostream& operator<<(std::ostream& os, const VkResult& result)
-{
-	os << string_VkResult(result);
-	return os;
-}
+/**
+ * Prints the given result into the output stream.
+ */
+std::ostream& operator<<(std::ostream& os, const VkResult& result);
 
 
 namespace kodanuki

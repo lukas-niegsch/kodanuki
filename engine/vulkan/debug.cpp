@@ -1,5 +1,4 @@
 #include "engine/vulkan/debug.h"
-#include <vulkan/vk_enum_string_helper.h>
 
 #define LINE_LENGTH 80
 
@@ -7,6 +6,8 @@
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include "extern/SPIRV-Reflect/spirv_reflect.c"
 #pragma GCC diagnostic pop
+
+#if 0
 
 #define APPEND_BOOLEAN_FIELD(name)	\
 	ss << #name << ": " << (info.name ? "true" : "false") << '\n'
@@ -288,4 +289,53 @@ std::string stringify(VkPhysicalDeviceFeatures info)
 	return ss.str();
 }
 
+}
+
+#endif
+
+template <>
+std::string kodanuki::stringify(VkResult info)
+{
+	#define ENUM_CASE(value) case value: return #value
+
+    switch (info)
+    {
+        ENUM_CASE(VK_ERROR_DEVICE_LOST);
+        ENUM_CASE(VK_ERROR_EXTENSION_NOT_PRESENT);
+        ENUM_CASE(VK_ERROR_FEATURE_NOT_PRESENT);
+        ENUM_CASE(VK_ERROR_FORMAT_NOT_SUPPORTED);
+        ENUM_CASE(VK_ERROR_FRAGMENTATION_EXT);
+        ENUM_CASE(VK_ERROR_FRAGMENTED_POOL);
+        ENUM_CASE(VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT);
+        ENUM_CASE(VK_ERROR_INCOMPATIBLE_DISPLAY_KHR);
+        ENUM_CASE(VK_ERROR_INCOMPATIBLE_DRIVER);
+        ENUM_CASE(VK_ERROR_INITIALIZATION_FAILED);
+        ENUM_CASE(VK_ERROR_INVALID_DEVICE_ADDRESS_EXT);
+        ENUM_CASE(VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT);
+        ENUM_CASE(VK_ERROR_INVALID_EXTERNAL_HANDLE);
+        ENUM_CASE(VK_ERROR_INVALID_SHADER_NV);
+        ENUM_CASE(VK_ERROR_LAYER_NOT_PRESENT);
+        ENUM_CASE(VK_ERROR_MEMORY_MAP_FAILED);
+        ENUM_CASE(VK_ERROR_NATIVE_WINDOW_IN_USE_KHR);
+        ENUM_CASE(VK_ERROR_NOT_PERMITTED_EXT);
+        ENUM_CASE(VK_ERROR_OUT_OF_DATE_KHR);
+        ENUM_CASE(VK_ERROR_OUT_OF_DEVICE_MEMORY);
+        ENUM_CASE(VK_ERROR_OUT_OF_HOST_MEMORY);
+        ENUM_CASE(VK_ERROR_OUT_OF_POOL_MEMORY);
+        ENUM_CASE(VK_ERROR_SURFACE_LOST_KHR);
+        ENUM_CASE(VK_ERROR_TOO_MANY_OBJECTS);
+        ENUM_CASE(VK_ERROR_VALIDATION_FAILED_EXT);
+        ENUM_CASE(VK_EVENT_RESET);
+        ENUM_CASE(VK_EVENT_SET);
+        ENUM_CASE(VK_INCOMPLETE);
+        ENUM_CASE(VK_NOT_READY);
+        ENUM_CASE(VK_SUBOPTIMAL_KHR);
+        ENUM_CASE(VK_SUCCESS);
+        ENUM_CASE(VK_TIMEOUT);
+        
+		default:
+			return "Unhandled VkResult";
+    }
+
+	#undef ENUM
 }
