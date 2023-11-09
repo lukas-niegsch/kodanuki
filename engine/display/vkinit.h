@@ -132,7 +132,11 @@ struct VulkanTarget
 
 struct VulkanTensor
 {
-
+	vktype::buffer_t         primary_buffer;
+	vktype::buffer_t         staging_buffer;
+	std::vector<std::size_t> shape;
+	uint32_t                 element_size;
+	uint32_t                 element_count;
 };
 
 
@@ -179,7 +183,9 @@ OptionalWrapper<VulkanTarget> target(const VulkanTargetBuilder& builder, VulkanD
 
 struct VulkanTensorBuilder
 {
-
+	std::vector<std::size_t> shape;
+	uint32_t                 element_size;
+	VkBufferUsageFlags       usage;
 };
 OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanDevice device);
 

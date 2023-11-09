@@ -78,6 +78,30 @@ int main()
 		.frame_count  = 3
 	}, device).expect("[Error] Failed to create window!");
 
+	VulkanTensor vertex_tensor = vkinit::tensor({
+		.shape        = {window.image_specs.frame_count, 3},
+		.element_size = sizeof(Vertex),
+		.usage        = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+	}, device).expect("[Error] Failed to create vertex tensor!");
+
+	VulkanTensor instance_tensor = vkinit::tensor({
+		.shape        = {window.image_specs.frame_count, 1},
+		.element_size = sizeof(glm::vec3),
+		.usage        = 0,
+	}, device).expect("[Error] Failed to create instance tensor!");
+
+	VulkanTensor index_tensor = vkinit::tensor({
+		.shape        = {window.image_specs.frame_count, 3},
+		.element_size = sizeof(uint32_t),
+		.usage        = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+	}, device).expect("[Error] Failed to create index tensor!");
+
+	VulkanTensor mvp_tensor = vkinit::tensor({
+		.shape        = {window.image_specs.frame_count, 3},
+		.element_size = sizeof(glm::mat4),
+		.usage        = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+	}, device).expect("[Error] Failed to create mpv tensor!");
+
 
 	bool running = true;
 	sf::WindowBase& native_window = window.window;

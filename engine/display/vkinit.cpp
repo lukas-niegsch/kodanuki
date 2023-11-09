@@ -1018,8 +1018,33 @@ OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanD
 {
 	VulkanTensor tensor;
 
-	(void) builder;
-	(void) device;
+	std::size_t element_count = 1;
+	for (auto dimension : builder.shape) {
+		element_count *= dimension;
+	}
+	tensor.shape = builder.shape;
+	tensor.element_size = builder.element_size;
+	tensor.element_count = element_count;
+
+	try {
+		VkBufferUsageFlags primary_usage_flags = builder.usage;
+		primary_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		primary_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		tensor.primary_buffer = create_buffer(device.allocator,
+			primary_usage_flags, tensor.element_size, tensor.element_count);
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create primary buffer."};
+	}
+
+	try {
+		VkBufferUsageFlags staging_usage_flags = 0;
+		staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		tensor.staging_buffer = create_buffer(device.allocator,
+			staging_usage_flags, tensor.element_size, tensor.element_count);
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create staging buffer."};
+	}
 
 	return {tensor, "", ""};
 }

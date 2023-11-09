@@ -116,7 +116,7 @@ void record_frame(VulkanDevice device, VulkanWindow& window, std::vector<std::fu
 	VkImageMemoryBarrier final_image_memory_barrier = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
 		.pNext = nullptr,
-		.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+		.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
 		.dstAccessMask = 0,
 		.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
