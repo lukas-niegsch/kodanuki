@@ -6,12 +6,7 @@
 #include "engine/nekolib/templates/type_name.h"
 #include <sstream>
 #include <stdexcept>
-	
-std::ostream& operator<<(std::ostream& os, const VkResult& result)
-{
-	os << string_VkResult(result);
-	return os;
-}
+
 
 namespace kodanuki::vkinit
 {
@@ -21,30 +16,10 @@ namespace kodanuki::vkinit
  */
 static constexpr bool ENABLE_AUTOWRAPPER_PRINTING = false; 
 
+/**
+ * The vulkan API version that is used inside the renderer.
+ */
 static constexpr uint32_t VULKAN_VERSION = VK_API_VERSION_1_3;
-
-/**
- * Makro that terminates the program and prints some debug information.
- */
-#define ERROR(reason)									\
-	do {												\
-		std::stringstream err;							\
-		err << "VkResult was " << (reason) << '\n';		\
-		err << "[Error] in file: " << __FILE__ << '\n';	\
-		err << "[Error] in line: " << __LINE__ << '\n';	\
-		throw std::runtime_error(err.str());    		\
-	} while (false)
-
-/**
- * Makro that checks if the vulkan function call was executed successfully.
- */
-#define CHECK_VULKAN(result)					\
-	do {										\
-		auto return_type = result;				\
-		if (return_type != VK_SUCCESS) {		\
-			ERROR(return_type);					\
-		}										\
-	} while (false)
 
 template <auto fn_create>
 constexpr bool is_vma = [](){
@@ -401,7 +376,7 @@ vktype::descriptor_pool_t create_descriptor_pool(
  * @param pool The descriptor pool from which the set is allocated.
  * @param layout The layout for the descriptor set.
  */
-vktype::descriptor_set_t descriptor_set(
+vktype::descriptor_set_t create_descriptor_set(
 	vktype::device_t            device,
 	vktype::descriptor_pool_t   pool,
 	vktype::descriptor_layout_t layout)
@@ -678,7 +653,6 @@ vktype::pipeline_layout_t create_pipeline_layout(
  * testing, simple color blending, no multisampling and no tesselation.
  *
  * @param device The device that stores and compiles the pipeline.
- * @param renderpass The renderpass inside which the pipeline runs.
  * @param layout The layout of the pipeline.
  * @param vertex_shader The vertex shader.
  * @param fragment_shader The fragment shader.
@@ -687,16 +661,17 @@ vktype::pipeline_layout_t create_pipeline_layout(
  * @param input_bindings The description on how often inputs are bound and their size.
  * @param input_attributes The description for the different binding attributes.
  */
-vktype::pipeline_t graphics_pipeline(
+vktype::pipeline_t create_graphics_pipeline(
 	vktype::device_t                               device,
-	vktype::renderpass_t                           renderpass,
 	vktype::pipeline_layout_t                      layout,
 	vktype::shader_module_t                        vertex_shader,
 	vktype::shader_module_t                        fragment_shader,
 	VkExtent2D                                     viewport_extent,
 	VkPrimitiveTopology                            input_topology,
 	std::vector<VkVertexInputBindingDescription>   input_bindings,
-	std::vector<VkVertexInputAttributeDescription> input_attributes)
+	std::vector<VkVertexInputAttributeDescription> input_attributes,
+	VkFormat                                       color_format,
+	VkFormat                                       depth_format)
 {
 	std::array<VkPipelineShaderStageCreateInfo, 2> shader_stages;
 	for (auto& stage : shader_stages) {
@@ -807,9 +782,18 @@ vktype::pipeline_t graphics_pipeline(
 		.pAttachments = &color_blend_attachment,
 		.blendConstants = {0.0f, 0.0f, 0.0f, 0.0f},
 	};
+	VkPipelineRenderingCreateInfo dynamic_rendering_info = {
+    	.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+    	.pNext = nullptr,
+    	.viewMask = 0,
+    	.colorAttachmentCount = 1,
+    	.pColorAttachmentFormats = &color_format,
+    	.depthAttachmentFormat = depth_format,
+    	.stencilAttachmentFormat = {},
+	};
 	return autowrapper<vkCreateGraphicsPipelines, vkDestroyPipeline>({
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-		.pNext = nullptr,
+		.pNext = &dynamic_rendering_info,
 		.flags = 0,
 		.stageCount = shader_stages.size(),
 		.pStages = shader_stages.data(),
@@ -823,7 +807,7 @@ vktype::pipeline_t graphics_pipeline(
 		.pColorBlendState = &color_blend,
 		.pDynamicState = nullptr,
 		.layout = layout,
-		.renderPass = renderpass,
+		.renderPass = VK_NULL_HANDLE,
 		.subpass = 0,
 		.basePipelineHandle = VK_NULL_HANDLE,
 		.basePipelineIndex = -1,
@@ -902,11 +886,6 @@ OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanD
 	window.image_specs.frame_count = builder.frame_count;
 	window.submit_frame = 0;
 	window.render_frame = 0;
-	window.render_image_views.resize(builder.frame_count);
-	window.render_buffers.resize(builder.frame_count);
-	window.image_available_semaphores.resize(builder.frame_count);
-	window.render_finished_semaphores.resize(builder.frame_count);
-	window.aquire_frame_fences.resize(builder.frame_count);
 
 	try {
 		window.window = vktype::window_t(new sf::WindowBase(sf::VideoMode(
@@ -925,22 +904,28 @@ OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanD
 		return {{}, error.what(), "Failed to create surface."};
 	}
 
+	window.surface_extent = get_surface_extent(device.hardware, window.surface);
+
 	try {
-		VkExtent2D extent = get_surface_extent(device.hardware,
-			window.surface);
 		window.swapchain = create_swapchain(device.device,
-			window.surface, window.image_specs, extent);
+			window.surface, window.image_specs, window.surface_extent);
 	} catch (std::runtime_error& error) {
 		return {{}, error.what(), "Failed to create swapchain."};
 	}
 
+	window.render_image_views.resize(builder.frame_count);
+	window.render_buffers.resize(builder.frame_count);
+	window.image_available_semaphores.resize(builder.frame_count);
+	window.render_finished_semaphores.resize(builder.frame_count);
+	window.aquire_frame_fences.resize(builder.frame_count);
+
 	try {
-		auto render_images = vectorize<vkGetSwapchainImagesKHR>(
+		window.render_images = vectorize<vkGetSwapchainImagesKHR>(
 			device.device, window.swapchain);
 		for (uint32_t i = 0; i < builder.frame_count; i++) {
 			window.render_image_views[i] = create_image_view(
 				device.device, window.image_specs.color_format,
-				render_images[i], VK_IMAGE_ASPECT_COLOR_BIT);
+				window.render_images[i], VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 	} catch (std::runtime_error& error) {
 		return {{}, error.what(), "Failed to create render image views."};
@@ -966,10 +951,8 @@ OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanD
 	}
 
 	try {
-		VkExtent2D extent = get_surface_extent(device.hardware,
-			window.surface);
 		window.depth_image = create_image(device.allocator,
-			window.image_specs.depth_format, extent,
+			window.image_specs.depth_format, window.surface_extent,
 			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 	} catch (std::runtime_error& error) {
 		return {{}, error.what(), "Failed to create depth image."};
@@ -984,6 +967,66 @@ OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanD
 	}
 
 	return {window, "", ""};
+}
+
+OptionalWrapper<VulkanTarget> target(const VulkanTargetBuilder& builder, VulkanDevice device, VulkanWindow window)
+{
+	VulkanTarget target;
+
+	try {
+		target.descriptor_layout = create_descriptor_layout(
+			device.device, builder.descriptor_bindings);
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create descriptor layout."};
+	}
+
+	try {
+		target.descriptor_set = create_descriptor_set(
+			device.device, device.descriptor_pool, target.descriptor_layout);
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create descriptor set."};
+	}
+
+	try {
+		target.pipeline_layout = create_pipeline_layout(
+			device.device, {target.descriptor_layout}, builder.push_constants);
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create pipeline layout."};
+	}
+
+	try {
+		vktype::shader_module_t vertex_shader = create_shader_module(
+			device.device, builder.path_vertex_shader.c_str());
+
+		vktype::shader_module_t fragment_shader = create_shader_module(
+			device.device, builder.path_fragment_shader.c_str());
+
+		target.graphics_pipeline = create_graphics_pipeline(
+			device.device, target.pipeline_layout,
+			vertex_shader, fragment_shader, window.surface_extent,
+			builder.vertex_input_topology, builder.vertex_input_bindings,
+			builder.vertex_input_attributes, window.image_specs.color_format,
+			window.image_specs.depth_format);
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create graphics pipeline."};
+	}
+
+	return {target, "", ""};
+}
+
+}
+
+namespace kodanuki
+{
+
+void VulkanWindow::recreate(VulkanDevice device)
+{
+	CHECK_VULKAN(vkDeviceWaitIdle(device));
+
+	// TODO: implement this method
+	// -> recreate swapchain and color image views
+	// -> reset frame counts
+	// -> maybe more ...
 }
 
 }

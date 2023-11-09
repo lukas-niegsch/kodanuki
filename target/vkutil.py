@@ -182,10 +182,11 @@ class VulkanStruct:
 if __name__ == '__main__':
 	vk_root = ElementTree.parse('/usr/share/vulkan/registry/vk.xml')
 	structs = VulkanStruct.list_from_xml(vk_root)
+	print(f'{len(structs) = }')
+	print()
 
-	for struct in structs:
-		print(f'translation for {struct.native_name}:')
+	for struct in structs[:3]:
+		print('-' * 30)
+		print(struct.native_string())
 		print()
 		print(struct.custom_string())
-		print()
-		print('-' * 30)

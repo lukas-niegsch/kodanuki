@@ -6,6 +6,37 @@
 #include <vk_mem_alloc.h>
 #include <SFML/Window.hpp>
 #include <vector>
+#include <sstream>
+
+
+/**
+ * Makro that terminates the program and prints some debug information.
+ */
+#define ERROR(reason)									\
+	do {												\
+		std::stringstream err;							\
+		err << "VkResult was " << (reason) << '\n';		\
+		err << "[Error] in file: " << __FILE__ << '\n';	\
+		err << "[Error] in line: " << __LINE__ << '\n';	\
+		throw std::runtime_error(err.str());    		\
+	} while (false)
+
+/**
+ * Makro that checks if the vulkan function call was executed successfully.
+ */
+#define CHECK_VULKAN(result)					\
+	do {										\
+		auto return_type = result;				\
+		if (return_type != VK_SUCCESS) {		\
+			ERROR(return_type);					\
+		}										\
+	} while (false)
+
+inline std::ostream& operator<<(std::ostream& os, const VkResult& result)
+{
+	os << string_VkResult(result);
+	return os;
+}
 
 
 namespace kodanuki
@@ -30,7 +61,6 @@ using framebuffer_t       = shared_wrapper_t<VkFramebuffer>;
 using buffer_t            = shared_wrapper_t<VkBuffer>;
 using image_t             = shared_wrapper_t<VkImage>;
 using image_view_t        = shared_wrapper_t<VkImageView>;
-using memory_t            = shared_wrapper_t<VkDeviceMemory>;
 using descriptor_pool_t   = shared_wrapper_t<VkDescriptorPool>;
 using descriptor_layout_t = shared_wrapper_t<VkDescriptorSetLayout>;
 using descriptor_set_t    = shared_wrapper_t<VkDescriptorSet>;
@@ -67,6 +97,8 @@ struct VulkanDevice
 	vktype::command_pool_t    command_pool;
 	vktype::descriptor_pool_t descriptor_pool;
 	vktype::vma_t             allocator;
+
+	operator VkDevice() const { return device; }
 };
 
 struct VulkanWindow
@@ -75,6 +107,7 @@ struct VulkanWindow
 	vktype::surface_t                     surface;
 	vktype::swapchain_t                   swapchain;
 	vktype::img_specs_t                   image_specs;
+	std::vector<VkImage>                  render_images;
 	std::vector<vktype::image_view_t>     render_image_views;
 	std::vector<vktype::command_buffer_t> render_buffers;
 	std::vector<vktype::semaphore_t>      image_available_semaphores;
@@ -82,14 +115,19 @@ struct VulkanWindow
 	std::vector<vktype::fence_t>          aquire_frame_fences;
 	vktype::image_t                       depth_image;
 	vktype::image_view_t                  depth_image_view;
-	vktype::memory_t                      depth_image_memory;
+	VkExtent2D                            surface_extent;
 	uint32_t                              submit_frame;
 	uint32_t                              render_frame;
+
+	void recreate(VulkanDevice device);
 };
 
 struct VulkanTarget
 {
-
+	vktype::descriptor_layout_t descriptor_layout;
+	vktype::descriptor_set_t    descriptor_set;
+	vktype::pipeline_layout_t   pipeline_layout;
+	vktype::pipeline_t          graphics_pipeline;
 };
 
 struct VulkanTensor
@@ -129,6 +167,20 @@ struct VulkanWindowBuilder
 	uint32_t            frame_count;
 };
 OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanDevice device);
+
+
+struct VulkanTargetBuilder
+{
+	std::string                                    path_vertex_shader;
+	std::string                                    path_fragment_shader;
+	std::vector<VkPushConstantRange>               push_constants;
+	std::vector<VkDescriptorSetLayoutBinding>      descriptor_bindings;
+	std::vector<VkVertexInputBindingDescription>   vertex_input_bindings;
+	std::vector<VkVertexInputAttributeDescription> vertex_input_attributes;
+	VkPrimitiveTopology                            vertex_input_topology;
+};
+OptionalWrapper<VulkanTarget> target(const VulkanTargetBuilder& builder, VulkanDevice device, VulkanWindow window);
+
 
 }
 
