@@ -17,7 +17,7 @@ struct OptionalWrapper
 	T expect(std::string message)
 	{
 		if (!optional) {
-			std::cout << message << '\n';
+			std::cout << "[Error] " << message << '\n';
 			std::cout << "[Error] because: " << error_result << '\n';
 			std::cout << "[Error] because: " << error_reason;
 			std::abort();

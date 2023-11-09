@@ -398,10 +398,11 @@ vktype::descriptor_set_t create_descriptor_set(
  * @param specs The configuration for the images.
  */
 vktype::swapchain_t create_swapchain(
-	vktype::device_t    device,
-	vktype::surface_t   surface,
-	vktype::img_specs_t specs,
-	VkExtent2D          surface_extent)
+	vktype::device_t          device,
+	vktype::surface_t         surface,
+	vktype::img_specs_t       specs,
+	VkExtent2D                surface_extent,
+	const vktype::swapchain_t old_swapchain = {})
 {
 	return autowrapper<vkCreateSwapchainKHR, vkDestroySwapchainKHR>({
 		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -421,7 +422,7 @@ vktype::swapchain_t create_swapchain(
 		.compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
 		.presentMode = specs.present_mode,
 		.clipped = VK_TRUE,
-		.oldSwapchain = VK_NULL_HANDLE,
+		.oldSwapchain = old_swapchain,
 	}, device);
 }
 
@@ -876,78 +877,30 @@ OptionalWrapper<VulkanDevice> device(const VulkanDeviceBuilder& builder)
 	return {device, "", ""};
 }
 
-OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanDevice device)
+OptionalWrapper<VulkanWindow> finalize_dynamic_window(VulkanWindow window, VulkanDevice device)
 {
-	VulkanWindow window;
-	window.image_specs.depth_format = builder.depth_format;
-	window.image_specs.color_format = builder.color_format;
-	window.image_specs.color_space = builder.color_space;
-	window.image_specs.present_mode = builder.present_mode;
-	window.image_specs.frame_count = builder.frame_count;
+	window.surface_extent = get_surface_extent(device.hardware, window.surface);
 	window.submit_frame = 0;
 	window.render_frame = 0;
 
 	try {
-		window.window = vktype::window_t(new sf::WindowBase(sf::VideoMode(
-			builder.shape.first, builder.shape.second), builder.title),
-			[](sf::WindowBase* ptr) {delete ptr; });
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create native window."};
-	}
-
-	try {
-		window.surface = create_surface(device.instance,
-			[&](VkInstance instance, VkSurfaceKHR& surface) {
-				static_cast<sf::WindowBase&>(window.window).createVulkanSurface(
-					instance, surface); });
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create surface."};
-	}
-
-	window.surface_extent = get_surface_extent(device.hardware, window.surface);
-
-	try {
 		window.swapchain = create_swapchain(device.device,
-			window.surface, window.image_specs, window.surface_extent);
+			window.surface, window.image_specs, window.surface_extent,
+			window.swapchain);
 	} catch (std::runtime_error& error) {
 		return {{}, error.what(), "Failed to create swapchain."};
 	}
 
-	window.render_image_views.resize(builder.frame_count);
-	window.render_buffers.resize(builder.frame_count);
-	window.image_available_semaphores.resize(builder.frame_count);
-	window.render_finished_semaphores.resize(builder.frame_count);
-	window.aquire_frame_fences.resize(builder.frame_count);
-
 	try {
 		window.render_images = vectorize<vkGetSwapchainImagesKHR>(
 			device.device, window.swapchain);
-		for (uint32_t i = 0; i < builder.frame_count; i++) {
+		for (uint32_t i = 0; i < window.image_specs.frame_count; i++) {
 			window.render_image_views[i] = create_image_view(
 				device.device, window.image_specs.color_format,
 				window.render_images[i], VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 	} catch (std::runtime_error& error) {
 		return {{}, error.what(), "Failed to create render image views."};
-	}
-
-	try {
-		for (uint32_t i = 0; i < builder.frame_count; i++) {
-			window.render_buffers[i] = create_command_buffer(
-				device.device, device.command_pool);
-		}
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create command buffers."};
-	}
-
-	try {
-		for (uint32_t i = 0; i < builder.frame_count; i++) {
-			window.image_available_semaphores[i] = create_semaphore(device.device);
-			window.render_finished_semaphores[i] = create_semaphore(device.device);
-			window.aquire_frame_fences[i] = create_fence(device.device, VK_FENCE_CREATE_SIGNALED_BIT);
-		}
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create synchronization objects."};
 	}
 
 	try {
@@ -967,6 +920,59 @@ OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanD
 	}
 
 	return {window, "", ""};
+}
+
+OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanDevice device)
+{
+	VulkanWindow window;
+	window.image_specs.depth_format = builder.depth_format;
+	window.image_specs.color_format = builder.color_format;
+	window.image_specs.color_space = builder.color_space;
+	window.image_specs.present_mode = builder.present_mode;
+	window.image_specs.frame_count = builder.frame_count;
+	window.render_image_views.resize(window.image_specs.frame_count);
+	window.render_buffers.resize(window.image_specs.frame_count);
+	window.image_available_semaphores.resize(window.image_specs.frame_count);
+	window.render_finished_semaphores.resize(window.image_specs.frame_count);
+	window.aquire_frame_fences.resize(window.image_specs.frame_count);
+
+	try {
+		window.window = vktype::window_t(new sf::WindowBase(sf::VideoMode(
+			builder.shape.first, builder.shape.second), builder.title),
+			[](sf::WindowBase* ptr) {delete ptr; });
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create native window."};
+	}
+
+	try {
+		window.surface = create_surface(device.instance,
+			[&](VkInstance instance, VkSurfaceKHR& surface) {
+				static_cast<sf::WindowBase&>(window.window).createVulkanSurface(
+					instance, surface); });
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create surface."};
+	}
+
+	try {
+		for (uint32_t i = 0; i < window.image_specs.frame_count; i++) {
+			window.render_buffers[i] = create_command_buffer(
+				device.device, device.command_pool);
+		}
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create command buffers."};
+	}
+
+	try {
+		for (uint32_t i = 0; i < window.image_specs.frame_count; i++) {
+			window.image_available_semaphores[i] = create_semaphore(device.device);
+			window.render_finished_semaphores[i] = create_semaphore(device.device);
+			window.aquire_frame_fences[i] = create_fence(device.device, VK_FENCE_CREATE_SIGNALED_BIT);
+		}
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create synchronization objects."};
+	}
+
+	return finalize_dynamic_window(window, device);
 }
 
 OptionalWrapper<VulkanTarget> target(const VulkanTargetBuilder& builder, VulkanDevice device, VulkanWindow window)
@@ -1056,12 +1062,8 @@ namespace kodanuki
 
 void VulkanWindow::recreate(VulkanDevice device)
 {
-	CHECK_VULKAN(vkDeviceWaitIdle(device));
-
-	// TODO: implement this method
-	// -> recreate swapchain and color image views
-	// -> reset frame counts
-	// -> maybe more ...
+	*this = vkinit::finalize_dynamic_window(*this, device)
+		.expect("Failed to recreate window!");
 }
 
 }

@@ -52,7 +52,7 @@ VulkanTarget create_torus_target(VulkanDevice device, VulkanWindow window)
 			{4, 1, VK_FORMAT_R32G32B32_SFLOAT, 0},
 		},
 		.vertex_input_topology   = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-	}, device, window).expect("[Error] Failed to create target!");
+	}, device, window).expect("Failed to create target!");
 
 	return target;
 }
@@ -66,7 +66,7 @@ int main()
 		.device_extensions   = {"VK_KHR_swapchain"},
 		.score_device        = &score_device_hardware,
 		.queue_priorities    = {1.0f},
-	}).expect("[Error] Failed to create device!");
+	}).expect("Failed to create device!");
 
 	VulkanWindow window = vkinit::window({
 		.title        = "Torus",
@@ -76,31 +76,32 @@ int main()
 		.color_space  = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
 		.present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR,
 		.frame_count  = 3
-	}, device).expect("[Error] Failed to create window!");
+	}, device).expect("Failed to create window!");
+
 
 	VulkanTensor vertex_tensor = vkinit::tensor({
 		.shape        = {window.image_specs.frame_count, 3},
 		.element_size = sizeof(Vertex),
 		.usage        = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-	}, device).expect("[Error] Failed to create vertex tensor!");
+	}, device).expect("Failed to create vertex tensor!");
 
 	VulkanTensor instance_tensor = vkinit::tensor({
 		.shape        = {window.image_specs.frame_count, 1},
 		.element_size = sizeof(glm::vec3),
 		.usage        = 0,
-	}, device).expect("[Error] Failed to create instance tensor!");
+	}, device).expect("Failed to create instance tensor!");
 
 	VulkanTensor index_tensor = vkinit::tensor({
 		.shape        = {window.image_specs.frame_count, 3},
 		.element_size = sizeof(uint32_t),
 		.usage        = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-	}, device).expect("[Error] Failed to create index tensor!");
+	}, device).expect("Failed to create index tensor!");
 
 	VulkanTensor mvp_tensor = vkinit::tensor({
 		.shape        = {window.image_specs.frame_count, 3},
 		.element_size = sizeof(glm::mat4),
 		.usage        = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-	}, device).expect("[Error] Failed to create mpv tensor!");
+	}, device).expect("Failed to create mpv tensor!");
 
 
 	bool running = true;
