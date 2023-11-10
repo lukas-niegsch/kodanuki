@@ -14,71 +14,16 @@ struct Vertex
 	bool operator==(const Vertex& other) const;
 };
 
-std::vector<const char*> get_instance_extensions()
+struct RenderTensors
 {
-	std::vector<const char*> extensions
-		= sf::Vulkan::getGraphicsRequiredInstanceExtensions();
-	extensions.push_back("VK_EXT_debug_utils");
-	return extensions;
-}
+	VulkanTensor vertex_tensor;
+	VulkanTensor instance_tensor;
+	VulkanTensor index_tensor;
+	VulkanTensor mvp_tensor;
+};
 
-int score_device_hardware(vktype::hardware_t hardware)
+RenderTensors get_render_tensors(VulkanDevice device, VulkanWindow window)
 {
-	int score = 0;
-	score += hardware.physical_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
-	score *= hardware.queue_family_properties.queueCount;
-	score *= hardware.queue_family_properties.queueFlags & VK_QUEUE_GRAPHICS_BIT;
-	return score;
-}
-
-VulkanTarget create_torus_target(VulkanDevice device, VulkanWindow window)
-{
-	VulkanTarget target = vkinit::target({
-		.path_vertex_shader      = "assets/shaders/fluid.vert.spv",
-		.path_fragment_shader    = "assets/shaders/fluid.frag.spv",
-		.push_constants          = {},
-		.descriptor_bindings     = {
-			{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}
-		},
-		.vertex_input_bindings   = {
-			{0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX},
-			{1, sizeof(glm::vec3), VK_VERTEX_INPUT_RATE_INSTANCE},
-		},
-		.vertex_input_attributes = {
-			{0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position)},
-			{1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color)},
-			{2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal)},
-			{3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv)},
-			{4, 1, VK_FORMAT_R32G32B32_SFLOAT, 0},
-		},
-		.vertex_input_topology   = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-	}, device, window).expect("Failed to create target!");
-
-	return target;
-}
-
-int main()
-{
-	VulkanDevice device = vkinit::device({
-		.instance_layers     = {"VK_LAYER_KHRONOS_validation"},
-		.instance_extensions = get_instance_extensions(),
-		.device_layers       = {},
-		.device_extensions   = {"VK_KHR_swapchain"},
-		.score_device        = &score_device_hardware,
-		.queue_priorities    = {1.0f},
-	}).expect("Failed to create device!");
-
-	VulkanWindow window = vkinit::window({
-		.title        = "Torus",
-		.shape        = {1950, 1200},
-		.depth_format = VK_FORMAT_D32_SFLOAT_S8_UINT,
-		.color_format = VK_FORMAT_B8G8R8A8_UNORM,
-		.color_space  = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-		.present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR,
-		.frame_count  = 3
-	}, device).expect("Failed to create window!");
-
-
 	VulkanTensor vertex_tensor = vkinit::tensor({
 		.shape        = {window.image_specs.frame_count, 3},
 		.element_size = sizeof(Vertex),
@@ -117,9 +62,95 @@ int main()
 		mvp_tensor.get<glm::mat4>({i, 2}) = glm::mat4(1.0f);
 	}
 
+	RenderTensors result;
+	result.vertex_tensor = vertex_tensor;
+	result.instance_tensor = instance_tensor;
+	result.index_tensor = index_tensor;
+	result.mvp_tensor = mvp_tensor;
+	return result;
+}
+
+std::vector<const char*> get_instance_extensions()
+{
+	std::vector<const char*> extensions
+		= sf::Vulkan::getGraphicsRequiredInstanceExtensions();
+	extensions.push_back("VK_EXT_debug_utils");
+	return extensions;
+}
+
+int score_device_hardware(vktype::hardware_t hardware)
+{
+	int score = 0;
+	score += hardware.physical_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+	score *= hardware.queue_family_properties.queueCount;
+	score *= hardware.queue_family_properties.queueFlags & VK_QUEUE_GRAPHICS_BIT;
+	return score;
+}
+
+VulkanTarget create_hardcoded_triangle_target(VulkanDevice device, VulkanWindow window)
+{
+	VulkanTarget target = vkinit::target({
+		.path_vertex_shader      = "assets/shaders/hardcoded_triangle.vert.spv",
+		.path_fragment_shader    = "assets/shaders/hardcoded_triangle.frag.spv",
+		.push_constants          = {},
+		.descriptor_bindings     = {},
+		.vertex_input_bindings   = {},
+		.vertex_input_attributes = {},
+		.vertex_input_topology   = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+	}, device, window).expect("Failed to create target!");
+	return target;
+}
+
+VulkanTarget create_torus_target(VulkanDevice device, VulkanWindow window)
+{
+	VulkanTarget target = vkinit::target({
+		.path_vertex_shader      = "assets/shaders/fluid.vert.spv",
+		.path_fragment_shader    = "assets/shaders/fluid.frag.spv",
+		.push_constants          = {},
+		.descriptor_bindings     = {
+			{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}
+		},
+		.vertex_input_bindings   = {
+			{0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX},
+			{1, sizeof(glm::vec3), VK_VERTEX_INPUT_RATE_INSTANCE},
+		},
+		.vertex_input_attributes = {
+			{0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position)},
+			{1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color)},
+			{2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal)},
+			{3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv)},
+			{4, 1, VK_FORMAT_R32G32B32_SFLOAT, 0},
+		},
+		.vertex_input_topology   = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+	}, device, window).expect("Failed to create target!");
+	return target;
+}
+
+int main()
+{
+	VulkanDevice device = vkinit::device({
+		.instance_layers     = {"VK_LAYER_KHRONOS_validation"},
+		.instance_extensions = get_instance_extensions(),
+		.device_layers       = {},
+		.device_extensions   = {"VK_KHR_swapchain"},
+		.score_device        = &score_device_hardware,
+		.queue_priorities    = {1.0f},
+	}).expect("Failed to create device!");
+
+	VulkanWindow window = vkinit::window({
+		.title        = "Torus",
+		.shape        = {1950, 1200},
+		.depth_format = VK_FORMAT_D32_SFLOAT_S8_UINT,
+		.color_format = VK_FORMAT_B8G8R8A8_UNORM,
+		.color_space  = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+		.present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR,
+		.frame_count  = 3
+	}, device).expect("Failed to create window!");
+
+
 	bool running = true;
 	sf::WindowBase& native_window = window.window;
-	VulkanTarget target = create_torus_target(device, window);
+	VulkanTarget target = create_hardcoded_triangle_target(device, window);
 
 	while (running) {
 		sf::Event event;
@@ -128,12 +159,20 @@ int main()
 				running = false;
 			} else if (event.type == sf::Event::Resized) {
 				window.recreate(device);
-				target = create_torus_target(device, window);
+				target = create_hardcoded_triangle_target(device, window);
 			}
 		}
 
 		vkutil::aquire_frame(device, window);
-		vkutil::record_frame(device, window, {});
+
+		std::vector<std::function<void(VkCommandBuffer)>> commands = {
+			[=](VkCommandBuffer buffer){
+				vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, target.graphics_pipeline);
+				vkCmdDraw(buffer, 3, 1, 0, 0);
+			}
+		};
+
+		vkutil::record_frame(device, window, commands);
 		vkutil::submit_frame(device, window);
 		vkutil::render_frame(device, window);
 	}

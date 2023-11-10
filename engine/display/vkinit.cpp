@@ -735,7 +735,7 @@ vktype::pipeline_t create_graphics_pipeline(
 		.depthClampEnable = VK_FALSE,
 		.rasterizerDiscardEnable = VK_FALSE,
 		.polygonMode = VK_POLYGON_MODE_FILL,
-		.cullMode = VK_CULL_MODE_BACK_BIT,
+		.cullMode = VK_CULL_MODE_NONE, // VK_CULL_MODE_BACK_BIT,
 		.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
 		.depthBiasEnable = VK_FALSE,
 		.depthBiasConstantFactor = 0.0f,
@@ -1077,6 +1077,7 @@ namespace kodanuki
 
 void VulkanWindow::recreate(VulkanDevice device)
 {
+	CHECK_VULKAN(vkDeviceWaitIdle(device));
 	*this = vkinit::finalize_dynamic_window(*this, device)
 		.expect("Failed to recreate window!");
 }
