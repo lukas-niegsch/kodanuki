@@ -3,8 +3,10 @@
 #include <functional>
 
 
-namespace kodanuki::vkutil
+namespace kodanuki::vkdraw
 {
+
+using fn_draw = std::function<void(VkCommandBuffer)>;
 
 /**
  * Aquires the next frame for rendering.
@@ -21,7 +23,7 @@ void aquire_frame(VulkanDevice device, VulkanWindow& window);
  * @param window The window that renders the frame.
  * @param commands The draw commands for recording.
  */
-void record_frame(VulkanDevice device, VulkanWindow& window, std::vector<std::function<void(VkCommandBuffer)>> commands);
+void record_frame(VulkanDevice device, VulkanWindow& window, std::vector<fn_draw> commands);
 
 /**
  * Submits the commands for the current frame.

@@ -1,5 +1,5 @@
 #include "engine/display/vkinit.h"
-#include "engine/display/vkutil.h"
+#include "engine/display/vkdraw.h"
 #include <glm/glm.hpp>
 using namespace kodanuki;
 
@@ -50,9 +50,12 @@ RenderTensors get_render_tensors(VulkanDevice device, VulkanWindow window)
 
 	
 	for (uint32_t i = 0; i < window.image_specs.frame_count; i++) {
-		vertex_tensor.get<Vertex>({i, 0}).position = {0, 0, 0};
-		vertex_tensor.get<Vertex>({i, 1}).position = {1, 0, 0};
-		vertex_tensor.get<Vertex>({i, 2}).position = {0, 0, 1};
+		vertex_tensor.get<Vertex>({i, 0}).position = { 0.0, -0.5, 0};
+		vertex_tensor.get<Vertex>({i, 1}).position = { 0.5,  0.5, 0};
+		vertex_tensor.get<Vertex>({i, 2}).position = {-0.5,  0.5, 0};
+		vertex_tensor.get<Vertex>({i, 0}).color = {1, 0, 0};
+		vertex_tensor.get<Vertex>({i, 1}).color = {0, 1, 0};
+		vertex_tensor.get<Vertex>({i, 2}).color = {0, 0, 1};
 		instance_tensor.get<glm::vec3>({i, 0}) = {0, 0, 0};
 		index_tensor.get<uint32_t>({i, 0}) = 0;
 		index_tensor.get<uint32_t>({i, 1}) = 1;
@@ -87,15 +90,20 @@ int score_device_hardware(vktype::hardware_t hardware)
 	return score;
 }
 
-VulkanTarget create_hardcoded_triangle_target(VulkanDevice device, VulkanWindow window)
+VulkanTarget create_triangle_target(VulkanDevice device, VulkanWindow window)
 {
 	VulkanTarget target = vkinit::target({
-		.path_vertex_shader      = "assets/shaders/hardcoded_triangle.vert.spv",
-		.path_fragment_shader    = "assets/shaders/hardcoded_triangle.frag.spv",
+		.path_vertex_shader      = "assets/shaders/triangle.vert.spv",
+		.path_fragment_shader    = "assets/shaders/triangle.frag.spv",
 		.push_constants          = {},
 		.descriptor_bindings     = {},
-		.vertex_input_bindings   = {},
-		.vertex_input_attributes = {},
+		.vertex_input_bindings   = {
+			{0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX},
+		},
+		.vertex_input_attributes = {
+			{0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position)},
+			{1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color)},
+		},
 		.vertex_input_topology   = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 	}, device, window).expect("Failed to create target!");
 	return target;
@@ -150,7 +158,8 @@ int main()
 
 	bool running = true;
 	sf::WindowBase& native_window = window.window;
-	VulkanTarget target = create_hardcoded_triangle_target(device, window);
+	VulkanTarget target = create_triangle_target(device, window);
+	RenderTensors tensors = get_render_tensors(device, window);
 
 	while (running) {
 		sf::Event event;
@@ -159,22 +168,24 @@ int main()
 				running = false;
 			} else if (event.type == sf::Event::Resized) {
 				window.recreate(device);
-				target = create_hardcoded_triangle_target(device, window);
+				target = create_triangle_target(device, window);
 			}
 		}
 
-		vkutil::aquire_frame(device, window);
+		vkdraw::aquire_frame(device, window);
 
-		std::vector<std::function<void(VkCommandBuffer)>> commands = {
-			[=](VkCommandBuffer buffer){
-				vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, target.graphics_pipeline);
-				vkCmdDraw(buffer, 3, 1, 0, 0);
-			}
+		auto draw_triangle = [=](VkCommandBuffer buffer){
+			VkBuffer vertex_buffers[] = {tensors.vertex_tensor.staging_buffer};
+			VkDeviceSize offsets[] = {0};
+
+			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, target.graphics_pipeline);
+			vkCmdBindVertexBuffers(buffer, 0, 1, vertex_buffers, offsets);
+			vkCmdDraw(buffer, 3, 1, 0, 0);
 		};
 
-		vkutil::record_frame(device, window, commands);
-		vkutil::submit_frame(device, window);
-		vkutil::render_frame(device, window);
+		vkdraw::record_frame(device, window, {draw_triangle});
+		vkdraw::submit_frame(device, window);
+		vkdraw::render_frame(device, window);
 	}
 
 	CHECK_VULKAN(vkDeviceWaitIdle(device));

@@ -1,6 +1,6 @@
-#include "engine/display/vkinit.h"
+#include "engine/display/vkdraw.h"
 
-namespace kodanuki::vkutil
+namespace kodanuki::vkdraw
 {
 
 /**
@@ -33,7 +33,7 @@ void aquire_frame(VulkanDevice device, VulkanWindow& window)
 		window.aquire_frame_fences[current_frame]));
 }
 
-void record_frame(VulkanDevice device, VulkanWindow& window, std::vector<std::function<void(VkCommandBuffer)>> commands)
+void record_frame(VulkanDevice device, VulkanWindow& window, std::vector<fn_draw> commands)
 {
 	uint32_t current_frame = window.submit_frame;
 	VkCommandBuffer buffer = window.render_buffers[current_frame];

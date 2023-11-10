@@ -1056,7 +1056,7 @@ OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanD
 		VmaAllocationCreateInfo alloc_create_info = {};
 		alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
 		alloc_create_info.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
-		VkBufferUsageFlags staging_usage_flags = 0;
+		VkBufferUsageFlags staging_usage_flags = builder.usage; // 0; TODO: remove once staging -> primary copies are implemented
 		staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 		tensor.staging_buffer = create_buffer(device.allocator,
