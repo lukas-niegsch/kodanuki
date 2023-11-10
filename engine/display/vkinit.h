@@ -132,9 +132,17 @@ struct VulkanTensor
 {
 	vktype::buffer_t         primary_buffer;
 	vktype::buffer_t         staging_buffer;
+	void*                    staging_memory;
 	std::vector<std::size_t> shape;
 	uint32_t                 element_size;
 	uint32_t                 element_count;
+
+	template <typename T>
+	T& get(std::vector<std::size_t> indices)
+	{
+		return *(static_cast<T*>(staging_memory) + offset(indices));
+	}
+	std::size_t offset(std::vector<std::size_t> indices);
 };
 
 

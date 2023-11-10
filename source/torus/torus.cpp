@@ -103,6 +103,19 @@ int main()
 		.usage        = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 	}, device).expect("Failed to create mpv tensor!");
 
+	
+	for (uint32_t i = 0; i < window.image_specs.frame_count; i++) {
+		vertex_tensor.get<Vertex>({i, 0}).position = {0, 0, 0};
+		vertex_tensor.get<Vertex>({i, 1}).position = {1, 0, 0};
+		vertex_tensor.get<Vertex>({i, 2}).position = {0, 0, 1};
+		instance_tensor.get<glm::vec3>({i, 0}) = {0, 0, 0};
+		index_tensor.get<uint32_t>({i, 0}) = 0;
+		index_tensor.get<uint32_t>({i, 1}) = 1;
+		index_tensor.get<uint32_t>({i, 2}) = 2;
+		mvp_tensor.get<glm::mat4>({i, 0}) = glm::mat4(1.0f);
+		mvp_tensor.get<glm::mat4>({i, 1}) = glm::mat4(1.0f);
+		mvp_tensor.get<glm::mat4>({i, 2}) = glm::mat4(1.0f);
+	}
 
 	bool running = true;
 	sf::WindowBase& native_window = window.window;

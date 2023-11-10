@@ -102,10 +102,9 @@ auto autowrapper(const config_t<fn_create>& config, args_t ... args)
 	VmaAllocation* allocation = nullptr;
 
 	if constexpr (is_vma<fn_create>) {
-		VmaAllocationCreateInfo alloc_info = {};
-		alloc_info.usage = VMA_MEMORY_USAGE_AUTO;
+		auto [allocator, alloc_create_info, alloc_info] = std::tie(args...);
 		allocation = new VmaAllocation;
-		CHECK_VULKAN(fn_create(args..., &config, &alloc_info, output, allocation, nullptr));
+		CHECK_VULKAN(fn_create(allocator, &config, &alloc_create_info, output, allocation, alloc_info));
 	} else if constexpr (std::is_same_v<T, VmaAllocator>) {
 		CHECK_VULKAN(fn_create(args..., &config, output));
 	} else if constexpr (std::is_same_v<T, VkPipeline>) {
@@ -122,7 +121,8 @@ auto autowrapper(const config_t<fn_create>& config, args_t ... args)
         	std::cout << "[INFO] delete: " << type_name<T>() << std::endl;
 		}
 		if constexpr (is_vma<fn_create>) {
-			fn_delete(args..., *ptr, *allocation);
+			auto [allocator, _1, _2] = std::tie(args...);
+			fn_delete(allocator, *ptr, *allocation);
 			delete allocation;
 		} else if constexpr (std::is_same_v<T, VmaAllocator>) {
 			fn_delete(args..., *ptr);
@@ -574,6 +574,8 @@ vktype::image_t create_image(
 	VkExtent2D        image_extent,
 	VkImageUsageFlags image_usage)
 {
+	VmaAllocationCreateInfo alloc_create_info = {};
+	alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
 	return autowrapper<vmaCreateImage, vmaDestroyImage>({
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.pNext = nullptr,
@@ -590,7 +592,7 @@ vktype::image_t create_image(
 		.queueFamilyIndexCount = 0,
 		.pQueueFamilyIndices = nullptr,
 		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-	}, allocator);
+	}, allocator, alloc_create_info, nullptr);
 }
 
 /**
@@ -600,12 +602,15 @@ vktype::image_t create_image(
  * @param usage_flags The types of elements that can be stored.
  * @param element_size The required size of each element.
  * @param element_count The number of elements that can be stored.
+ * @param allocation_flags Additional allocation flags for vma.
  */
 vktype::buffer_t create_buffer(
-	vktype::vma_t      allocator,
-	VkBufferUsageFlags usage_flags,
-	uint32_t           element_size,
-	uint32_t           element_count)
+	vktype::vma_t           allocator,
+	VkBufferUsageFlags      usage_flags,
+	uint32_t                element_size,
+	uint32_t                element_count,
+	VmaAllocationCreateInfo alloc_create_info,
+	VmaAllocationInfo*      alloc_info)
 {
 	return autowrapper<vmaCreateBuffer, vmaDestroyBuffer>({
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -616,7 +621,7 @@ vktype::buffer_t create_buffer(
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.queueFamilyIndexCount = 0,
 		.pQueueFamilyIndices = nullptr,
-	}, allocator);
+	}, allocator, alloc_create_info, alloc_info);
 }
 
 /**
@@ -1033,21 +1038,31 @@ OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanD
 	tensor.element_count = element_count;
 
 	try {
+		VmaAllocationInfo alloc_info;
+		VmaAllocationCreateInfo alloc_create_info = {};
+		alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
 		VkBufferUsageFlags primary_usage_flags = builder.usage;
 		primary_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		primary_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 		tensor.primary_buffer = create_buffer(device.allocator,
-			primary_usage_flags, tensor.element_size, tensor.element_count);
+			primary_usage_flags, tensor.element_size, tensor.element_count,
+			alloc_create_info, &alloc_info);
 	} catch (std::runtime_error& error) {
 		return {{}, error.what(), "Failed to create primary buffer."};
 	}
 
 	try {
+		VmaAllocationInfo alloc_info;
+		VmaAllocationCreateInfo alloc_create_info = {};
+		alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
+		alloc_create_info.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
 		VkBufferUsageFlags staging_usage_flags = 0;
 		staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 		tensor.staging_buffer = create_buffer(device.allocator,
-			staging_usage_flags, tensor.element_size, tensor.element_count);
+			staging_usage_flags, tensor.element_size, tensor.element_count,
+			alloc_create_info, &alloc_info);
+		tensor.staging_memory = alloc_info.pMappedData;
 	} catch (std::runtime_error& error) {
 		return {{}, error.what(), "Failed to create staging buffer."};
 	}
@@ -1064,6 +1079,19 @@ void VulkanWindow::recreate(VulkanDevice device)
 {
 	*this = vkinit::finalize_dynamic_window(*this, device)
 		.expect("Failed to recreate window!");
+}
+
+std::size_t VulkanTensor::offset(std::vector<std::size_t> indices)
+{
+	assert(indices.size() == shape.size());
+	std::size_t flat_idx = 0;
+	std::size_t stride = 1;
+	for (std::size_t i = indices.size(); i > 0; i--) {
+		std::size_t idx = indices[i - 1];
+		flat_idx += idx * stride;
+		stride *= shape[i - 1];
+	}
+	return flat_idx;
 }
 
 }
