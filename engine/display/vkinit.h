@@ -138,6 +138,7 @@ struct VulkanWindow
 
 struct VulkanTensor
 {
+	VulkanDevice             device;
 	vktype::buffer_t         primary_buffer;
 	vktype::buffer_t         staging_buffer;
 	void*                    staging_memory;
@@ -158,14 +159,12 @@ struct VulkanTensor
  * Executes the given compute shader. The number of tensors and constants
  * must match the shader. Execution is done synchronously inside the device.
  * 
- * @param device The device that executes the operation.
  * @param shader_path The path to the SPIRV compute shader.
  * @param tensors One tensor for each buffer in order of the shader.
  * @param constants One float for each push_constant in order of the shader.
  * @param queue_index The index for the device queue for command submission.
  */
 void execute_compute_shader(
-	VulkanDevice              device,
 	std::string               shader_path,
 	std::vector<VulkanTensor> tensors,
 	std::vector<float>        constants,

@@ -1113,6 +1113,7 @@ OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanD
 	tensor.element_size = builder.element_size;
 	tensor.element_count = element_count;
 	tensor.usage_flags = builder.usage;
+	tensor.device = device;
 
 	try {
 		VmaAllocationInfo alloc_info;
@@ -1155,13 +1156,13 @@ namespace kodanuki
 {
 
 void execute_compute_shader(
-	VulkanDevice              device,
 	std::string               shader_path,
 	std::vector<VulkanTensor> tensors,
 	std::vector<float>        constants,
 	uint32_t                  queue_index)
 {
 	assert(!tensors.empty());
+	VulkanDevice device = tensors[0].device;
 
 	if (!device.compute_cache.contains(shader_path)) {
 		std::vector<VkDescriptorSetLayoutBinding> bindings(tensors.size());

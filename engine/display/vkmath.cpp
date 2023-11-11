@@ -4,13 +4,13 @@
 namespace kodanuki::vkmath
 {
 
-VulkanTensor empty_tensor_copy(VulkanDevice device, VulkanTensor tensorA)
+VulkanTensor empty_tensor_copy(VulkanTensor tensorA)
 {
 	VulkanTensor tensorZ = vkinit::tensor({
 		.shape        = tensorA.shape,
 		.element_size = tensorA.element_size,
 		.usage        = tensorA.usage_flags,
-	}, device).expect("Failed to create output tensor!");
+	}, tensorA.device).expect("Failed to create output tensor!");
 	return tensorZ;
 }
 
@@ -32,7 +32,6 @@ std::string get_compute_path(std::string shader, bool is_constant, bool is_inpla
 }
 
 VulkanTensor execute(
-	VulkanDevice              device,
 	std::string               shader,
 	std::vector<VulkanTensor> tensors,
 	std::vector<float>        constants,
@@ -47,216 +46,216 @@ VulkanTensor execute(
 		constants.push_back(std::bit_cast<float>(dimension));
 	}
 	if (!is_inplace) {
-		tensors.insert(tensors.begin(), empty_tensor_copy(device, tensors[0]));
+		tensors.insert(tensors.begin(), empty_tensor_copy(tensors[0]));
 	}
 	std::string path_shader = get_compute_path(shader, is_constant, is_inplace);
-	execute_compute_shader(device, path_shader, {tensors}, {constants});
+	execute_compute_shader(path_shader, {tensors}, {constants});
 	return tensors[0];
 }
 
-VulkanTensor id(VulkanDevice device, VulkanTensor tensorA, bool inplace)
+VulkanTensor id(VulkanTensor tensorA, bool inplace)
 {
-	return execute(device, "copy", {tensorA}, {}, false, inplace);
+	return execute("copy", {tensorA}, {}, false, inplace);
 }
 
-VulkanTensor abs(VulkanDevice device, VulkanTensor tensorA, bool inplace)
+VulkanTensor abs(VulkanTensor tensorA, bool inplace)
 {
-	return execute(device, "abs", {tensorA}, {}, false, inplace);
+	return execute("abs", {tensorA}, {}, false, inplace);
 }
 
-VulkanTensor sign(VulkanDevice device, VulkanTensor tensorA, bool inplace)
+VulkanTensor sign(VulkanTensor tensorA, bool inplace)
 {
-	return execute(device, "sign", {tensorA}, {}, false, inplace);
+	return execute("sign", {tensorA}, {}, false, inplace);
 }
 
-VulkanTensor ceil(VulkanDevice device, VulkanTensor tensorA, bool inplace)
+VulkanTensor ceil(VulkanTensor tensorA, bool inplace)
 {
-	return execute(device, "ceil", {tensorA}, {}, false, inplace);
+	return execute("ceil", {tensorA}, {}, false, inplace);
 }
 
-VulkanTensor floor(VulkanDevice device, VulkanTensor tensorA, bool inplace)
+VulkanTensor floor(VulkanTensor tensorA, bool inplace)
 {
-	return execute(device, "floor", {tensorA}, {}, false, inplace);
+	return execute("floor", {tensorA}, {}, false, inplace);
 }
 
-VulkanTensor round(VulkanDevice device, VulkanTensor tensorA, bool inplace)
+VulkanTensor round(VulkanTensor tensorA, bool inplace)
 {
-	return execute(device, "round", {tensorA}, {}, false, inplace);
+	return execute("round", {tensorA}, {}, false, inplace);
 }
 
-VulkanTensor clamp(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, VulkanTensor tensorC, bool inplace)
+VulkanTensor clamp(VulkanTensor tensorA, VulkanTensor tensorB, VulkanTensor tensorC, bool inplace)
 {
-	return execute(device, "clamp", {tensorA, tensorB, tensorC}, {}, false, inplace);
+	return execute("clamp", {tensorA, tensorB, tensorC}, {}, false, inplace);
 }
 
-VulkanTensor clamp(VulkanDevice device, VulkanTensor tensorA, float constB, float constC, bool inplace)
+VulkanTensor clamp(VulkanTensor tensorA, float constB, float constC, bool inplace)
 {
-	return execute(device, "clamp", {tensorA}, {constB, constC}, true, inplace);
+	return execute("clamp", {tensorA}, {constB, constC}, true, inplace);
 }
 
-VulkanTensor min(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor min(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "min", {tensorA, tensorB}, {}, false, inplace);
+	return execute("min", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor min(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor min(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "min", {tensorA}, {constB}, true, inplace);
+	return execute("min", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor max(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor max(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "max", {tensorA, tensorB}, {}, false, inplace);
+	return execute("max", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor max(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor max(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "max", {tensorA}, {constB}, true, inplace);
+	return execute("max", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor add(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor add(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "add", {tensorA, tensorB}, {}, false, inplace);
+	return execute("add", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor add(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor add(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "add", {tensorA}, {constB}, true, inplace);
+	return execute("add", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor sub(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor sub(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "sub", {tensorA, tensorB}, {}, false, inplace);
+	return execute("sub", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor sub(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor sub(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "sub", {tensorA}, {constB}, true, inplace);
+	return execute("sub", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor mul(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor mul(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "mul", {tensorA, tensorB}, {}, false, inplace);
+	return execute("mul", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor mul(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor mul(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "mul", {tensorA}, {constB}, true, inplace);
+	return execute("mul", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor div(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor div(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "div", {tensorA, tensorB}, {}, false, inplace);
+	return execute("div", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor div(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor div(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "div", {tensorA}, {constB}, true, inplace);
+	return execute("div", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor linear(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, float alpha, float beta, bool inplace)
+VulkanTensor linear(VulkanTensor tensorA, VulkanTensor tensorB, float alpha, float beta, bool inplace)
 {
-	return execute(device, "linear", {tensorA, tensorB}, {alpha, beta}, false, inplace);
+	return execute("linear", {tensorA, tensorB}, {alpha, beta}, false, inplace);
 }
 
-VulkanTensor linear(VulkanDevice device, VulkanTensor tensorA, float alpha, float beta, bool inplace)
+VulkanTensor linear(VulkanTensor tensorA, float alpha, float beta, bool inplace)
 {
-	return execute(device, "linear", {tensorA}, {alpha, beta, 1.0f}, true, inplace);
+	return execute("linear", {tensorA}, {alpha, beta, 1.0f}, true, inplace);
 }
 
-VulkanTensor eq(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor eq(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "eq", {tensorA, tensorB}, {}, false, inplace);
+	return execute("eq", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor eq(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor eq(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "eq", {tensorA}, {constB}, true, inplace);
+	return execute("eq", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor gt(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor gt(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "gt", {tensorA, tensorB}, {}, false, inplace);
+	return execute("gt", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor gt(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor gt(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "gt", {tensorA}, {constB}, true, inplace);
+	return execute("gt", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor geq(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor geq(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "geq", {tensorA, tensorB}, {}, false, inplace);
+	return execute("geq", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor geq(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor geq(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "geq", {tensorA}, {constB}, true, inplace);
+	return execute("geq", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor lt(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor lt(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "lt", {tensorA, tensorB}, {}, false, inplace);
+	return execute("lt", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor lt(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor lt(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "lt", {tensorA}, {constB}, true, inplace);
+	return execute("lt", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor leq(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor leq(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "leq", {tensorA, tensorB}, {}, false, inplace);
+	return execute("leq", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor leq(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor leq(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "leq", {tensorA}, {constB}, true, inplace);
+	return execute("leq", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor sin(VulkanDevice device, VulkanTensor tensorA, bool inplace)
+VulkanTensor sin(VulkanTensor tensorA, bool inplace)
 {
-	return execute(device, "sin", {tensorA}, {}, false, inplace);
+	return execute("sin", {tensorA}, {}, false, inplace);
 }
 
-VulkanTensor cos(VulkanDevice device, VulkanTensor tensorA, bool inplace)
+VulkanTensor cos(VulkanTensor tensorA, bool inplace)
 {
-	return execute(device, "cos", {tensorA}, {}, false, inplace);
+	return execute("cos", {tensorA}, {}, false, inplace);
 }
 
-VulkanTensor tan(VulkanDevice device, VulkanTensor tensorA, bool inplace)
+VulkanTensor tan(VulkanTensor tensorA, bool inplace)
 {
-	return execute(device, "tan", {tensorA}, {}, false, inplace);
+	return execute("tan", {tensorA}, {}, false, inplace);
 }
 
-VulkanTensor exp(VulkanDevice device, VulkanTensor tensorA, bool inplace)
+VulkanTensor exp(VulkanTensor tensorA, bool inplace)
 {
-	return execute(device, "exp", {tensorA}, {}, false, inplace);
+	return execute("exp", {tensorA}, {}, false, inplace);
 }
 
-VulkanTensor log(VulkanDevice device, VulkanTensor tensorA, bool inplace)
+VulkanTensor log(VulkanTensor tensorA, bool inplace)
 {
-	return execute(device, "log", {tensorA}, {}, false, inplace);
+	return execute("log", {tensorA}, {}, false, inplace);
 }
 
-VulkanTensor pow(VulkanDevice device, VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
+VulkanTensor pow(VulkanTensor tensorA, VulkanTensor tensorB, bool inplace)
 {
-	return execute(device, "pow", {tensorA, tensorB}, {}, false, inplace);
+	return execute("pow", {tensorA, tensorB}, {}, false, inplace);
 }
 
-VulkanTensor pow(VulkanDevice device, VulkanTensor tensorA, float constB, bool inplace)
+VulkanTensor pow(VulkanTensor tensorA, float constB, bool inplace)
 {
-	return execute(device, "pow", {tensorA}, {constB}, true, inplace);
+	return execute("pow", {tensorA}, {constB}, true, inplace);
 }
 
-VulkanTensor range(VulkanDevice device, VulkanTensor tensorA, float start, float step)
+VulkanTensor range(VulkanTensor tensorA, float start, float step)
 {
-	return execute(device, "range", {tensorA}, {start, step}, false, false);
+	return execute("range", {tensorA}, {start, step}, false, false);
 }
 
-VulkanTensor fill(VulkanDevice device, VulkanTensor tensorA, float constB)
+VulkanTensor fill(VulkanTensor tensorA, float constB)
 {
-	return execute(device, "fill", {tensorA}, {constB}, false, false);
+	return execute("fill", {tensorA}, {constB}, false, false);
 }
 
 }
