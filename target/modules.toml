@@ -1,7 +1,7 @@
 [engine]
 description = "The kodanuki game engine."
 path        = "engine/"
-depends     = ["vulkan", "glfw"]
+depends     = ["vulkan", "glfw", "sfml-window", "sfml-system"]
 library     = true
 
 [kodanuki]

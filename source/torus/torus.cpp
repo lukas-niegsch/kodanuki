@@ -1,5 +1,6 @@
 #include "engine/display/vkinit.h"
 #include "engine/display/vkdraw.h"
+#include "engine/display/vkmath.h"
 #include <glm/glm.hpp>
 using namespace kodanuki;
 
@@ -94,7 +95,7 @@ VulkanTarget create_triangle_target(VulkanDevice device, VulkanWindow window)
 {
 	VulkanTarget target = vkinit::target({
 		.path_vertex_shader      = "assets/shaders/triangle.vert.spv",
-		.path_fragment_shader    = "assets/shaders/triangle.frag.spv",
+		.path_fragment_shader    = "assets/shaders/fluid.frag.spv",
 		.push_constants          = {},
 		.descriptor_bindings     = {},
 		.vertex_input_bindings   = {

@@ -821,6 +821,38 @@ vktype::pipeline_t create_graphics_pipeline(
 }
 
 /**
+ * Vulkan compute pipeline consists of one programmable shader module.
+ *
+ * @param device The device that stores and compiles the pipeline.
+ * @param layout The layout of the pipeline.
+ * @param shader The compute shader.
+ */
+vktype::pipeline_t create_compute_pipeline(
+	vktype::device_t          device,
+	vktype::pipeline_layout_t layout,
+	vktype::shader_module_t   shader)
+{
+	VkPipelineShaderStageCreateInfo shader_stage = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.stage = VK_SHADER_STAGE_COMPUTE_BIT,
+		.module = shader,
+		.pName = "main",
+		.pSpecializationInfo = nullptr,
+	};
+	return autowrapper<vkCreateComputePipelines, vkDestroyPipeline>({
+		.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.stage = shader_stage,
+		.layout = layout,
+		.basePipelineHandle = VK_NULL_HANDLE,
+		.basePipelineIndex = -1,
+	}, device);
+}
+
+/**
  * Returns the current surface extent.
  *
  * @param hardware The properties of the physical device.
@@ -877,6 +909,13 @@ OptionalWrapper<VulkanDevice> device(const VulkanDeviceBuilder& builder)
 			device.instance, device.hardware, device.device);
 	} catch (const std::runtime_error& error) {
 		return {{}, error.what(), "Failed to create vulkan memory allocator."};
+	}
+
+	try {
+		device.compute_buffer = create_command_buffer(
+			device.device, device.command_pool);
+	} catch (const std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create compute buffer."};
 	}
 
 	return {device, "", ""};
@@ -980,7 +1019,7 @@ OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanD
 	return finalize_dynamic_window(window, device);
 }
 
-OptionalWrapper<VulkanTarget> target(const VulkanTargetBuilder& builder, VulkanDevice device, VulkanWindow window)
+OptionalWrapper<VulkanTarget> target(const VulkanTargetGraphicsBuilder& builder, VulkanDevice device, VulkanWindow window)
 {
 	VulkanTarget target;
 
@@ -1025,6 +1064,43 @@ OptionalWrapper<VulkanTarget> target(const VulkanTargetBuilder& builder, VulkanD
 	return {target, "", ""};
 }
 
+OptionalWrapper<VulkanTarget> target(const VulkanTargetComputeBuilder& builder, VulkanDevice device)
+{
+	VulkanTarget target;
+
+	try {
+		target.descriptor_layout = create_descriptor_layout(
+			device.device, builder.descriptor_bindings);
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create descriptor layout."};
+	}
+
+	try {
+		target.descriptor_set = create_descriptor_set(
+			device.device, device.descriptor_pool, target.descriptor_layout);
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create descriptor set."};
+	}
+
+	try {
+		target.pipeline_layout = create_pipeline_layout(
+			device.device, {target.descriptor_layout}, builder.push_constants);
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create pipeline layout."};
+	}
+
+	try {
+		vktype::shader_module_t shader = create_shader_module(
+			device.device, builder.compute_shader.c_str());
+		target.graphics_pipeline = create_compute_pipeline(
+			device.device, target.pipeline_layout, shader);
+	} catch (std::runtime_error& error) {
+		return {{}, error.what(), "Failed to create compute pipeline."};
+	}
+
+	return {target, "", ""};
+}
+
 OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanDevice device)
 {
 	VulkanTensor tensor;
@@ -1045,6 +1121,7 @@ OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanD
 		VkBufferUsageFlags primary_usage_flags = builder.usage;
 		primary_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		primary_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		primary_usage_flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 		tensor.primary_buffer = create_buffer(device.allocator,
 			primary_usage_flags, tensor.element_size, tensor.element_count,
 			alloc_create_info, &alloc_info);
@@ -1060,6 +1137,7 @@ OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanD
 		VkBufferUsageFlags staging_usage_flags = builder.usage; // 0; TODO: remove once staging -> primary copies are implemented
 		staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		staging_usage_flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 		tensor.staging_buffer = create_buffer(device.allocator,
 			staging_usage_flags, tensor.element_size, tensor.element_count,
 			alloc_create_info, &alloc_info);
@@ -1075,6 +1153,102 @@ OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanD
 
 namespace kodanuki
 {
+
+void execute_compute_shader(
+	VulkanDevice              device,
+	std::string               shader_path,
+	std::vector<VulkanTensor> tensors,
+	std::vector<float>        constants,
+	uint32_t                  queue_index)
+{
+	assert(!tensors.empty());
+
+	if (!device.compute_cache.contains(shader_path)) {
+		std::vector<VkDescriptorSetLayoutBinding> bindings(tensors.size());
+		for (uint32_t i = 0; i < tensors.size(); i++) {
+			bindings[i] = {
+				.binding = i,
+				.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				.descriptorCount = 1,
+				.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+				.pImmutableSamplers = nullptr,
+			};
+		}
+		VkPushConstantRange push_constant_range = {
+			.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+			.offset = 0,
+			.size = static_cast<uint32_t>(sizeof(float) * constants.size()),
+		};
+		VulkanTarget target = vkinit::target({
+			.compute_shader = shader_path,
+			.push_constants = {push_constant_range},
+			.descriptor_bindings = bindings,
+		}, device).expect("Failed to create compute shader.");
+		device.compute_cache[shader_path] = target;
+	}
+
+	VulkanTarget compute_target = device.compute_cache[shader_path];
+	vktype::pipeline_t pipeline = compute_target.graphics_pipeline;
+	vktype::pipeline_layout_t layout = compute_target.pipeline_layout;
+	vktype::descriptor_set_t descriptor = compute_target.descriptor_set;
+
+	for (uint32_t i = 0; i < tensors.size(); i++) {
+		VkDescriptorBufferInfo buffer_info = {
+			.buffer = tensors[0].staging_buffer,
+			.offset = 0,
+			.range = VK_WHOLE_SIZE,
+		};
+		VkWriteDescriptorSet descriptor_write = {
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.pNext = nullptr,
+			.dstSet = descriptor,
+			.dstBinding = i,
+			.dstArrayElement = 0,
+			.descriptorCount = 1,
+			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+			.pImageInfo = nullptr,
+			.pBufferInfo = &buffer_info,
+			.pTexelBufferView = nullptr,
+		};
+		vkUpdateDescriptorSets(device, 1, &descriptor_write, 0, nullptr);
+	}
+
+
+	VkCommandBuffer buffer = device.compute_buffer;
+	VkCommandBufferBeginInfo buffer_info = {
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.pInheritanceInfo = nullptr
+	};
+	CHECK_VULKAN(vkResetCommandBuffer(buffer, 0));
+	CHECK_VULKAN(vkBeginCommandBuffer(buffer, &buffer_info));
+	
+	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+	vkCmdPushConstants(buffer, layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(float) * constants.size(), constants.data());
+	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_COMPUTE, layout, 0, 1, descriptor, 0, nullptr);
+	vkCmdDispatch(buffer, (tensors[0].element_count + 63) / 64, 1, 1);
+	vkCmdPipelineBarrier(buffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 0, nullptr);
+	
+	CHECK_VULKAN(vkEndCommandBuffer(buffer));
+
+	VkQueue execute_queue;
+	vkGetDeviceQueue(device, device.hardware.queue_family_index, queue_index, &execute_queue);
+
+	VkSubmitInfo info = {
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.pNext = nullptr,
+		.waitSemaphoreCount = 0,
+		.pWaitSemaphores = nullptr,
+		.pWaitDstStageMask = nullptr,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &buffer,
+		.signalSemaphoreCount = 0,
+		.pSignalSemaphores = nullptr
+	};
+	CHECK_VULKAN(vkQueueSubmit(execute_queue, 1, &info, nullptr));
+	CHECK_VULKAN(vkQueueWaitIdle(execute_queue));
+}
 
 void VulkanWindow::recreate(VulkanDevice device)
 {

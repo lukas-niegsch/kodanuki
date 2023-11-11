@@ -4,22 +4,54 @@
 namespace kodanuki::vkmath
 {
 
+VulkanTensor empty_tensor_copy(VulkanDevice device, VulkanTensor tensorA)
+{
+	VulkanTensor tensorZ = vkinit::tensor({
+		.shape        = tensorA.shape,
+		.element_size = tensorA.element_size,
+		.usage        = tensorA.usage_flags,
+	}, device).expect("Failed to create output tensor!");
+	return tensorZ;
+}
+
+std::string get_compute_path(std::string shader, bool is_constant, bool is_inplace)
+{
+	std::string prefix = "assets/shaders/vt_op_";
+	std::string suffix = ".comp.spv";
+	std::string middle = "";
+	if (is_inplace) {
+		middle += "i";
+	}
+	if (is_constant) {
+		middle += "c";
+	}
+	if (!middle.empty()) {
+		middle = std::string("_") + middle;
+	}
+	return prefix + shader + middle + suffix;
+}
+
 VulkanTensor execute(
 	VulkanDevice              device,
-	std::string               compute_shader,
+	std::string               shader,
 	std::vector<VulkanTensor> tensors,
 	std::vector<float>        constants,
 	bool                      is_constant,
 	bool                      is_inplace)
 {
-	// TODO: implement this method
-	(void) device;
-	(void) compute_shader;
-	(void) tensors;
-	(void) constants;
-	(void) is_constant;
-	(void) is_inplace;
-	return {};
+	uint32_t element_count = tensors[0].element_count;
+	uint32_t dimension_count = tensors[0].shape.size();
+	constants.push_back(std::bit_cast<float>(element_count));
+	constants.push_back(std::bit_cast<float>(dimension_count));
+	for (uint32_t dimension : tensors[0].shape) {
+		constants.push_back(std::bit_cast<float>(dimension));
+	}
+	if (!is_inplace) {
+		tensors.insert(tensors.begin(), empty_tensor_copy(device, tensors[0]));
+	}
+	std::string path_shader = get_compute_path(shader, is_constant, is_inplace);
+	execute_compute_shader(device, path_shader, {tensors}, {constants});
+	return tensors[0];
 }
 
 VulkanTensor id(VulkanDevice device, VulkanTensor tensorA, bool inplace)

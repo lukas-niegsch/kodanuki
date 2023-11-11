@@ -64,7 +64,6 @@ using descriptor_layout_t = shared_wrapper_t<VkDescriptorSetLayout>;
 using descriptor_set_t    = shared_wrapper_t<VkDescriptorSet>;
 using window_t            = shared_wrapper_t<sf::WindowBase>;
 using vma_t               = shared_wrapper_t<VmaAllocator>;
-using compute_cache_t     = std::unordered_map<std::string, vktype::pipeline_t>;
 
 struct hardware_t
 {
@@ -87,6 +86,20 @@ struct img_specs_t
 
 }
 
+struct VulkanTarget
+{
+	vktype::descriptor_layout_t descriptor_layout;
+	vktype::descriptor_set_t    descriptor_set;
+	vktype::pipeline_layout_t   pipeline_layout;
+	vktype::pipeline_t          graphics_pipeline;
+};
+
+namespace vktype
+{
+
+using target_cache_t = std::unordered_map<std::string, VulkanTarget>;
+
+}
 
 struct VulkanDevice
 {
@@ -96,7 +109,8 @@ struct VulkanDevice
 	vktype::command_pool_t    command_pool;
 	vktype::descriptor_pool_t descriptor_pool;
 	vktype::vma_t             allocator;
-	vktype::compute_cache_t   compute_cache;
+	vktype::command_buffer_t  compute_buffer;
+	vktype::target_cache_t    compute_cache;
 
 	operator VkDevice() const { return device; }
 };
@@ -122,14 +136,6 @@ struct VulkanWindow
 	void recreate(VulkanDevice device);
 };
 
-struct VulkanTarget
-{
-	vktype::descriptor_layout_t descriptor_layout;
-	vktype::descriptor_set_t    descriptor_set;
-	vktype::pipeline_layout_t   pipeline_layout;
-	vktype::pipeline_t          graphics_pipeline;
-};
-
 struct VulkanTensor
 {
 	vktype::buffer_t         primary_buffer;
@@ -147,6 +153,23 @@ struct VulkanTensor
 	}
 	std::size_t offset(std::vector<std::size_t> indices);
 };
+
+/**
+ * Executes the given compute shader. The number of tensors and constants
+ * must match the shader. Execution is done synchronously inside the device.
+ * 
+ * @param device The device that executes the operation.
+ * @param shader_path The path to the SPIRV compute shader.
+ * @param tensors One tensor for each buffer in order of the shader.
+ * @param constants One float for each push_constant in order of the shader.
+ * @param queue_index The index for the device queue for command submission.
+ */
+void execute_compute_shader(
+	VulkanDevice              device,
+	std::string               shader_path,
+	std::vector<VulkanTensor> tensors,
+	std::vector<float>        constants,
+	uint32_t                  queue_index = 0);
 
 
 namespace vkinit
@@ -177,7 +200,7 @@ struct VulkanWindowBuilder
 OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanDevice device);
 
 
-struct VulkanTargetBuilder
+struct VulkanTargetGraphicsBuilder
 {
 	std::string                                    path_vertex_shader;
 	std::string                                    path_fragment_shader;
@@ -187,7 +210,16 @@ struct VulkanTargetBuilder
 	std::vector<VkVertexInputAttributeDescription> vertex_input_attributes;
 	VkPrimitiveTopology                            vertex_input_topology;
 };
-OptionalWrapper<VulkanTarget> target(const VulkanTargetBuilder& builder, VulkanDevice device, VulkanWindow window);
+OptionalWrapper<VulkanTarget> target(const VulkanTargetGraphicsBuilder& builder, VulkanDevice device, VulkanWindow window);
+
+
+struct VulkanTargetComputeBuilder
+{
+	std::string                               compute_shader;
+	std::vector<VkPushConstantRange>          push_constants;
+	std::vector<VkDescriptorSetLayoutBinding> descriptor_bindings;
+};
+OptionalWrapper<VulkanTarget> target(const VulkanTargetComputeBuilder& builder, VulkanDevice device);
 
 
 struct VulkanTensorBuilder
