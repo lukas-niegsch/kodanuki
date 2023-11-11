@@ -1036,6 +1036,7 @@ OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanD
 	tensor.shape = builder.shape;
 	tensor.element_size = builder.element_size;
 	tensor.element_count = element_count;
+	tensor.usage_flags = builder.usage;
 
 	try {
 		VmaAllocationInfo alloc_info;

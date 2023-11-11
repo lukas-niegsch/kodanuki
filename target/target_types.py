@@ -182,8 +182,8 @@ class ShadersTarget(Target):
 			sub    = 'A[] - B[]',
 			div    = 'A[] / B[]',
 			eq     = 'float(abs(A[] - B[]) <= params.epsilon)',
-			le     = 'float(A[] < B[])',
-			ge     = 'float(A[] > B[])',
+			lt     = 'float(A[] < B[])',
+			gt     = 'float(A[] > B[])',
 			leg    = 'float(A[] <= B[])',
 			geq    = 'float(A[] >= B[])',
 			pow    = 'pow(A[], B[])',
@@ -208,7 +208,6 @@ class ShadersTarget(Target):
 
 		shaders = self.append_inline_shaders(shaders)
 		shaders = self.append_constant_shaders(shaders)
-		shaders['id'] = shaders.pop('copy_i') # Inplace copy is identity!
 
 		for name, op in shaders.items():
 			self.make_compute_shader(args, name, op)

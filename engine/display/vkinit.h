@@ -64,6 +64,7 @@ using descriptor_layout_t = shared_wrapper_t<VkDescriptorSetLayout>;
 using descriptor_set_t    = shared_wrapper_t<VkDescriptorSet>;
 using window_t            = shared_wrapper_t<sf::WindowBase>;
 using vma_t               = shared_wrapper_t<VmaAllocator>;
+using compute_cache_t     = std::unordered_map<std::string, vktype::pipeline_t>;
 
 struct hardware_t
 {
@@ -95,6 +96,7 @@ struct VulkanDevice
 	vktype::command_pool_t    command_pool;
 	vktype::descriptor_pool_t descriptor_pool;
 	vktype::vma_t             allocator;
+	vktype::compute_cache_t   compute_cache;
 
 	operator VkDevice() const { return device; }
 };
@@ -136,6 +138,7 @@ struct VulkanTensor
 	std::vector<std::size_t> shape;
 	uint32_t                 element_size;
 	uint32_t                 element_count;
+	VkBufferUsageFlags       usage_flags;
 
 	template <typename T>
 	T& get(std::vector<std::size_t> indices)
