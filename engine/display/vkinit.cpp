@@ -92,8 +92,8 @@ auto vectorize(Args ... args)
 template <auto fn_create, auto fn_delete, typename ... args_t>
 auto autowrapper(const config_t<fn_create>& config, args_t ... args)
 {
-    using T = vulkan_t<fn_create>;
-    constexpr bool is_allocate_wrapper = sizeof...(args_t) == 2;
+	using T = vulkan_t<fn_create>;
+	constexpr bool is_allocate_wrapper = sizeof...(args_t) == 2;
 
 	if constexpr (ENABLE_AUTOWRAPPER_PRINTING) {
 		std::cout << "[INFO] create: " << type_name<T>() << std::endl;
@@ -108,17 +108,17 @@ auto autowrapper(const config_t<fn_create>& config, args_t ... args)
 	} else if constexpr (std::is_same_v<T, VmaAllocator>) {
 		CHECK_VULKAN(fn_create(args..., &config, output));
 	} else if constexpr (std::is_same_v<T, VkPipeline>) {
-        CHECK_VULKAN(fn_create(args..., VK_NULL_HANDLE, 1, &config, nullptr, output));
-    } else if constexpr (is_allocate_wrapper) {
-        auto[device, _] = std::tie(args...);
-        CHECK_VULKAN(fn_create(device, &config, output));
-    } else {
-        CHECK_VULKAN(fn_create(args..., &config, nullptr, output));
-    }
+		CHECK_VULKAN(fn_create(args..., VK_NULL_HANDLE, 1, &config, nullptr, output));
+	} else if constexpr (is_allocate_wrapper) {
+		auto[device, _] = std::tie(args...);
+		CHECK_VULKAN(fn_create(device, &config, output));
+	} else {
+		CHECK_VULKAN(fn_create(args..., &config, nullptr, output));
+	}
 
-    auto destroy = [=](T* ptr) {
+	auto destroy = [=](T* ptr) {
 		if constexpr (ENABLE_AUTOWRAPPER_PRINTING) {
-        	std::cout << "[INFO] delete: " << type_name<T>() << std::endl;
+			std::cout << "[INFO] delete: " << type_name<T>() << std::endl;
 		}
 		if constexpr (is_vma<fn_create>) {
 			auto [allocator, _1, _2] = std::tie(args...);
@@ -127,16 +127,16 @@ auto autowrapper(const config_t<fn_create>& config, args_t ... args)
 		} else if constexpr (std::is_same_v<T, VmaAllocator>) {
 			fn_delete(args..., *ptr);
 		} else if constexpr (std::is_same_v<T, VkPipeline>) {
-            fn_delete(args..., *ptr, nullptr);
-        } else if constexpr (std::is_same_v<T, VkDevice>) {
-            fn_delete(*ptr, nullptr);
-        } else if constexpr (is_allocate_wrapper) {
-            fn_delete(args..., 1, ptr);
-        } else {
-            fn_delete(args..., *ptr, nullptr);
-        }
-        delete ptr;
-    };
+			fn_delete(args..., *ptr, nullptr);
+		} else if constexpr (std::is_same_v<T, VkDevice>) {
+			fn_delete(*ptr, nullptr);
+		} else if constexpr (is_allocate_wrapper) {
+			fn_delete(args..., 1, ptr);
+		} else {
+			fn_delete(args..., *ptr, nullptr);
+		}
+		delete ptr;
+	};
 	return shared_wrapper_t<T>(output, destroy);
 }
 
@@ -681,11 +681,11 @@ vktype::pipeline_t create_graphics_pipeline(
 {
 	std::array<VkPipelineShaderStageCreateInfo, 2> shader_stages;
 	for (auto& stage : shader_stages) {
-    	stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    	stage.pNext = nullptr;
-    	stage.flags = 0;
-    	stage.pName = "main";
-    	stage.pSpecializationInfo = nullptr;
+		stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		stage.pNext = nullptr;
+		stage.flags = 0;
+		stage.pName = "main";
+		stage.pSpecializationInfo = nullptr;
 	}
 	shader_stages[0].module = vertex_shader;
 	shader_stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -789,13 +789,13 @@ vktype::pipeline_t create_graphics_pipeline(
 		.blendConstants = {0.0f, 0.0f, 0.0f, 0.0f},
 	};
 	VkPipelineRenderingCreateInfo dynamic_rendering_info = {
-    	.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
-    	.pNext = nullptr,
-    	.viewMask = 0,
-    	.colorAttachmentCount = 1,
-    	.pColorAttachmentFormats = &color_format,
-    	.depthAttachmentFormat = depth_format,
-    	.stencilAttachmentFormat = {},
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+		.pNext = nullptr,
+		.viewMask = 0,
+		.colorAttachmentCount = 1,
+		.pColorAttachmentFormats = &color_format,
+		.depthAttachmentFormat = depth_format,
+		.stencilAttachmentFormat = {},
 	};
 	return autowrapper<vkCreateGraphicsPipelines, vkDestroyPipeline>({
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -1277,44 +1277,44 @@ std::ostream& operator<<(std::ostream& os, const VkResult& result)
 {
 	#define ENUM_CASE(value) case value: os << #value; break
 
-    switch (result)
-    {
-        ENUM_CASE(VK_ERROR_DEVICE_LOST);
-        ENUM_CASE(VK_ERROR_EXTENSION_NOT_PRESENT);
-        ENUM_CASE(VK_ERROR_FEATURE_NOT_PRESENT);
-        ENUM_CASE(VK_ERROR_FORMAT_NOT_SUPPORTED);
-        ENUM_CASE(VK_ERROR_FRAGMENTATION_EXT);
-        ENUM_CASE(VK_ERROR_FRAGMENTED_POOL);
-        ENUM_CASE(VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT);
-        ENUM_CASE(VK_ERROR_INCOMPATIBLE_DISPLAY_KHR);
-        ENUM_CASE(VK_ERROR_INCOMPATIBLE_DRIVER);
-        ENUM_CASE(VK_ERROR_INITIALIZATION_FAILED);
-        ENUM_CASE(VK_ERROR_INVALID_DEVICE_ADDRESS_EXT);
-        ENUM_CASE(VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT);
-        ENUM_CASE(VK_ERROR_INVALID_EXTERNAL_HANDLE);
-        ENUM_CASE(VK_ERROR_INVALID_SHADER_NV);
-        ENUM_CASE(VK_ERROR_LAYER_NOT_PRESENT);
-        ENUM_CASE(VK_ERROR_MEMORY_MAP_FAILED);
-        ENUM_CASE(VK_ERROR_NATIVE_WINDOW_IN_USE_KHR);
-        ENUM_CASE(VK_ERROR_NOT_PERMITTED_EXT);
-        ENUM_CASE(VK_ERROR_OUT_OF_DATE_KHR);
-        ENUM_CASE(VK_ERROR_OUT_OF_DEVICE_MEMORY);
-        ENUM_CASE(VK_ERROR_OUT_OF_HOST_MEMORY);
-        ENUM_CASE(VK_ERROR_OUT_OF_POOL_MEMORY);
-        ENUM_CASE(VK_ERROR_SURFACE_LOST_KHR);
-        ENUM_CASE(VK_ERROR_TOO_MANY_OBJECTS);
-        ENUM_CASE(VK_ERROR_VALIDATION_FAILED_EXT);
-        ENUM_CASE(VK_EVENT_RESET);
-        ENUM_CASE(VK_EVENT_SET);
-        ENUM_CASE(VK_INCOMPLETE);
-        ENUM_CASE(VK_NOT_READY);
-        ENUM_CASE(VK_SUBOPTIMAL_KHR);
-        ENUM_CASE(VK_SUCCESS);
-        ENUM_CASE(VK_TIMEOUT);
-        
+	switch (result)
+	{
+		ENUM_CASE(VK_ERROR_DEVICE_LOST);
+		ENUM_CASE(VK_ERROR_EXTENSION_NOT_PRESENT);
+		ENUM_CASE(VK_ERROR_FEATURE_NOT_PRESENT);
+		ENUM_CASE(VK_ERROR_FORMAT_NOT_SUPPORTED);
+		ENUM_CASE(VK_ERROR_FRAGMENTATION_EXT);
+		ENUM_CASE(VK_ERROR_FRAGMENTED_POOL);
+		ENUM_CASE(VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT);
+		ENUM_CASE(VK_ERROR_INCOMPATIBLE_DISPLAY_KHR);
+		ENUM_CASE(VK_ERROR_INCOMPATIBLE_DRIVER);
+		ENUM_CASE(VK_ERROR_INITIALIZATION_FAILED);
+		ENUM_CASE(VK_ERROR_INVALID_DEVICE_ADDRESS_EXT);
+		ENUM_CASE(VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT);
+		ENUM_CASE(VK_ERROR_INVALID_EXTERNAL_HANDLE);
+		ENUM_CASE(VK_ERROR_INVALID_SHADER_NV);
+		ENUM_CASE(VK_ERROR_LAYER_NOT_PRESENT);
+		ENUM_CASE(VK_ERROR_MEMORY_MAP_FAILED);
+		ENUM_CASE(VK_ERROR_NATIVE_WINDOW_IN_USE_KHR);
+		ENUM_CASE(VK_ERROR_NOT_PERMITTED_EXT);
+		ENUM_CASE(VK_ERROR_OUT_OF_DATE_KHR);
+		ENUM_CASE(VK_ERROR_OUT_OF_DEVICE_MEMORY);
+		ENUM_CASE(VK_ERROR_OUT_OF_HOST_MEMORY);
+		ENUM_CASE(VK_ERROR_OUT_OF_POOL_MEMORY);
+		ENUM_CASE(VK_ERROR_SURFACE_LOST_KHR);
+		ENUM_CASE(VK_ERROR_TOO_MANY_OBJECTS);
+		ENUM_CASE(VK_ERROR_VALIDATION_FAILED_EXT);
+		ENUM_CASE(VK_EVENT_RESET);
+		ENUM_CASE(VK_EVENT_SET);
+		ENUM_CASE(VK_INCOMPLETE);
+		ENUM_CASE(VK_NOT_READY);
+		ENUM_CASE(VK_SUBOPTIMAL_KHR);
+		ENUM_CASE(VK_SUCCESS);
+		ENUM_CASE(VK_TIMEOUT);
+		
 		default:
 			os << "Unhandled VkResult";
-    }
+	}
 
 	#undef ENUM
 
