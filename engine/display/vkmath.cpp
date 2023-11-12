@@ -10,7 +10,7 @@ VulkanTensor empty_tensor_copy(VulkanTensor tensorA)
 		.shape        = tensorA.shape,
 		.element_size = tensorA.element_size,
 		.usage        = tensorA.usage_flags,
-	}, tensorA.device).expect("Failed to create output tensor!");
+	}, tensorA.device);
 	return tensorZ;
 }
 

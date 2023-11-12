@@ -1,6 +1,5 @@
 #pragma once
 #include "engine/nekolib/templates/shared_wrapper.h"
-#include "engine/nekolib/templates/optional_wrapper.h"
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
 #include <SFML/Window.hpp>
@@ -183,7 +182,7 @@ struct VulkanDeviceBuilder
 	std::function<int(vktype::hardware_t)> score_device;
 	std::vector<float>                     queue_priorities;
 };
-OptionalWrapper<VulkanDevice> device(const VulkanDeviceBuilder& builder);
+VulkanDevice device(const VulkanDeviceBuilder& builder);
 
 
 struct VulkanWindowBuilder
@@ -196,7 +195,7 @@ struct VulkanWindowBuilder
 	VkPresentModeKHR    present_mode;
 	uint32_t            frame_count;
 };
-OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanDevice device);
+VulkanWindow window(const VulkanWindowBuilder& builder, VulkanDevice device);
 
 
 struct VulkanTargetGraphicsBuilder
@@ -209,7 +208,7 @@ struct VulkanTargetGraphicsBuilder
 	std::vector<VkVertexInputAttributeDescription> vertex_input_attributes;
 	VkPrimitiveTopology                            vertex_input_topology;
 };
-OptionalWrapper<VulkanTarget> target(const VulkanTargetGraphicsBuilder& builder, VulkanDevice device, VulkanWindow window);
+VulkanTarget target(const VulkanTargetGraphicsBuilder& builder, VulkanDevice device, VulkanWindow window);
 
 
 struct VulkanTargetComputeBuilder
@@ -218,7 +217,7 @@ struct VulkanTargetComputeBuilder
 	std::vector<VkPushConstantRange>          push_constants;
 	std::vector<VkDescriptorSetLayoutBinding> descriptor_bindings;
 };
-OptionalWrapper<VulkanTarget> target(const VulkanTargetComputeBuilder& builder, VulkanDevice device);
+VulkanTarget target(const VulkanTargetComputeBuilder& builder, VulkanDevice device);
 
 
 struct VulkanTensorBuilder
@@ -227,7 +226,7 @@ struct VulkanTensorBuilder
 	uint32_t                 element_size;
 	VkBufferUsageFlags       usage;
 };
-OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanDevice device);
+VulkanTensor tensor(const VulkanTensorBuilder& builder, VulkanDevice device);
 
 }
 

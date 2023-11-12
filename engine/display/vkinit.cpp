@@ -12,11 +12,6 @@ namespace kodanuki::vkinit
 {
 
 /**
- * Enables debug printing inside the autowrapper method.
- */
-static constexpr bool ENABLE_AUTOWRAPPER_PRINTING = false; 
-
-/**
  * The vulkan API version that is used inside the renderer.
  */
 static constexpr uint32_t VULKAN_VERSION = VK_API_VERSION_1_3;
@@ -95,9 +90,6 @@ auto autowrapper(const config_t<fn_create>& config, args_t ... args)
 	using T = vulkan_t<fn_create>;
 	constexpr bool is_allocate_wrapper = sizeof...(args_t) == 2;
 
-	if constexpr (ENABLE_AUTOWRAPPER_PRINTING) {
-		std::cout << "[INFO] create: " << type_name<T>() << std::endl;
-	}
 	T* output = new T();
 	VmaAllocation* allocation = nullptr;
 
@@ -117,9 +109,6 @@ auto autowrapper(const config_t<fn_create>& config, args_t ... args)
 	}
 
 	auto destroy = [=](T* ptr) {
-		if constexpr (ENABLE_AUTOWRAPPER_PRINTING) {
-			std::cout << "[INFO] delete: " << type_name<T>() << std::endl;
-		}
 		if constexpr (is_vma<fn_create>) {
 			auto [allocator, _1, _2] = std::tie(args...);
 			fn_delete(allocator, *ptr, *allocation);
@@ -866,107 +855,63 @@ VkExtent2D get_surface_extent(vktype::hardware_t hardware, vktype::surface_t sur
 	return capabilities.currentExtent;
 }
 
-OptionalWrapper<VulkanDevice> device(const VulkanDeviceBuilder& builder)
+VulkanDevice device(const VulkanDeviceBuilder& builder)
 {
 	VulkanDevice device;
 
-	try {
-		device.instance = create_instance(
-			builder.instance_layers, builder.instance_extensions);
-	} catch (const std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create instance."};
-	}
+	device.instance = create_instance(
+		builder.instance_layers, builder.instance_extensions);
 
-	try {
-		device.hardware = select_physical_device(device.instance,
-			builder.score_device);
-	} catch (const std::runtime_error& error) {
-		return {{}, error.what(), "Failed to select physical device."};
-	}
+	device.hardware = select_physical_device(device.instance,
+		builder.score_device);
 
-	try {
-		device.device = create_device(device.hardware, builder.device_layers,
-			builder.device_extensions, builder.queue_priorities);
-	} catch (const std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create logical device."};
-	}
+	device.device = create_device(device.hardware, builder.device_layers,
+		builder.device_extensions, builder.queue_priorities);
 
-	try {
-		device.command_pool = create_command_pool(device.device,
-			device.hardware.queue_family_index);
-	} catch (const std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create command pool."};
-	}
+	device.command_pool = create_command_pool(device.device,
+		device.hardware.queue_family_index);
 
-	try {
-		device.descriptor_pool = create_descriptor_pool(device.device);
-	} catch (const std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create descriptor pool."};
-	}
+	device.descriptor_pool = create_descriptor_pool(device.device);
 
-	try {
-		device.allocator = create_vulkan_memory_allocator(
-			device.instance, device.hardware, device.device);
-	} catch (const std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create vulkan memory allocator."};
-	}
+	device.allocator = create_vulkan_memory_allocator(
+		device.instance, device.hardware, device.device);
 
-	try {
-		device.compute_buffer = create_command_buffer(
-			device.device, device.command_pool);
-	} catch (const std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create compute buffer."};
-	}
+	device.compute_buffer = create_command_buffer(
+		device.device, device.command_pool);
 
-	return {device, "", ""};
+	return device;
 }
 
-OptionalWrapper<VulkanWindow> finalize_dynamic_window(VulkanWindow window, VulkanDevice device)
+VulkanWindow finalize_dynamic_window(VulkanWindow window, VulkanDevice device)
 {
 	window.surface_extent = get_surface_extent(device.hardware, window.surface);
 	window.submit_frame = 0;
 	window.render_frame = 0;
 
-	try {
-		window.swapchain = create_swapchain(device.device,
-			window.surface, window.image_specs, window.surface_extent,
-			window.swapchain);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create swapchain."};
+	window.swapchain = create_swapchain(device.device, window.surface,
+		window.image_specs, window.surface_extent, window.swapchain);
+
+	window.render_images = vectorize<vkGetSwapchainImagesKHR>(
+		device.device, window.swapchain);
+		
+	for (uint32_t i = 0; i < window.image_specs.frame_count; i++) {
+		window.render_image_views[i] = create_image_view(
+			device.device, window.image_specs.color_format,
+			window.render_images[i], VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 
-	try {
-		window.render_images = vectorize<vkGetSwapchainImagesKHR>(
-			device.device, window.swapchain);
-		for (uint32_t i = 0; i < window.image_specs.frame_count; i++) {
-			window.render_image_views[i] = create_image_view(
-				device.device, window.image_specs.color_format,
-				window.render_images[i], VK_IMAGE_ASPECT_COLOR_BIT);
-		}
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create render image views."};
-	}
+	window.depth_image = create_image(device.allocator,
+		window.image_specs.depth_format, window.surface_extent,
+		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
-	try {
-		window.depth_image = create_image(device.allocator,
-			window.image_specs.depth_format, window.surface_extent,
-			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create depth image."};
-	}
+	window.depth_image_view = create_image_view(device.device,
+		window.image_specs.depth_format, window.depth_image,
+		VK_IMAGE_ASPECT_DEPTH_BIT);
 
-	try {
-		window.depth_image_view = create_image_view(device.device,
-			window.image_specs.depth_format, window.depth_image,
-			VK_IMAGE_ASPECT_DEPTH_BIT);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create depth image view."};
-	}
-
-	return {window, "", ""};
+	return window;
 }
 
-OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanDevice device)
+VulkanWindow window(const VulkanWindowBuilder& builder, VulkanDevice device)
 {
 	VulkanWindow window;
 	window.image_specs.depth_format = builder.depth_format;
@@ -980,128 +925,78 @@ OptionalWrapper<VulkanWindow> window(const VulkanWindowBuilder& builder, VulkanD
 	window.render_finished_semaphores.resize(window.image_specs.frame_count);
 	window.aquire_frame_fences.resize(window.image_specs.frame_count);
 
-	try {
-		window.window = vktype::window_t(new sf::WindowBase(sf::VideoMode(
-			builder.shape.first, builder.shape.second), builder.title),
-			[](sf::WindowBase* ptr) {delete ptr; });
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create native window."};
-	}
+	window.window = vktype::window_t(new sf::WindowBase(sf::VideoMode(
+		builder.shape.first, builder.shape.second), builder.title),
+		[](sf::WindowBase* ptr) {delete ptr; });
 
-	try {
-		window.surface = create_surface(device.instance,
-			[&](VkInstance instance, VkSurfaceKHR& surface) {
-				static_cast<sf::WindowBase&>(window.window).createVulkanSurface(
-					instance, surface); });
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create surface."};
-	}
+	window.surface = create_surface(device.instance,
+		[&](VkInstance instance, VkSurfaceKHR& surface) {
+			static_cast<sf::WindowBase&>(window.window).createVulkanSurface(
+				instance, surface); });
 
-	try {
-		for (uint32_t i = 0; i < window.image_specs.frame_count; i++) {
-			window.render_buffers[i] = create_command_buffer(
-				device.device, device.command_pool);
-		}
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create command buffers."};
-	}
-
-	try {
-		for (uint32_t i = 0; i < window.image_specs.frame_count; i++) {
-			window.image_available_semaphores[i] = create_semaphore(device.device);
-			window.render_finished_semaphores[i] = create_semaphore(device.device);
-			window.aquire_frame_fences[i] = create_fence(device.device, VK_FENCE_CREATE_SIGNALED_BIT);
-		}
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create synchronization objects."};
+	for (uint32_t i = 0; i < window.image_specs.frame_count; i++) {
+		window.render_buffers[i] = create_command_buffer(
+			device.device, device.command_pool);
+		window.image_available_semaphores[i] = create_semaphore(device.device);
+		window.render_finished_semaphores[i] = create_semaphore(device.device);
+		window.aquire_frame_fences[i] = create_fence(device.device, VK_FENCE_CREATE_SIGNALED_BIT);
 	}
 
 	return finalize_dynamic_window(window, device);
 }
 
-OptionalWrapper<VulkanTarget> target(const VulkanTargetGraphicsBuilder& builder, VulkanDevice device, VulkanWindow window)
+VulkanTarget target(const VulkanTargetGraphicsBuilder& builder, VulkanDevice device, VulkanWindow window)
 {
 	VulkanTarget target;
 
-	try {
-		target.descriptor_layout = create_descriptor_layout(
-			device.device, builder.descriptor_bindings);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create descriptor layout."};
-	}
+	target.descriptor_layout = create_descriptor_layout(
+		device.device, builder.descriptor_bindings);
 
-	try {
-		target.descriptor_set = create_descriptor_set(
-			device.device, device.descriptor_pool, target.descriptor_layout);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create descriptor set."};
-	}
+	target.descriptor_set = create_descriptor_set(
+		device.device, device.descriptor_pool, target.descriptor_layout);
 
-	try {
-		target.pipeline_layout = create_pipeline_layout(
-			device.device, {target.descriptor_layout}, builder.push_constants);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create pipeline layout."};
-	}
+	target.pipeline_layout = create_pipeline_layout(
+		device.device, {target.descriptor_layout}, builder.push_constants);
 
-	try {
-		vktype::shader_module_t vertex_shader = create_shader_module(
-			device.device, builder.path_vertex_shader.c_str());
+	vktype::shader_module_t vertex_shader = create_shader_module(
+		device.device, builder.path_vertex_shader.c_str());
 
-		vktype::shader_module_t fragment_shader = create_shader_module(
-			device.device, builder.path_fragment_shader.c_str());
+	vktype::shader_module_t fragment_shader = create_shader_module(
+		device.device, builder.path_fragment_shader.c_str());
 
-		target.graphics_pipeline = create_graphics_pipeline(
-			device.device, target.pipeline_layout,
-			vertex_shader, fragment_shader, window.surface_extent,
-			builder.vertex_input_topology, builder.vertex_input_bindings,
-			builder.vertex_input_attributes, window.image_specs.color_format,
-			window.image_specs.depth_format);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create graphics pipeline."};
-	}
+	target.graphics_pipeline = create_graphics_pipeline(
+		device.device, target.pipeline_layout,
+		vertex_shader, fragment_shader, window.surface_extent,
+		builder.vertex_input_topology, builder.vertex_input_bindings,
+		builder.vertex_input_attributes, window.image_specs.color_format,
+		window.image_specs.depth_format);
 
-	return {target, "", ""};
+	return target;
 }
 
-OptionalWrapper<VulkanTarget> target(const VulkanTargetComputeBuilder& builder, VulkanDevice device)
+VulkanTarget target(const VulkanTargetComputeBuilder& builder, VulkanDevice device)
 {
 	VulkanTarget target;
 
-	try {
-		target.descriptor_layout = create_descriptor_layout(
-			device.device, builder.descriptor_bindings);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create descriptor layout."};
-	}
+	target.descriptor_layout = create_descriptor_layout(
+		device.device, builder.descriptor_bindings);
 
-	try {
-		target.descriptor_set = create_descriptor_set(
-			device.device, device.descriptor_pool, target.descriptor_layout);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create descriptor set."};
-	}
+	target.descriptor_set = create_descriptor_set(
+		device.device, device.descriptor_pool, target.descriptor_layout);
 
-	try {
-		target.pipeline_layout = create_pipeline_layout(
-			device.device, {target.descriptor_layout}, builder.push_constants);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create pipeline layout."};
-	}
+	target.pipeline_layout = create_pipeline_layout(
+		device.device, {target.descriptor_layout}, builder.push_constants);
 
-	try {
-		vktype::shader_module_t shader = create_shader_module(
-			device.device, builder.compute_shader.c_str());
-		target.graphics_pipeline = create_compute_pipeline(
-			device.device, target.pipeline_layout, shader);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create compute pipeline."};
-	}
+	vktype::shader_module_t shader = create_shader_module(
+		device.device, builder.compute_shader.c_str());
 
-	return {target, "", ""};
+	target.graphics_pipeline = create_compute_pipeline(
+		device.device, target.pipeline_layout, shader);
+
+	return target;
 }
 
-OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanDevice device)
+VulkanTensor tensor(const VulkanTensorBuilder& builder, VulkanDevice device)
 {
 	VulkanTensor tensor;
 
@@ -1115,39 +1010,33 @@ OptionalWrapper<VulkanTensor> tensor(const VulkanTensorBuilder& builder, VulkanD
 	tensor.usage_flags = builder.usage;
 	tensor.device = device;
 
-	try {
-		VmaAllocationInfo alloc_info;
-		VmaAllocationCreateInfo alloc_create_info = {};
-		alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
-		VkBufferUsageFlags primary_usage_flags = builder.usage;
-		primary_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-		primary_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		primary_usage_flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-		tensor.primary_buffer = create_buffer(device.allocator,
-			primary_usage_flags, tensor.element_size, tensor.element_count,
-			alloc_create_info, &alloc_info);
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create primary buffer."};
-	}
+	VkBufferUsageFlags shared_usage_flags = builder.usage;
+	shared_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	shared_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	shared_usage_flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 
-	try {
-		VmaAllocationInfo alloc_info;
-		VmaAllocationCreateInfo alloc_create_info = {};
-		alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
-		alloc_create_info.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
-		VkBufferUsageFlags staging_usage_flags = builder.usage; // 0; TODO: remove once staging -> primary copies are implemented
-		staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-		staging_usage_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		staging_usage_flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-		tensor.staging_buffer = create_buffer(device.allocator,
-			staging_usage_flags, tensor.element_size, tensor.element_count,
-			alloc_create_info, &alloc_info);
-		tensor.staging_memory = alloc_info.pMappedData;
-	} catch (std::runtime_error& error) {
-		return {{}, error.what(), "Failed to create staging buffer."};
-	}
+	VmaAllocationCreateInfo primary_allocation_config = {};
+	primary_allocation_config.usage = VMA_MEMORY_USAGE_AUTO;
 
-	return {tensor, "", ""};
+	tensor.primary_buffer = create_buffer(device.allocator,
+		shared_usage_flags, tensor.element_size, tensor.element_count,
+		primary_allocation_config, nullptr);
+
+	VmaAllocationCreateFlags staging_memory_flags = {};
+	staging_memory_flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	staging_memory_flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+
+	VmaAllocationCreateInfo staging_allocation_config = {};
+	staging_allocation_config.usage = VMA_MEMORY_USAGE_AUTO;
+	staging_allocation_config.flags = staging_memory_flags;
+
+	VmaAllocationInfo staging_allocation_info;
+	tensor.staging_buffer = create_buffer(device.allocator,
+		shared_usage_flags, tensor.element_size, tensor.element_count,
+		staging_allocation_config, &staging_allocation_info);
+	tensor.staging_memory = staging_allocation_info.pMappedData;
+
+	return tensor;
 }
 
 }
@@ -1184,7 +1073,7 @@ void execute_compute_shader(
 			.compute_shader = shader_path,
 			.push_constants = {push_constant_range},
 			.descriptor_bindings = bindings,
-		}, device).expect("Failed to create compute shader.");
+		}, device);
 		device.compute_cache[shader_path] = target;
 	}
 
@@ -1254,8 +1143,7 @@ void execute_compute_shader(
 void VulkanWindow::recreate(VulkanDevice device)
 {
 	CHECK_VULKAN(vkDeviceWaitIdle(device));
-	*this = vkinit::finalize_dynamic_window(*this, device)
-		.expect("Failed to recreate window!");
+	*this = vkinit::finalize_dynamic_window(*this, device);
 }
 
 std::size_t VulkanTensor::offset(std::vector<std::size_t> indices)

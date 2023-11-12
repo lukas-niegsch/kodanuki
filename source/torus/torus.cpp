@@ -29,25 +29,25 @@ RenderTensors get_render_tensors(VulkanDevice device, VulkanWindow window)
 		.shape        = {window.image_specs.frame_count, 3},
 		.element_size = sizeof(Vertex),
 		.usage        = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-	}, device).expect("Failed to create vertex tensor!");
+	}, device);
 
 	VulkanTensor instance_tensor = vkinit::tensor({
 		.shape        = {window.image_specs.frame_count, 1},
 		.element_size = sizeof(glm::vec3),
 		.usage        = 0,
-	}, device).expect("Failed to create instance tensor!");
+	}, device);
 
 	VulkanTensor index_tensor = vkinit::tensor({
 		.shape        = {window.image_specs.frame_count, 3},
 		.element_size = sizeof(uint32_t),
 		.usage        = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-	}, device).expect("Failed to create index tensor!");
+	}, device);
 
 	VulkanTensor mvp_tensor = vkinit::tensor({
 		.shape        = {window.image_specs.frame_count, 3},
 		.element_size = sizeof(glm::mat4),
 		.usage        = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-	}, device).expect("Failed to create mpv tensor!");
+	}, device);
 
 	
 	for (uint32_t i = 0; i < window.image_specs.frame_count; i++) {
@@ -106,7 +106,7 @@ VulkanTarget create_triangle_target(VulkanDevice device, VulkanWindow window)
 			{1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color)},
 		},
 		.vertex_input_topology   = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-	}, device, window).expect("Failed to create target!");
+	}, device, window);
 	return target;
 }
 
@@ -131,7 +131,7 @@ VulkanTarget create_torus_target(VulkanDevice device, VulkanWindow window)
 			{4, 1, VK_FORMAT_R32G32B32_SFLOAT, 0},
 		},
 		.vertex_input_topology   = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-	}, device, window).expect("Failed to create target!");
+	}, device, window);
 	return target;
 }
 
@@ -144,7 +144,7 @@ int main()
 		.device_extensions   = {"VK_KHR_swapchain"},
 		.score_device        = &score_device_hardware,
 		.queue_priorities    = {1.0f},
-	}).expect("Failed to create device!");
+	});
 
 	VulkanWindow window = vkinit::window({
 		.title        = "Torus",
@@ -154,7 +154,7 @@ int main()
 		.color_space  = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
 		.present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR,
 		.frame_count  = 3
-	}, device).expect("Failed to create window!");
+	}, device);
 
 
 	bool running = true;
