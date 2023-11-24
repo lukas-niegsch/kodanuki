@@ -43,4 +43,15 @@ void submit_frame(VulkanDevice device, VulkanWindow& window, uint32_t queue_inde
  */
 void render_frame(VulkanDevice device, VulkanWindow& window, uint32_t queue_index = 0);
 
+
+struct DrawIndexedParams
+{
+	uint32_t                  index_count;
+	uint32_t                  instance_count;
+	vktype::pipeline_t        pipeline;
+	VulkanTensor              indices;
+	std::vector<VulkanTensor> vertices;
+};
+fn_draw indexed(const DrawIndexedParams& params);
+
 }

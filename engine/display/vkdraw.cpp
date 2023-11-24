@@ -1,4 +1,6 @@
 #include "engine/display/vkdraw.h"
+#include <ranges>
+
 
 namespace kodanuki::vkdraw
 {
@@ -190,6 +192,22 @@ void render_frame(VulkanDevice device, VulkanWindow& window, uint32_t queue_inde
 	if (result != VK_SUCCESS) {
 		throw std::runtime_error("failed to present swap chain image!");
 	}
+}
+
+fn_draw indexed(const DrawIndexedParams& params)
+{
+	return [=](VkCommandBuffer buffer) {
+		std::vector<VkBuffer> vertex_buffers;
+		std::vector<VkDeviceSize> vertex_offsets;
+		for (auto tensor : params.vertices) {
+			vertex_buffers.push_back(tensor.staging_buffer);
+			vertex_offsets.push_back(0);
+		}
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, params.pipeline);
+		vkCmdBindVertexBuffers(buffer, 0, vertex_buffers.size(), vertex_buffers.data(), vertex_offsets.data());
+		vkCmdBindIndexBuffer(buffer, params.indices.staging_buffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdDrawIndexed(buffer, params.index_count, params.instance_count, 0, 0, 0);
+	};
 }
 
 }

@@ -34,7 +34,7 @@ RenderTensors get_render_tensors(VulkanDevice device, VulkanWindow window)
 	VulkanTensor instance_tensor = vkinit::tensor({
 		.shape        = {window.image_specs.frame_count, 1},
 		.element_size = sizeof(glm::vec3),
-		.usage        = 0,
+		.usage        = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 	}, device);
 
 	VulkanTensor index_tensor = vkinit::tensor({
@@ -91,29 +91,10 @@ int score_device_hardware(vktype::hardware_t hardware)
 	return score;
 }
 
-VulkanTarget create_triangle_target(VulkanDevice device, VulkanWindow window)
-{
-	VulkanTarget target = vkinit::target({
-		.path_vertex_shader      = "assets/shaders/triangle.vert.spv",
-		.path_fragment_shader    = "assets/shaders/fluid.frag.spv",
-		.push_constants          = {},
-		.descriptor_bindings     = {},
-		.vertex_input_bindings   = {
-			{0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX},
-		},
-		.vertex_input_attributes = {
-			{0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position)},
-			{1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color)},
-		},
-		.vertex_input_topology   = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-	}, device, window);
-	return target;
-}
-
 VulkanTarget create_torus_target(VulkanDevice device, VulkanWindow window)
 {
 	VulkanTarget target = vkinit::target({
-		.path_vertex_shader      = "assets/shaders/fluid.vert.spv",
+		.path_vertex_shader      = "assets/shaders/triangle.vert.spv",
 		.path_fragment_shader    = "assets/shaders/fluid.frag.spv",
 		.push_constants          = {},
 		.descriptor_bindings     = {
@@ -133,6 +114,21 @@ VulkanTarget create_torus_target(VulkanDevice device, VulkanWindow window)
 		.vertex_input_topology   = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 	}, device, window);
 	return target;
+}
+
+vkdraw::fn_draw draw_triangle(VulkanTarget target, RenderTensors tensors)
+{
+	auto fn = vkdraw::indexed({
+		.index_count    = 3,
+		.instance_count = 1,
+		.pipeline       = target.graphics_pipeline,
+		.indices        = tensors.index_tensor,
+		.vertices       = {
+			tensors.vertex_tensor,
+			tensors.instance_tensor,
+		},
+	});
+	return fn;
 }
 
 int main()
@@ -159,7 +155,7 @@ int main()
 
 	bool running = true;
 	sf::WindowBase& native_window = window.window;
-	VulkanTarget target = create_triangle_target(device, window);
+	VulkanTarget target = create_torus_target(device, window);
 	RenderTensors tensors = get_render_tensors(device, window);
 
 	while (running) {
@@ -169,22 +165,12 @@ int main()
 				running = false;
 			} else if (event.type == sf::Event::Resized) {
 				window.recreate(device);
-				target = create_triangle_target(device, window);
+				target = create_torus_target(device, window);
 			}
 		}
 
 		vkdraw::aquire_frame(device, window);
-
-		auto draw_triangle = [=](VkCommandBuffer buffer){
-			VkBuffer vertex_buffers[] = {tensors.vertex_tensor.staging_buffer};
-			VkDeviceSize offsets[] = {0};
-
-			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, target.graphics_pipeline);
-			vkCmdBindVertexBuffers(buffer, 0, 1, vertex_buffers, offsets);
-			vkCmdDraw(buffer, 3, 1, 0, 0);
-		};
-
-		vkdraw::record_frame(device, window, {draw_triangle});
+		vkdraw::record_frame(device, window, {draw_triangle(target, tensors)});
 		vkdraw::submit_frame(device, window);
 		vkdraw::render_frame(device, window);
 	}

@@ -1,8 +1,75 @@
 #include "engine/display/vkmath.h"
+#include <numeric>
 
 
 namespace kodanuki::vkmath
 {
+
+// static Tensor empty(
+// 	std::vector<std::size_t> shape,
+// 	TensorType               dtype = eFloat,
+// 	VkBufferUsageFlags       usage = {});
+
+// static Tensor zeros(
+// 	std::vector<std::size_t> shape,
+// 	TensorType               dtype = eFloat,
+// 	VkBufferUsageFlags       usage = {});
+
+// Tensor(
+// 	std::vector<std::size_t> shape,
+// 	TensorType               dtype = eFloat,
+// 	VkBufferUsageFlags       usage = {});
+
+// Tensor(const Tensor& other);
+
+// void operator=(const Tensor& other);
+
+// Tensor(Tensor&& other) noexcept;
+
+// void operator=(Tensor&& other) noexcept;
+
+// Tensor& operator&();
+
+// const Tensor& operator&() const;
+
+
+void Tensor::sync_wait(AccessType access)
+{
+	(void) access;
+	// TODO: don't wait on everything ...
+	CHECK_VULKAN(vkDeviceWaitIdle(device));
+}
+
+void Tensor::sync_load(uint32_t byte_offset, uint32_t byte_number)
+{
+	if (staging_equals_primary) {
+		return;
+	}
+	VkBufferCopy copy = {
+		.srcOffset = byte_offset,
+		.dstOffset = byte_offset,
+		.size = byte_number,
+	};
+	vkCmdCopyBuffer(transfer_buffer, primary_buffer, staging_buffer, 1, &copy);
+}
+
+void Tensor::sync_save(uint32_t byte_offset, uint32_t byte_number)
+{
+	if (staging_equals_primary) {
+		return;
+	}
+	VkBufferCopy copy = {
+		.srcOffset = byte_offset,
+		.dstOffset = byte_offset,
+		.size = byte_number,
+	};
+	vkCmdCopyBuffer(transfer_buffer, staging_buffer, primary_buffer, 1, &copy);
+}
+
+uint32_t Tensor::numel() const
+{
+	return std::ranges::fold_left(shape, 1U, std::multiplies<>());
+}
 
 VulkanTensor empty_tensor_copy(VulkanTensor tensorA)
 {
