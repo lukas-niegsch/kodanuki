@@ -152,11 +152,11 @@ int main()
 		.frame_count  = 3
 	}, device);
 
-
 	bool running = true;
 	sf::WindowBase& native_window = window.window;
-	VulkanTarget target = create_torus_target(device, window);
-	RenderTensors tensors = get_render_tensors(device, window);
+	VulkanTarget target      = create_torus_target(device, window);
+	RenderTensors tensors    = get_render_tensors(device, window);
+	vkdraw::fn_draw triangle = draw_triangle(target, tensors);
 
 	while (running) {
 		sf::Event event;
@@ -165,12 +165,13 @@ int main()
 				running = false;
 			} else if (event.type == sf::Event::Resized) {
 				window.recreate(device);
-				target = create_torus_target(device, window);
+				target   = create_torus_target(device, window);
+				triangle = draw_triangle(target, tensors);
 			}
 		}
 
 		vkdraw::aquire_frame(device, window);
-		vkdraw::record_frame(device, window, {draw_triangle(target, tensors)});
+		vkdraw::record_frame(device, window, {triangle});
 		vkdraw::submit_frame(device, window);
 		vkdraw::render_frame(device, window);
 	}
