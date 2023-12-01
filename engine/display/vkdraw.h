@@ -6,7 +6,7 @@
 namespace kodanuki::vkdraw
 {
 
-using fn_draw = std::function<void(VkCommandBuffer)>;
+using fn_draw = std::function<void(VkCommandBuffer, std::function<void()>)>;
 
 /**
  * Aquires the next frame for rendering.

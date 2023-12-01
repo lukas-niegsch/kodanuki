@@ -651,17 +651,17 @@ vktype::pipeline_layout_t create_pipeline_layout(
  * @param layout The layout of the pipeline.
  * @param vertex_shader The vertex shader.
  * @param fragment_shader The fragment shader.
- * @param viewport_extent The extent of the view, e.g. the whole window.
  * @param input_topology The input tology, e.g. triangle lists.
  * @param input_bindings The description on how often inputs are bound and their size.
  * @param input_attributes The description for the different binding attributes.
+ * @param color_format The format of the output color image.
+ * @param depth_format The format of the used depth image.
  */
 vktype::pipeline_t create_graphics_pipeline(
 	vktype::device_t                               device,
 	vktype::pipeline_layout_t                      layout,
 	vktype::shader_module_t                        vertex_shader,
 	vktype::shader_module_t                        fragment_shader,
-	VkExtent2D                                     viewport_extent,
 	VkPrimitiveTopology                            input_topology,
 	std::vector<VkVertexInputBindingDescription>   input_bindings,
 	std::vector<VkVertexInputAttributeDescription> input_attributes,
@@ -696,26 +696,14 @@ vktype::pipeline_t create_graphics_pipeline(
 		.topology = input_topology,
 		.primitiveRestartEnable = VK_FALSE,
 	};
-	VkViewport keep_everything_viewport = {
-		.x = 0.0f,
-		.y = 0.0f,
-		.width = static_cast<float>(viewport_extent.width),
-		.height = static_cast<float>(viewport_extent.height),
-		.minDepth = 0.0f,
-		.maxDepth = 1.0f,
-	};
-	VkRect2D keep_everything_scissor = {
-		.offset = {0, 0},
-		.extent = viewport_extent,
-	};
 	VkPipelineViewportStateCreateInfo viewport = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
 		.pNext = nullptr,
 		.flags = 0,
 		.viewportCount = 1,
-		.pViewports = &keep_everything_viewport,
+		.pViewports = nullptr,
 		.scissorCount = 1,
-		.pScissors = &keep_everything_scissor,
+		.pScissors = nullptr,
 	};
 	VkPipelineRasterizationStateCreateInfo resterization = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
@@ -777,6 +765,17 @@ vktype::pipeline_t create_graphics_pipeline(
 		.pAttachments = &color_blend_attachment,
 		.blendConstants = {0.0f, 0.0f, 0.0f, 0.0f},
 	};
+	std::array<VkDynamicState, 2> dynamic_states = {
+		VK_DYNAMIC_STATE_VIEWPORT,
+		VK_DYNAMIC_STATE_SCISSOR
+	};
+	VkPipelineDynamicStateCreateInfo dynamic_state_info = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.dynamicStateCount = dynamic_states.size(),
+		.pDynamicStates = dynamic_states.data(),
+	};
 	VkPipelineRenderingCreateInfo dynamic_rendering_info = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 		.pNext = nullptr,
@@ -800,7 +799,7 @@ vktype::pipeline_t create_graphics_pipeline(
 		.pMultisampleState = &multisample,
 		.pDepthStencilState = &depth_stencil,
 		.pColorBlendState = &color_blend,
-		.pDynamicState = nullptr,
+		.pDynamicState = &dynamic_state_info,
 		.layout = layout,
 		.renderPass = VK_NULL_HANDLE,
 		.subpass = 0,
@@ -966,8 +965,7 @@ VulkanTarget target(const VulkanTargetGraphicsBuilder& builder, VulkanDevice dev
 
 	target.graphics_pipeline = create_graphics_pipeline(
 		device.device, target.pipeline_layout,
-		vertex_shader, fragment_shader, window.surface_extent,
-		builder.vertex_input_topology, builder.vertex_input_bindings,
+		vertex_shader, fragment_shader, builder.vertex_input_topology, builder.vertex_input_bindings,
 		builder.vertex_input_attributes, window.image_specs.color_format,
 		window.image_specs.depth_format);
 

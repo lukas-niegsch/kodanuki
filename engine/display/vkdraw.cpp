@@ -109,8 +109,28 @@ void record_frame(VulkanDevice device, VulkanWindow& window, std::vector<fn_draw
 	};
 	vkCmdBeginRendering(buffer, &render_info);
 
+	// TODO: This is bad design, we give the user a method
+    //       that must be called after vkCmdBindPipeline ...
+	auto set_dynamic_state = [&]() {
+		VkViewport keep_everything_viewport = {
+			.x = 0.0f,
+			.y = 0.0f,
+			.width = static_cast<float>(window.surface_extent.width),
+			.height = static_cast<float>(window.surface_extent.height),
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f,
+		};
+		vkCmdSetViewport(buffer, 0, 1, &keep_everything_viewport);
+
+		VkRect2D keep_everything_scissor = {
+			.offset = {0, 0},
+			.extent = window.surface_extent,
+		};
+		vkCmdSetScissor(buffer, 0, 1, &keep_everything_scissor);
+	};
+
 	for (auto command : commands) {
-		command(buffer);
+		command(buffer, set_dynamic_state);
 	}
 
 	vkCmdEndRendering(buffer);
@@ -196,7 +216,7 @@ void render_frame(VulkanDevice device, VulkanWindow& window, uint32_t queue_inde
 
 fn_draw indexed(const DrawIndexedParams& params)
 {
-	return [=](VkCommandBuffer buffer) {
+	return [=](VkCommandBuffer buffer, std::function<void()> set_pipeline_state) {
 		std::vector<VkBuffer> vertex_buffers;
 		std::vector<VkDeviceSize> vertex_offsets;
 		for (auto tensor : params.vertices) {
@@ -204,6 +224,7 @@ fn_draw indexed(const DrawIndexedParams& params)
 			vertex_offsets.push_back(0);
 		}
 		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, params.pipeline);
+		set_pipeline_state();
 		vkCmdBindVertexBuffers(buffer, 0, vertex_buffers.size(), vertex_buffers.data(), vertex_offsets.data());
 		vkCmdBindIndexBuffer(buffer, params.indices.staging_buffer, 0, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(buffer, params.index_count, params.instance_count, 0, 0, 0);
