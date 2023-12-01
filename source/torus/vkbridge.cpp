@@ -69,3 +69,47 @@ VulkanTarget create_target(VulkanDevice device, VulkanWindow window)
 	}, device, window);
 	return target;
 }
+
+vkdraw::fn_draw create_example_triangle(VulkanDevice device, VulkanTarget target)
+{
+	VulkanTensor vertex_tensor = vkinit::tensor({
+		.shape        = {3},
+		.element_size = sizeof(Vertex),
+		.usage        = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+	}, device);
+
+	VulkanTensor instance_tensor = vkinit::tensor({
+		.shape        = {1},
+		.element_size = sizeof(glm::vec3),
+		.usage        = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+	}, device);
+
+	VulkanTensor index_tensor = vkinit::tensor({
+		.shape        = {3},
+		.element_size = sizeof(uint32_t),
+		.usage        = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+	}, device);
+
+	vertex_tensor.get<Vertex>({0}).position = { 0.0, -0.5, 0};
+	vertex_tensor.get<Vertex>({1}).position = { 0.5,  0.5, 0};
+	vertex_tensor.get<Vertex>({2}).position = {-0.5,  0.5, 0};
+	vertex_tensor.get<Vertex>({0}).color = {1, 0, 0};
+	vertex_tensor.get<Vertex>({1}).color = {0, 1, 0};
+	vertex_tensor.get<Vertex>({2}).color = {0, 0, 1};
+	instance_tensor.get<glm::vec3>({0}) = {0, 0, 0};
+	index_tensor.get<uint32_t>({0}) = 0;
+	index_tensor.get<uint32_t>({1}) = 1;
+	index_tensor.get<uint32_t>({2}) = 2;
+
+	auto fn = vkdraw::indexed({
+		.index_count    = 3,
+		.instance_count = 1,
+		.pipeline       = target.graphics_pipeline,
+		.indices        = index_tensor,
+		.vertices       = {
+			vertex_tensor,
+			instance_tensor,
+		},
+	});
+	return fn;
+}

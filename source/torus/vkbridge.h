@@ -19,3 +19,5 @@ struct Vertex
 VulkanDevice create_device();
 VulkanWindow create_window(VulkanDevice device, int width, int height);
 VulkanTarget create_target(VulkanDevice device, VulkanWindow window);
+
+vkdraw::fn_draw create_example_triangle(VulkanDevice device, VulkanTarget target);
