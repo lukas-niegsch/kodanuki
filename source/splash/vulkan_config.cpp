@@ -193,7 +193,7 @@ VulkanPipeline create_render_fluid_pipeline(VulkanDevice device, VulkanTarget ta
 	resterization.rasterizerDiscardEnable = VK_FALSE;
 	resterization.polygonMode = VK_POLYGON_MODE_FILL;
 	resterization.cullMode = VK_CULL_MODE_BACK_BIT;
-	resterization.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+	resterization.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	resterization.depthBiasEnable = VK_FALSE;
 	resterization.depthBiasConstantFactor = 0.0f;
 	resterization.depthBiasClamp = 0.0f;
