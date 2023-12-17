@@ -5,34 +5,6 @@
 namespace kodanuki::vkmath
 {
 
-// static Tensor empty(
-// 	std::vector<std::size_t> shape,
-// 	TensorType               dtype = eFloat,
-// 	VkBufferUsageFlags       usage = {});
-
-// static Tensor zeros(
-// 	std::vector<std::size_t> shape,
-// 	TensorType               dtype = eFloat,
-// 	VkBufferUsageFlags       usage = {});
-
-// Tensor(
-// 	std::vector<std::size_t> shape,
-// 	TensorType               dtype = eFloat,
-// 	VkBufferUsageFlags       usage = {});
-
-// Tensor(const Tensor& other);
-
-// void operator=(const Tensor& other);
-
-// Tensor(Tensor&& other) noexcept;
-
-// void operator=(Tensor&& other) noexcept;
-
-// Tensor& operator&();
-
-// const Tensor& operator&() const;
-
-
 void Tensor::sync_wait(AccessType access)
 {
 	(void) access;

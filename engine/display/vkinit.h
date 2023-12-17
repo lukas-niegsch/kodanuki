@@ -1,34 +1,16 @@
 #pragma once
 #include "engine/nekolib/templates/shared_wrapper.h"
+#include "engine/nekolib/debug.h"
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
 #include <SFML/Window.hpp>
 #include <vector>
 #include <sstream>
 
-
-/**
- * Makro that terminates the program and prints some debug information.
- */
-#define ERROR(reason)									\
-	do {												\
-		std::stringstream err;							\
-		err << "VkResult was " << (reason) << '\n';		\
-		err << "[Error] in file: " << __FILE__ << '\n';	\
-		err << "[Error] in line: " << __LINE__ << '\n';	\
-		throw std::runtime_error(err.str());    		\
-	} while (false)
-
 /**
  * Makro that checks if the vulkan function call was executed successfully.
  */
-#define CHECK_VULKAN(result)					\
-	do {										\
-		auto return_type = result;				\
-		if (return_type != VK_SUCCESS) {		\
-			ERROR(return_type);					\
-		}										\
-	} while (false)
+#define CHECK_VULKAN(result) CHECK_RESULT(result, VK_SUCCESS)
 
 /**
  * Prints the given result into the output stream.
