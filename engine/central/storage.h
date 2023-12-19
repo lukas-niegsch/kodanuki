@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/nekolib/container/dense_map.h"
+#include "engine/nekolib/dense_map.h"
 #include <algorithm>
 #include <any>
 #include <cassert>
