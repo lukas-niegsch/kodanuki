@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/nekolib/templates/shared_wrapper.h"
-#include "engine/nekolib/debug.h"
+#include "engine/nekolib/debug_error.h"
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
 #include <SFML/Window.hpp>
