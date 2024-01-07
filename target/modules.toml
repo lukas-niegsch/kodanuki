@@ -39,3 +39,9 @@ description = "Standalone torus application that runs without the engine."
 path        = "source/torus"
 depends     = ["kodanuki.engine", "vulkan", "sfml-window", "sfml-system"]
 library     = false
+
+[strexpr]
+description = "Some methods working on strings for university."
+path        = "source/strexpr"
+depends     = []
+library     = false
