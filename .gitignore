@@ -18,3 +18,4 @@ assets/sphinx/_*
 imgui.ini
 todo.txt
 callgrind*
+.env
