@@ -10,6 +10,7 @@ help:
 install:
 	@ git submodule update --init
 	@ python -m pip install -r target/requirements.txt
+	@ sudo emerge -a $$(< target/gentoo.txt)
 
 profile:
 	@ python -B target/build.py $(SRC_DIR) $(OUT_DIR) $(BIN_DIR) unittest run
