@@ -2,10 +2,16 @@
 #include "engine/nekolib/templates/shared_wrapper.h"
 #include "engine/nekolib/debug_error.h"
 #include <vulkan/vulkan.h>
-#include <vk_mem_alloc.h>
 #include <SFML/Window.hpp>
 #include <vector>
 #include <sstream>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#include "extern/VulkanMemoryAllocator/include/vk_mem_alloc.h"
+#pragma GCC diagnostic pop
 
 /**
  * Makro that checks if the vulkan function call was executed successfully.

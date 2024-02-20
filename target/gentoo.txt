@@ -1,3 +1,7 @@
 dev-util/vulkan-tools
 media-libs/vulkan-layers
+media-libs/libsfml
+media-libs/glfw
+media-libs/glm
+media-libs/shaderc
 app-text/doxygen
