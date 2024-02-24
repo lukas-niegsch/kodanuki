@@ -1,15 +1,9 @@
-[submodule "extern/imgui"]
-	path = extern/imgui
-	url = https://github.com/ocornut/imgui.git
-[submodule "extern/tinyobjloader"]
-	path = extern/tinyobjloader
-	url = https://github.com/tinyobjloader/tinyobjloader.git
-[submodule "extern/SPIRV-Reflect"]
-	path = extern/SPIRV-Reflect
-	url = https://github.com/KhronosGroup/SPIRV-Reflect.git
 [submodule "extern/stb"]
-	path = extern/stb
+	path = extern/submodules/stb
 	url = https://github.com/nothings/stb.git
 [submodule "extern/VulkanMemoryAllocator"]
-	path = extern/VulkanMemoryAllocator
+	path = extern/submodules/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+[submodule "extern/fixed_string"]
+	path = extern/submodules/fixed_string
+	url = https://github.com/unterumarmung/fixed_string.git
