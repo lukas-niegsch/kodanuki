@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <fstream>
 #define STB_IMAGE_IMPLEMENTATION
-#include "extern/stb/stb_image.h"
+#include "extern/stb_image.h"
 
 namespace kodanuki
 {
