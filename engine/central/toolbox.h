@@ -3,6 +3,7 @@
 #include "engine/central/storage.h"
 #include "engine/nekolib/algorithm/sorted_intersection.h"
 
+
 namespace kodanuki
 {
 
@@ -113,4 +114,3 @@ void update_entity_tags(std::vector<Entity> entities)
 }
 
 }
-

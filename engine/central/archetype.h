@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 
+
 namespace kodanuki
 {
 
@@ -91,4 +92,3 @@ struct Calculate
 };
 
 }
-

@@ -2,6 +2,7 @@
 #include "engine/central/entity.h"
 #include <unordered_set>
 
+
 namespace kodanuki
 {
 
@@ -75,4 +76,4 @@ private:
 	std::unordered_set<Entity> children;
 };
 
-} // namespace kodanuki
+}

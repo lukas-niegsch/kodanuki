@@ -1,7 +1,7 @@
 #include "engine/central/archetype.h"
 #include "engine/central/entity.h"
 #include "engine/central/family.h"
-#include <cassert>
+
 
 namespace kodanuki
 {
