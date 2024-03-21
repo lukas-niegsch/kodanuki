@@ -1,13 +1,13 @@
 [engine]
 description = "The kodanuki game engine."
 path        = "engine/"
-depends     = ["vulkan", "glfw", "sfml-window", "sfml-system"]
+depends     = ["vulkan", "sfml-window"]
 library     = true
 
 [kodanuki]
 description = "The upcoming kodanuki game."
 path        = "source/kodanuki/"
-depends     = ["kodanuki.engine", "vulkan", "glfw", "GL"]
+depends     = ["kodanuki.engine", "vulkan", "sfml-window", "sfml-system"]
 library     = false
 
 [unittest]
@@ -26,18 +26,6 @@ library     = false
 description = "The tetris side project for the multiboard tetris game."
 path        = "source/tetris/"
 depends     = ["kodanuki.engine", "ncurses"]
-library     = false
-
-[splash]
-description = "The splash side project for SPH fluid simulation."
-path        = "source/splash/"
-depends     = ["kodanuki.engine", "vulkan", "glfw"]
-library     = false
-
-[torus]
-description = "Standalone torus application that runs without the engine."
-path        = "source/torus"
-depends     = ["kodanuki.engine", "vulkan", "sfml-window", "sfml-system"]
 library     = false
 
 [strexpr]

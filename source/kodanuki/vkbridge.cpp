@@ -1,4 +1,4 @@
-#include "source/torus/vkbridge.h"
+#include "source/kodanuki/vkbridge.h"
 
 
 int score_device_hardware(vktype::hardware_t hardware)
@@ -34,7 +34,7 @@ VulkanDevice create_device()
 VulkanWindow create_window(VulkanDevice device, int width, int height)
 {
 	VulkanWindow window = vkinit::window({
-		.title        = "Torus",
+		.title        = "Kodanuki",
 		.shape        = {width, height},
 		.depth_format = VK_FORMAT_D32_SFLOAT_S8_UINT,
 		.color_format = VK_FORMAT_B8G8R8A8_UNORM,
